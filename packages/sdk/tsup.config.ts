@@ -8,6 +8,7 @@ export default defineConfig({
     index: "src/index.ts",
     "app-auth/index": "src/app-auth/index.ts",
     "app-auth/session-guard": "src/app-auth/session-guard.ts",
+    "app-header/index": "src/app-header/index.ts",
     "verify/index": "src/verify/index.ts",
   },
   format: ["esm"],

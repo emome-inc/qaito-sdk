@@ -4,7 +4,8 @@
   "description": "書き出しに必要な社内の型と文言。npm には出さない（@qaito/sdk の中に取り込まれる）",
   "type": "module",
   "exports": {
-    "./errors": "./src/errors.ts"
+    "./errors": "./src/errors.ts",
+    "./app-header": "./src/app-header.ts"
   },
   "dependencies": {
     "zod": "^4.3.6"

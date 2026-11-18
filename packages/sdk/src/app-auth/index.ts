@@ -9,8 +9,19 @@ import { QaitoClient } from "../client.js";
 import { QaitoError } from "../error.js";
 
 export type AppAuthConfig = {
-  /** 組み込みキー（`@qaito/schemas/external-apps` の `BUILTIN_EXTERNAL_APPS`。例 `chat` / `piazza`） */
+  /**
+   * 組み込みキー（`@qaito/schemas/external-apps` の `BUILTIN_EXTERNAL_APPS`。例 `chat` / `piazza`）。
+   * 連携アプリ（`clientId` を渡すもの）では cookie の名前にだけ使う（英小文字・数字・ハイフン）
+   */
   app: string;
+  /**
+   * 連携アプリの OAuth 公開クライアント ID（組織がコンソールで登録した鍵の `key_prefix`）。
+   * 渡すと組み込みアプリの台帳（`GET /auth/oauth/client`）を引かず、この ID でログインする。
+   * クライアントは 1 つの組織に属するので、連携アプリは `defaultOrg` と組み合わせて使う
+   */
+  clientId?: string;
+  /** 組織 ID の既定（`?org=` も覚えている組織も無いときに使う）。連携アプリは登録した組織を入れる */
+  defaultOrg?: string;
   /** Qaito API の base URL（サーバー間の呼び出しに使う） */
   apiBaseUrl: string;
   /** `NEXT_PUBLIC_APP_DOMAIN`（ポータル `{org}.{appDomain}` の組み立てに使う） */
@@ -108,6 +119,7 @@ export function createAppAuth(config: AppAuthConfig) {
 
   /** 組織 ID → この組織のこのアプリの OAuth 公開クライアント ID（ログイン前の口）。無ければ null */
   async function resolveClientId(orgSlug: string): Promise<string | null> {
+    if (config.clientId) return config.clientId;
     try {
       const data = await new QaitoClient({ baseUrl: config.apiBaseUrl }).oauth.client(config.app, orgSlug);
       return data.client_id;
@@ -193,7 +205,7 @@ export function createAppAuth(config: AppAuthConfig) {
   async function login(req: Request): Promise<Response> {
     const url = new URL(req.url);
     const cookieHeader = req.headers.get("cookie") ?? "";
-    const org = url.searchParams.get("org") ?? rememberedOrg(cookieHeader);
+    const org = url.searchParams.get("org") ?? rememberedOrg(cookieHeader) ?? config.defaultOrg;
     if (!isOrgSlug(org)) return redirect(homeWith("need_org", "1"));
 
     const clientId = await resolveClientId(org);
