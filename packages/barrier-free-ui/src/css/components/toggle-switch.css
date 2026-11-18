@@ -1,0 +1,85 @@
+
+.bf-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--bf-space-4);
+  width: 100%;
+  min-height: var(--bf-control-h);
+  padding: var(--bf-space-2) var(--bf-space-4);
+  background: var(--bf-bg);
+  border: var(--bf-border-w) solid var(--bf-border);
+  cursor: pointer;
+  text-align: start;
+}
+.bf-switch:hover {
+  background: var(--bf-hover-bg);
+}
+
+.bf-switch__label {
+  font-size: var(--bf-font-base);
+  font-weight: var(--bf-weight-medium);
+  color: var(--bf-fg);
+}
+
+.bf-switch__state {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bf-space-2);
+}
+
+.bf-switch__statetext {
+  font-size: var(--bf-font-sm);
+  font-weight: var(--bf-weight-bold);
+  color: var(--bf-muted-fg);
+  min-width: 2.5em;
+  text-align: end;
+}
+
+.bf-switch__track {
+  position: relative;
+  width: calc(var(--bf-control-h) * 1.6);
+  height: calc(var(--bf-control-h) * 0.7);
+  background: var(--bf-surface-2);
+  border: var(--bf-border-w-strong) solid var(--bf-border);
+  border-radius: var(--bf-radius-pill);
+  transition: background-color var(--bf-duration-fast) var(--bf-ease-standard), border-color var(--bf-duration-fast) var(--bf-ease-standard);
+}
+.bf-switch__thumb {
+  position: absolute;
+  top: 50%;
+  inset-inline-start: 2px;
+  transform: translateY(-50%);
+  width: calc(var(--bf-control-h) * 0.7 - 8px);
+  height: calc(var(--bf-control-h) * 0.7 - 8px);
+  background: var(--bf-muted-fg);
+  border-radius: var(--bf-radius-circle);
+  transition: inset-inline-start var(--bf-duration-fast) var(--bf-ease-standard), background-color var(--bf-duration-fast) var(--bf-ease-standard);
+}
+
+.bf-switch--bare {
+  display: inline-flex;
+  width: auto;
+  justify-content: flex-start;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+.bf-switch--bare:hover {
+  background: transparent;
+}
+.bf-switch--bare:hover .bf-switch__track {
+  border-color: var(--bf-fg);
+}
+
+.bf-switch[aria-checked="true"] .bf-switch__track {
+  background: var(--bf-success-bg);
+  border-color: var(--bf-success);
+}
+.bf-switch[aria-checked="true"] .bf-switch__thumb {
+  inset-inline-start: calc(100% - (var(--bf-control-h) * 0.7 - 8px) - 2px);
+  background: var(--bf-success);
+}
+.bf-switch[aria-checked="true"] .bf-switch__statetext {
+  color: var(--bf-success);
+}

@@ -1,0 +1,67 @@
+
+.bf-copyfield {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bf-space-1);
+  min-width: 0;
+}
+
+.bf-copyfield__caption {
+  font-size: var(--bf-font-sm);
+  color: var(--bf-muted-fg);
+}
+
+.bf-copyfield__row {
+  display: flex;
+  align-items: center;
+  gap: var(--bf-space-2);
+  min-width: 0;
+  border: var(--bf-border-w) solid var(--bf-border);
+  background: var(--bf-surface);
+  padding: var(--bf-space-2) var(--bf-space-3);
+}
+.bf-copyfield__value {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--bf-font-family-mono);
+  font-size: var(--bf-font-sm);
+  font-weight: var(--bf-weight-normal);
+  letter-spacing: 0.02em;
+  color: var(--bf-fg);
+  word-break: break-all;
+}
+
+.bf-copyfield[data-multiline="true"] {
+  gap: 0;
+  border: var(--bf-border-w) solid var(--bf-border);
+}
+.bf-copyfield__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--bf-space-2);
+  border-bottom: var(--bf-border-w) solid var(--bf-border);
+  background: color-mix(in oklch, var(--bf-muted-fg) 8%, transparent);
+  padding: var(--bf-space-2) var(--bf-space-3);
+}
+.bf-copyfield[data-multiline="true"] .bf-copyfield__caption {
+  font-family: var(--bf-font-family-mono);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bf-copyfield__code {
+  margin: 0;
+  overflow-x: auto;
+  background: color-mix(in oklch, var(--bf-muted-fg) 5%, transparent);
+  padding: var(--bf-space-3);
+  font-family: var(--bf-font-family-mono);
+  font-size: var(--bf-font-sm);
+  line-height: var(--bf-leading-relaxed);
+  color: var(--bf-fg);
+}
+
+.bf-copyfield__button {
+  flex-shrink: 0;
+}

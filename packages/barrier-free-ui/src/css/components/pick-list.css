@@ -1,0 +1,67 @@
+
+.bf-picklist {
+  display: flex;
+  flex-direction: column;
+}
+.bf-picklist__item + .bf-picklist__item {
+  border-top: var(--bf-border-w) solid var(--bf-border);
+}
+
+.bf-pickrow {
+  display: flex;
+  align-items: center;
+  gap: var(--bf-space-3);
+  padding: var(--bf-space-2) 0;
+  min-height: var(--bf-control-h-sm);
+  cursor: pointer;
+}
+.bf-pickrow[data-disabled] {
+  cursor: default;
+}
+.bf-pickrow__input {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  margin: 0;
+  accent-color: var(--bf-primary);
+}
+.bf-pickrow__label {
+  font-size: var(--bf-font-sm);
+  font-weight: var(--bf-weight-semibold);
+  color: var(--bf-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.bf-pickrow__meta {
+  margin-inline-start: auto;
+  padding-inline-start: var(--bf-space-3);
+  font-size: var(--bf-font-xs);
+  color: var(--bf-muted-fg);
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.bf-picks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bf-space-3);
+}
+.bf-picks__note {
+  margin: 0;
+  font-size: var(--bf-font-sm);
+  color: var(--bf-muted-fg);
+}
+
+.bf-pickrow__leading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.bf-pickrow__leading svg {
+  width: 1.2em;
+  height: 1.2em;
+}

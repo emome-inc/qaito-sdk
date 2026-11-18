@@ -1,0 +1,20 @@
+
+.bf-slider {
+  display: flex;
+  align-items: center;
+  gap: var(--bf-space-4);
+}
+.bf-slider__input {
+  flex: 1;
+  height: var(--bf-control-h);
+  accent-color: var(--bf-primary);
+  cursor: pointer;
+}
+.bf-slider__value {
+  min-width: 3em;
+  text-align: end;
+  font-size: var(--bf-font-lg);
+  font-weight: var(--bf-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--bf-fg);
+}

@@ -1,0 +1,447 @@
+
+.bf-theme-client {
+  --bf-primary: oklch(0.545 0.11 160);
+  --bf-ring: oklch(0.545 0.11 160);
+}
+.bf-theme-assessment {
+  --bf-primary: oklch(0.53 0.12 200);
+  --bf-ring: oklch(0.53 0.12 200);
+}
+.bf-theme-medical {
+  --bf-primary: oklch(0.52 0.13 20);
+  --bf-ring: oklch(0.52 0.13 20);
+}
+.bf-theme-facility {
+  --bf-primary: oklch(0.56 0.12 75);
+  --bf-ring: oklch(0.56 0.12 75);
+}
+.bf-theme-customer {
+  --bf-primary: oklch(0.5 0.14 270);
+  --bf-ring: oklch(0.5 0.14 270);
+}
+.bf-theme-careplan {
+  --bf-primary: oklch(0.53 0.12 175);
+  --bf-ring: oklch(0.53 0.12 175);
+}
+.bf-theme-staff {
+  --bf-primary: oklch(0.54 0.13 130);
+  --bf-ring: oklch(0.54 0.13 130);
+}
+.bf-theme-company {
+  --bf-primary: oklch(0.55 0.18 270);
+  --bf-ring: oklch(0.55 0.18 270);
+}
+.bf-theme-portal {
+  --bf-primary: oklch(0.45 0.02 270);
+  --bf-ring: oklch(0.45 0.02 270);
+}
+.bf-theme-chat {
+  --bf-primary: oklch(0.52 0.11 130);
+  --bf-ring: oklch(0.52 0.11 130);
+}
+.bf-theme-drive {
+  --bf-primary: oklch(0.52 0.11 250);
+  --bf-ring: oklch(0.52 0.11 250);
+}
+.bf-theme-calendar {
+  --bf-primary: oklch(0.52 0.085 190);
+  --bf-ring: oklch(0.52 0.085 190);
+}
+
+.dark .bf-theme-client {
+  --bf-primary: oklch(0.65 0.11 160);
+  --bf-ring: oklch(0.65 0.11 160);
+}
+.dark .bf-theme-assessment {
+  --bf-primary: oklch(0.65 0.12 200);
+  --bf-ring: oklch(0.65 0.12 200);
+}
+.dark .bf-theme-medical {
+  --bf-primary: oklch(0.65 0.13 20);
+  --bf-ring: oklch(0.65 0.13 20);
+}
+.dark .bf-theme-facility {
+  --bf-primary: oklch(0.7 0.12 75);
+  --bf-ring: oklch(0.7 0.12 75);
+}
+.dark .bf-theme-customer {
+  --bf-primary: oklch(0.62 0.14 270);
+  --bf-ring: oklch(0.62 0.14 270);
+}
+.dark .bf-theme-careplan {
+  --bf-primary: oklch(0.65 0.12 175);
+  --bf-ring: oklch(0.65 0.12 175);
+}
+.dark .bf-theme-staff {
+  --bf-primary: oklch(0.66 0.13 130);
+  --bf-ring: oklch(0.66 0.13 130);
+}
+.dark .bf-theme-company {
+  --bf-primary: oklch(0.65 0.18 270);
+  --bf-ring: oklch(0.65 0.18 270);
+}
+.dark .bf-theme-portal {
+  --bf-primary: oklch(0.70 0.02 270);
+  --bf-ring: oklch(0.70 0.02 270);
+}
+.dark .bf-theme-chat {
+  --bf-primary: oklch(0.70 0.11 130);
+  --bf-ring: oklch(0.70 0.11 130);
+}
+.dark .bf-theme-drive {
+  --bf-primary: oklch(0.70 0.11 250);
+  --bf-ring: oklch(0.70 0.11 250);
+}
+.dark .bf-theme-calendar {
+  --bf-primary: oklch(0.70 0.085 190);
+  --bf-ring: oklch(0.70 0.085 190);
+}
+.bf-theme-schedule {
+  --bf-primary: oklch(0.58 0.16 50);
+  --bf-ring: oklch(0.58 0.16 50);
+}
+.dark .bf-theme-schedule {
+  --bf-primary: oklch(0.70 0.16 50);
+  --bf-ring: oklch(0.70 0.16 50);
+}
+
+.bf-theme-console {
+  --bf-primary: oklch(0.528 0.096 248.8);
+  --bf-ring: oklch(0.528 0.096 248.8);
+}
+.dark .bf-theme-console {
+  --bf-primary: oklch(0.65 0.096 248.8);
+  --bf-ring: oklch(0.65 0.096 248.8);
+}
+
+.bf-theme-intake {
+  --bf-primary: oklch(0.55 0.15 230);
+  --bf-ring: oklch(0.55 0.15 230);
+}
+.dark .bf-theme-intake {
+  --bf-primary: oklch(0.68 0.15 230);
+  --bf-ring: oklch(0.68 0.15 230);
+}
+
+.bf-theme-admin {
+  --bf-primary: oklch(0.45 0.06 250);
+  --bf-ring: oklch(0.45 0.06 250);
+}
+.dark .bf-theme-admin {
+  --bf-primary: oklch(0.72 0.06 250);
+  --bf-ring: oklch(0.72 0.06 250);
+}
+
+.bf-theme-contactnote {
+  --bf-primary: oklch(0.54 0.13 187);
+  --bf-ring: oklch(0.54 0.13 187);
+}
+.dark .bf-theme-contactnote {
+  --bf-primary: oklch(0.68 0.13 187);
+  --bf-ring: oklch(0.68 0.13 187);
+}
+
+.bf-theme-carerecord {
+  --bf-primary: oklch(0.55 0.18 200);
+  --bf-ring: oklch(0.55 0.18 200);
+}
+.dark .bf-theme-carerecord {
+  --bf-primary: oklch(0.70 0.18 200);
+  --bf-ring: oklch(0.70 0.18 200);
+}
+
+.bf-theme-training {
+  --bf-primary: oklch(0.57 0.17 40);
+  --bf-ring: oklch(0.57 0.17 40);
+}
+.dark .bf-theme-training {
+  --bf-primary: oklch(0.72 0.17 40);
+  --bf-ring: oklch(0.72 0.17 40);
+}
+
+.bf-theme-training-plan {
+  --bf-primary: oklch(0.58 0.16 55);
+  --bf-ring: oklch(0.58 0.16 55);
+}
+.dark .bf-theme-training-plan {
+  --bf-primary: oklch(0.72 0.16 55);
+  --bf-ring: oklch(0.72 0.16 55);
+}
+
+.bf-theme-careplan {
+  --bf-primary: oklch(0.54 0.14 180);
+  --bf-ring: oklch(0.54 0.14 180);
+}
+.dark .bf-theme-careplan {
+  --bf-primary: oklch(0.68 0.14 180);
+  --bf-ring: oklch(0.68 0.14 180);
+}
+
+.bf-theme-transport-log {
+  --bf-primary: oklch(0.52 0.15 240);
+  --bf-ring: oklch(0.52 0.15 240);
+}
+.dark .bf-theme-transport-log {
+  --bf-primary: oklch(0.68 0.15 240);
+  --bf-ring: oklch(0.68 0.15 240);
+}
+
+.bf-theme-transport-plan {
+  --bf-primary: oklch(0.55 0.18 50);
+  --bf-ring: oklch(0.55 0.18 50);
+}
+.dark .bf-theme-transport-plan {
+  --bf-primary: oklch(0.70 0.18 50);
+  --bf-ring: oklch(0.70 0.18 50);
+}
+
+.bf-theme-insurance {
+  --bf-primary: oklch(0.55 0.13 210);
+  --bf-ring: oklch(0.55 0.13 210);
+}
+.dark .bf-theme-insurance {
+  --bf-primary: oklch(0.70 0.13 210);
+  --bf-ring: oklch(0.70 0.13 210);
+}
+
+.bf-theme-contracts {
+  --bf-primary: oklch(0.58 0.13 60);
+  --bf-ring: oklch(0.58 0.13 60);
+}
+.dark .bf-theme-contracts {
+  --bf-primary: oklch(0.72 0.13 60);
+  --bf-ring: oklch(0.72 0.13 60);
+}
+
+.bf-theme-vitals {
+  --bf-primary: oklch(0.55 0.18 10);
+  --bf-ring: oklch(0.55 0.18 10);
+}
+.dark .bf-theme-vitals {
+  --bf-primary: oklch(0.68 0.18 10);
+  --bf-ring: oklch(0.68 0.18 10);
+}
+
+.bf-theme-monitoring {
+  --bf-primary: oklch(0.55 0.15 160);
+  --bf-ring: oklch(0.55 0.15 160);
+}
+.dark .bf-theme-monitoring {
+  --bf-primary: oklch(0.70 0.15 160);
+  --bf-ring: oklch(0.70 0.15 160);
+}
+
+.bf-theme-evaluation {
+  --bf-primary: oklch(0.55 0.15 200);
+  --bf-ring: oklch(0.55 0.15 200);
+}
+.dark .bf-theme-evaluation {
+  --bf-primary: oklch(0.70 0.15 200);
+  --bf-ring: oklch(0.70 0.15 200);
+}
+
+.bf-theme-dayservice-plan {
+  --bf-primary: oklch(0.55 0.16 220);
+  --bf-ring: oklch(0.55 0.16 220);
+}
+.dark .bf-theme-dayservice-plan {
+  --bf-primary: oklch(0.70 0.16 220);
+  --bf-ring: oklch(0.70 0.16 220);
+}
+
+.bf-theme-homecare-plan {
+  --bf-primary: oklch(0.58 0.14 30);
+  --bf-ring: oklch(0.58 0.14 30);
+}
+.dark .bf-theme-homecare-plan {
+  --bf-primary: oklch(0.72 0.14 30);
+  --bf-ring: oklch(0.72 0.14 30);
+}
+
+.bf-theme-equipment-rental {
+  --bf-primary: oklch(0.55 0.10 200);
+  --bf-ring: oklch(0.55 0.10 200);
+}
+.dark .bf-theme-equipment-rental {
+  --bf-primary: oklch(0.70 0.10 200);
+  --bf-ring: oklch(0.70 0.10 200);
+}
+
+.bf-theme-nursing-plan {
+  --bf-primary: oklch(0.62 0.10 190);
+  --bf-ring: oklch(0.62 0.10 190);
+}
+.dark .bf-theme-nursing-plan {
+  --bf-primary: oklch(0.74 0.10 190);
+  --bf-ring: oklch(0.74 0.10 190);
+}
+
+.bf-theme-rehab-plan {
+  --bf-primary: oklch(0.55 0.14 145);
+  --bf-ring: oklch(0.55 0.14 145);
+}
+.dark .bf-theme-rehab-plan {
+  --bf-primary: oklch(0.70 0.14 145);
+  --bf-ring: oklch(0.70 0.14 145);
+}
+
+.bf-theme-life {
+  --bf-primary: oklch(0.55 0.13 190);
+  --bf-ring: oklch(0.55 0.13 190);
+}
+.dark .bf-theme-life {
+  --bf-primary: oklch(0.70 0.13 190);
+  --bf-ring: oklch(0.70 0.13 190);
+}
+
+.bf-theme-careplan-link {
+  --bf-primary: oklch(0.55 0.14 265);
+  --bf-ring: oklch(0.55 0.14 265);
+}
+.dark .bf-theme-careplan-link {
+  --bf-primary: oklch(0.70 0.14 265);
+  --bf-ring: oklch(0.70 0.14 265);
+}
+
+.bf-theme-transport {
+  --bf-primary: oklch(0.52 0.14 195);
+  --bf-ring: oklch(0.52 0.14 195);
+}
+.dark .bf-theme-transport {
+  --bf-primary: oklch(0.68 0.14 195);
+  --bf-ring: oklch(0.68 0.14 195);
+}
+
+.bf-theme-dayservice-daily {
+  --bf-primary: oklch(0.55 0.16 30);
+  --bf-ring: oklch(0.55 0.16 30);
+}
+.dark .bf-theme-dayservice-daily {
+  --bf-primary: oklch(0.70 0.16 30);
+  --bf-ring: oklch(0.70 0.16 30);
+}
+
+.bf-theme-dayservice-monthly {
+  --bf-primary: oklch(0.52 0.14 280);
+  --bf-ring: oklch(0.52 0.14 280);
+}
+.dark .bf-theme-dayservice-monthly {
+  --bf-primary: oklch(0.68 0.14 280);
+  --bf-ring: oklch(0.68 0.14 280);
+}
+
+.bf-theme-dayservice-suite {
+  --bf-primary: oklch(0.50 0.14 290);
+  --bf-ring: oklch(0.50 0.14 290);
+}
+.dark .bf-theme-dayservice-suite {
+  --bf-primary: oklch(0.66 0.14 290);
+  --bf-ring: oklch(0.66 0.14 290);
+}
+
+.bf-theme-careplan-suite {
+  --bf-primary: oklch(0.50 0.14 110);
+  --bf-ring: oklch(0.50 0.14 110);
+}
+.dark .bf-theme-careplan-suite {
+  --bf-primary: oklch(0.66 0.14 110);
+  --bf-ring: oklch(0.66 0.14 110);
+}
+
+.bf-theme-analytics {
+  --bf-primary: oklch(0.55 0.16 330);
+  --bf-ring: oklch(0.55 0.16 330);
+}
+.dark .bf-theme-analytics {
+  --bf-primary: oklch(0.70 0.16 330);
+  --bf-ring: oklch(0.70 0.16 330);
+}
+
+.bf-theme-claims {
+  --bf-primary: oklch(0.55 0.16 95);
+  --bf-ring: oklch(0.55 0.16 95);
+}
+.dark .bf-theme-claims {
+  --bf-primary: oklch(0.70 0.16 95);
+  --bf-ring: oklch(0.70 0.16 95);
+}
+
+.bf-theme-clinical-record {
+  --bf-primary: oklch(0.53 0.13 165);
+  --bf-ring: oklch(0.53 0.13 165);
+}
+.dark .bf-theme-clinical-record {
+  --bf-primary: oklch(0.68 0.13 165);
+  --bf-ring: oklch(0.68 0.13 165);
+}
+
+.bf-theme-forms {
+  --bf-primary: oklch(0.55 0.14 310);
+  --bf-ring: oklch(0.55 0.14 310);
+}
+.dark .bf-theme-forms {
+  --bf-primary: oklch(0.70 0.14 310);
+  --bf-ring: oklch(0.70 0.14 310);
+}
+
+.bf-theme-alerts {
+  --bf-primary: oklch(0.55 0.15 335);
+  --bf-ring: oklch(0.55 0.15 335);
+}
+.dark .bf-theme-alerts {
+  --bf-primary: oklch(0.70 0.15 335);
+  --bf-ring: oklch(0.70 0.15 335);
+}
+
+.bf-theme-masters {
+  --bf-primary: oklch(0.55 0.05 250);
+  --bf-ring: oklch(0.55 0.05 250);
+}
+.dark .bf-theme-masters {
+  --bf-primary: oklch(0.70 0.05 250);
+  --bf-ring: oklch(0.70 0.05 250);
+}
+.bf-theme-hr {
+  --bf-primary: oklch(0.540 0.130 130);
+  --bf-ring: oklch(0.540 0.130 130);
+}
+.dark .bf-theme-hr {
+  --bf-primary: oklch(0.66 0.13 130);
+  --bf-ring: oklch(0.66 0.13 130);
+}
+
+.bf-theme-bulletin {
+  --bf-primary: oklch(0.57 0.17 15);
+  --bf-ring: oklch(0.57 0.17 15);
+}
+.dark .bf-theme-bulletin {
+  --bf-primary: oklch(0.70 0.15 15);
+  --bf-ring: oklch(0.70 0.15 15);
+}
+
+.bf-theme-closing {
+  --bf-primary: oklch(0.55 0.12 160);
+  --bf-ring: oklch(0.55 0.12 160);
+}
+.dark .bf-theme-closing {
+  --bf-primary: oklch(0.70 0.11 160);
+  --bf-ring: oklch(0.70 0.11 160);
+}
+
+.bf-theme-library {
+  --bf-primary: oklch(0.52 0.11 60);
+  --bf-ring: oklch(0.52 0.11 60);
+}
+.dark .bf-theme-library {
+  --bf-primary: oklch(0.70 0.11 60);
+  --bf-ring: oklch(0.70 0.11 60);
+}
+
+.bf-theme-piazza {
+  --bf-primary: oklch(0.58 0.13 290);
+  --bf-ring: oklch(0.58 0.13 290);
+}
+.dark .bf-theme-piazza {
+  --bf-primary: oklch(0.72 0.13 290);
+  --bf-ring: oklch(0.72 0.13 290);
+}

@@ -1,0 +1,76 @@
+
+.bf-hoverhint {
+  position: relative;
+  display: inline-flex;
+  max-width: 100%;
+  min-width: 0;
+}
+.bf-hoverhint[data-block] {
+  display: block;
+}
+.bf-hoverhint__target {
+  display: inline-flex;
+  max-width: 100%;
+  min-width: 0;
+}
+.bf-hoverhint[data-block] > .bf-hoverhint__target {
+  display: block;
+}
+.bf-hoverhint__bubble {
+  position: absolute;
+  inset-block-start: calc(100% + var(--bf-bubble-gap));
+  inset-inline-start: 50%;
+  transform: translateX(calc(-50% + var(--bf-bubble-shift, 0px)));
+  z-index: 30;
+  width: max-content;
+  max-width: min(20rem, 90vw);
+  padding: var(--bf-space-2) var(--bf-space-3);
+  font-size: var(--bf-font-xs);
+  font-weight: var(--bf-weight-normal, 400);
+  line-height: var(--bf-leading-normal);
+  text-align: start;
+  white-space: normal;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--bf-duration-fast) var(--bf-ease-standard) var(--bf-delay-hover);
+}
+@media (hover: hover) {
+  .bf-hoverhint:hover .bf-hoverhint__bubble {
+    opacity: 1;
+  }
+}
+.bf-hoverhint:focus-within .bf-hoverhint__bubble {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bf-hoverhint__bubble {
+    transition-duration: 0s;
+  }
+}
+
+@media (hover: hover) {
+  .bf-tile:hover > .bf-hoverhint__bubble {
+    opacity: 1;
+  }
+}
+.bf-tile:focus-visible > .bf-hoverhint__bubble {
+  opacity: 1;
+}
+
+.bf-sidebar__item {
+  position: relative;
+}
+.bf-sidebar__item > .bf-hoverhint__bubble {
+  max-width: calc(var(--bf-sidebar-w) - var(--bf-space-6));
+}
+@media (hover: hover) {
+  .bf-sidebar__item:hover > .bf-hoverhint__bubble {
+    opacity: 1;
+  }
+}
+.bf-sidebar__item:focus-visible > .bf-hoverhint__bubble {
+  opacity: 1;
+}
+.bf-sidebar--collapsed .bf-hoverhint__bubble {
+  display: none;
+}

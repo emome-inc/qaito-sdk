@@ -1,0 +1,81 @@
+
+.bf-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--bf-space-3);
+  width: 100%;
+  min-height: var(--bf-tap-min);
+  padding: var(--bf-space-2) 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: start;
+  font-size: var(--bf-font-base);
+  color: var(--bf-fg);
+}
+.bf-checkbox:not(:disabled):hover .bf-checkbox__box {
+  border-color: var(--bf-primary);
+}
+.bf-checkbox:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+.bf-checkbox:disabled:not([aria-checked="true"]):not([aria-checked="mixed"]) .bf-checkbox__box {
+  background: var(--bf-surface-2);
+}
+.bf-checkbox:disabled:is([aria-checked="true"], [aria-checked="mixed"]) .bf-checkbox__box {
+  background: var(--bf-muted-fg);
+  border-color: var(--bf-muted-fg);
+}
+
+.bf-checkbox__box {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--bf-font-base) * 1.25);
+  height: calc(var(--bf-font-base) * 1.25);
+  background: var(--bf-bg);
+  border: var(--bf-border-w-strong) solid var(--bf-control-border);
+  border-radius: var(--bf-radius-sm);
+  color: transparent;
+  font-size: var(--bf-font-base);
+  font-weight: var(--bf-weight-bold);
+}
+.bf-checkbox[aria-checked="true"] .bf-checkbox__box {
+  background: var(--bf-primary);
+  border-color: var(--bf-primary);
+  color: var(--bf-primary-fg);
+}
+
+.bf-checkbox[aria-checked="mixed"] .bf-checkbox__box {
+  background: var(--bf-primary);
+  border-color: var(--bf-primary);
+  color: var(--bf-primary-fg);
+}
+.bf-checkbox--bare[aria-checked="mixed"] {
+  background: transparent;
+}
+
+.bf-checkbox--bare {
+  width: auto;
+  min-width: var(--bf-tap-min);
+  min-height: var(--bf-tap-min);
+  justify-content: center;
+  padding: 0;
+  gap: 0;
+  background: transparent;
+  border: 0;
+}
+.bf-checkbox--bare:hover {
+  background: transparent;
+}
+.bf-checkbox--bare[aria-checked="true"] {
+  background: transparent;
+}
+
+.bf-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}

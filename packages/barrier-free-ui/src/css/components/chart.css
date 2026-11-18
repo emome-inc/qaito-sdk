@@ -1,0 +1,204 @@
+
+.bf-chart {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bf-space-2);
+  min-width: 0;
+}
+
+.bf-chart__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--bf-space-2) var(--bf-space-3);
+}
+.bf-chart__title {
+  font-size: var(--bf-font-base);
+  font-weight: var(--bf-weight-semibold);
+  line-height: var(--bf-leading-tight);
+  margin: 0;
+}
+.bf-chart__unit,
+.bf-chart__desc {
+  font-size: var(--bf-font-sm);
+  color: var(--bf-muted-fg);
+  margin: 0;
+}
+
+.bf-chart__plot {
+  position: relative;
+  width: 100%;
+  height: calc(var(--bf-chart-h, 14rem) * var(--bf-scale));
+  min-width: 0;
+}
+.bf-chart__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  font-family: var(--bf-font-family);
+  outline: none;
+}
+.bf-chart__svg:focus-visible {
+  outline: var(--bf-border-w-strong) solid var(--bf-ring);
+  outline-offset: 2px;
+}
+
+.bf-chart__tick {
+  font-size: var(--bf-font-xs);
+  fill: var(--bf-chart-muted);
+  font-variant-numeric: tabular-nums;
+}
+.bf-chart__label {
+  font-size: var(--bf-font-xs);
+  fill: var(--bf-chart-ink);
+  font-weight: var(--bf-weight-semibold);
+}
+.bf-chart__reflabel {
+  font-size: var(--bf-font-xs);
+  fill: var(--bf-chart-ref);
+}
+.bf-chart__markerlabel {
+  font-size: var(--bf-font-xs);
+  fill: var(--bf-chart-muted);
+}
+
+.bf-chart__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bf-space-2) var(--bf-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bf-chart__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bf-space-2);
+  font-size: var(--bf-font-sm);
+  color: var(--bf-fg);
+}
+.bf-chart__legend-key {
+  flex: 0 0 auto;
+  display: inline-block;
+  width: calc(1.25rem * var(--bf-scale));
+  height: calc(1.25rem * var(--bf-scale));
+}
+
+.bf-chart__tooltip {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  min-width: calc(7rem * var(--bf-scale));
+  max-width: calc(16rem * var(--bf-scale));
+  padding: var(--bf-space-2) var(--bf-space-3);
+  background: var(--bf-bg);
+  border: var(--bf-border-w) solid var(--bf-input-border);
+  box-shadow: var(--bf-shadow-overlay);
+  font-size: var(--bf-font-sm);
+  color: var(--bf-fg);
+}
+.bf-chart__tooltip-x {
+  display: block;
+  font-size: var(--bf-font-xs);
+  color: var(--bf-muted-fg);
+  margin-bottom: var(--bf-space-1);
+}
+.bf-chart__tooltip-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--bf-space-2);
+  white-space: nowrap;
+}
+.bf-chart__tooltip-key {
+  flex: 0 0 auto;
+  width: calc(0.75rem * var(--bf-scale));
+  height: 2px;
+}
+.bf-chart__tooltip-value {
+  font-weight: var(--bf-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+.bf-chart__tooltip-name {
+  color: var(--bf-muted-fg);
+  font-size: var(--bf-font-xs);
+}
+
+.bf-chart__table-details {
+  border-top: var(--bf-border-w) solid var(--bf-border);
+  padding-top: var(--bf-space-2);
+}
+.bf-chart__table-summary {
+  cursor: pointer;
+  font-size: var(--bf-font-sm);
+  color: var(--bf-muted-fg);
+  min-height: var(--bf-tap-min);
+  display: flex;
+  align-items: center;
+}
+.bf-chart__table-summary:focus-visible {
+  outline: var(--bf-border-w-strong) solid var(--bf-ring);
+  outline-offset: 2px;
+}
+.bf-chart__table-wrap {
+  overflow-x: auto;
+  max-height: calc(20rem * var(--bf-scale));
+}
+.bf-chart__table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: var(--bf-font-sm);
+}
+.bf-chart__table th,
+.bf-chart__table td {
+  border-bottom: var(--bf-border-w) solid var(--bf-border);
+  padding: var(--bf-space-2);
+  text-align: left;
+  white-space: nowrap;
+}
+.bf-chart__table td {
+  font-variant-numeric: tabular-nums;
+}
+.bf-chart__table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--bf-bg);
+  font-weight: var(--bf-weight-semibold);
+}
+
+.bf-chart__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: var(--bf-space-6);
+  border: var(--bf-border-w) dashed var(--bf-border);
+  color: var(--bf-muted-fg);
+  font-size: var(--bf-font-sm);
+  text-align: center;
+}
+
+.bf-sparkline {
+  display: block;
+  width: 100%;
+  height: calc(var(--bf-spark-h, 2rem) * var(--bf-scale));
+  overflow: visible;
+}
+
+.bf-chart[data-loading="true"] .bf-chart__plot {
+  opacity: 0.5;
+}
+
+.bf-chart__hit {
+  fill: transparent;
+  cursor: crosshair;
+}
+.bf-chart__mark {
+  transition: opacity var(--bf-duration-fast) var(--bf-ease-standard);
+}
+@media (prefers-reduced-motion: reduce) {
+  .bf-chart__mark,
+  .bf-chart__plot {
+    transition: none !important;
+  }
+}

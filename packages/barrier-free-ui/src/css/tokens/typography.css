@@ -1,0 +1,20 @@
+
+:root {
+  --bf-font-family:
+    "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", "Yu Gothic",
+    Meiryo, system-ui, sans-serif;
+  --bf-font-family-mono: "SFMono-Regular", "Consolas", "Liberation Mono", Menlo,
+    monospace;
+
+  --bf-weight-normal: 400;
+  --bf-weight-medium: 500;
+  --bf-weight-semibold: 600;
+  --bf-weight-bold: 700;
+
+  --bf-leading-tight: 1.35;
+  --bf-leading-normal: 1.6;
+  --bf-leading-relaxed: 1.8;
+
+  --bf-tracking-normal: 0;
+  --bf-tracking-wide: 0.01em;
+}

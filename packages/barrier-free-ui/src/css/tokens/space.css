@@ -1,0 +1,18 @@
+
+:root {
+  --bf-field-gap: var(--bf-space-4); 
+  --bf-label-gap: var(--bf-space-1); 
+  --bf-section-gap: var(--bf-space-8); 
+  --bf-inline-gap: var(--bf-space-3); 
+
+  --bf-pad-control: var(--bf-space-3); 
+  --bf-pad-card: var(--bf-space-5); 
+  --bf-pad-content: var(--bf-space-6); 
+
+  --bf-content-max: 64rem; 
+  --bf-measure: 48rem; 
+  --bf-content-narrow: 44rem; 
+
+  --bf-border-w: 1px;
+  --bf-border-w-strong: 2px; 
+}

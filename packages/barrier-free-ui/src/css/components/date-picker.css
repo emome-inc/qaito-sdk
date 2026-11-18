@@ -1,0 +1,47 @@
+
+.bf-datepicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bf-space-2);
+  align-items: flex-start;
+}
+
+.bf-datepicker__col {
+  flex: 1 1 0;
+  min-width: calc(var(--bf-space-2) * 3 + var(--bf-font-base) * 2.4 + var(--bf-icon) + var(--bf-border-w) * 2);
+}
+
+.bf-datepicker__col--year {
+  flex: 1.4 1 0;
+  min-width: calc(var(--bf-space-2) * 3 + var(--bf-font-base) * 3.6 + var(--bf-icon) + var(--bf-border-w) * 2);
+}
+
+.bf-datepicker[data-era="true"] .bf-datepicker__col--year {
+  min-width: calc(var(--bf-space-2) * 3 + var(--bf-font-base) * 7.8 + var(--bf-icon) + var(--bf-border-w) * 2);
+}
+.bf-datepicker__md {
+  display: flex;
+  gap: var(--bf-space-2);
+  flex: 2 1 0;
+  min-width: calc((var(--bf-space-2) * 3 + var(--bf-font-base) * 2.4 + var(--bf-icon) + var(--bf-border-w) * 2) * 2 + var(--bf-space-2));
+}
+
+.bf-datepicker .bf-select__trigger {
+  padding-inline: var(--bf-space-2);
+}
+
+.bf-yearmonth-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bf-space-2);
+}
+
+.bf-yearmonth-nav > .bf-button {
+  padding-inline: 0;
+}
+
+.bf-yearmonth-nav__select {
+  min-width: 10rem;
+  font-size: var(--bf-font-lg);
+  font-weight: 700;
+}

@@ -1,0 +1,40 @@
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.bf-root {
+  font-family: var(--bf-font-family);
+  font-size: var(--bf-font-base);
+  line-height: var(--bf-leading-normal);
+  color: var(--bf-fg);
+  background: var(--bf-bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.bf-root button,
+.bf-root input,
+.bf-root select,
+.bf-root textarea {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+[class*="bf-"] {
+  border-radius: var(--bf-radius);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [class*="bf-"],
+  [class*="bf-"]::before,
+  [class*="bf-"]::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

@@ -1,0 +1,61 @@
+
+:root {
+  --bf-primary: oklch(0.528 0.096 248.8); 
+  --bf-primary-fg: oklch(1 0 0);
+  --bf-secondary: oklch(0.650 0.073 178.0); 
+  --bf-secondary-fg: oklch(1 0 0);
+  --bf-accent: oklch(0.593 0.117 301.7); 
+  --bf-accent-fg: oklch(1 0 0);
+
+  --bf-success: oklch(0.620 0.130 150); 
+  --bf-success-fg: oklch(1 0 0);
+  --bf-danger: oklch(0.577 0.245 27.325); 
+  --bf-danger-fg: oklch(1 0 0);
+  --bf-warning: oklch(0.700 0.150 70); 
+  --bf-warning-fg: oklch(0.205 0 0);
+  --bf-info: oklch(0.520 0.110 215); 
+  --bf-info-fg: oklch(1 0 0);
+
+  --bf-fg: oklch(0.205 0 0);
+  --bf-muted-fg: oklch(0.45 0 0);
+  --bf-bg: oklch(1 0 0);
+  --bf-surface: oklch(0.985 0 0); 
+  --bf-surface-2: oklch(0.97 0 0); 
+  --bf-border: oklch(0.90 0 0);
+  --bf-input-border: oklch(0.80 0 0);
+  --bf-control-border: oklch(0.62 0 0);
+  --bf-ring: var(--bf-primary);
+
+  --bf-hover-bg: color-mix(in oklch, var(--bf-fg) 5%, transparent);
+
+  --bf-success-bg: color-mix(in oklch, var(--bf-success) 8%, transparent);
+  --bf-danger-bg: color-mix(in oklch, var(--bf-danger) 8%, transparent);
+  --bf-warning-bg: color-mix(in oklch, var(--bf-warning) 10%, transparent);
+}
+
+.dark {
+  --bf-primary: oklch(0.650 0.096 248.8);
+  --bf-primary-fg: oklch(0.205 0 0);
+  --bf-secondary: oklch(0.750 0.073 178.0);
+  --bf-secondary-fg: oklch(0.205 0 0);
+  --bf-accent: oklch(0.700 0.117 301.7);
+  --bf-accent-fg: oklch(0.205 0 0);
+
+  --bf-success: oklch(0.700 0.130 150);
+  --bf-success-fg: oklch(0.205 0 0);
+  --bf-danger: oklch(0.704 0.191 22.216);
+  --bf-danger-fg: oklch(0.205 0 0);
+  --bf-warning: oklch(0.780 0.150 70);
+  --bf-warning-fg: oklch(0.205 0 0);
+  --bf-info: oklch(0.740 0.110 215);
+  --bf-info-fg: oklch(0.205 0 0);
+
+  --bf-fg: oklch(0.95 0.003 70);
+  --bf-muted-fg: oklch(0.73 0.004 70);
+  --bf-bg: oklch(0.255 0.006 70);
+  --bf-surface: oklch(0.295 0.006 70);
+  --bf-surface-2: oklch(0.345 0.007 70);
+  --bf-border: oklch(1 0 0 / 15%);
+  --bf-input-border: oklch(1 0 0 / 26%);
+  --bf-control-border: oklch(0.58 0.004 70); 
+}

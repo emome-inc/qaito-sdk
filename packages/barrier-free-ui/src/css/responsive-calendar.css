@@ -1,0 +1,12 @@
+.bf-responsive-calendar{min-width:0}
+.bf-responsive-calendar header{display:flex;align-items:center;gap:var(--bf-space-1);margin-bottom:var(--bf-space-2)}
+.bf-responsive-calendar header strong{flex:1;font-size:var(--bf-font-sm)}
+.bf-responsive-calendar__grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));row-gap:var(--bf-space-1);align-items:center;text-align:center}
+.bf-responsive-calendar__weekday{font-size:var(--bf-font-xs);color:var(--bf-muted-fg);padding-block:var(--bf-space-1)}
+.bf-responsive-calendar__date{display:flex;align-items:center;justify-content:center;min-height:var(--bf-tap-min);border-radius:var(--bf-radius-sm);font-size:var(--bf-font-sm);color:var(--bf-fg);text-decoration:none;border:var(--bf-border-w) solid transparent}
+.bf-responsive-calendar__date[data-outside="true"]{color:var(--bf-muted-fg)}
+.bf-responsive-calendar__date[aria-current="date"]{border-color:var(--bf-primary);font-weight:700}
+.bf-responsive-calendar__date:hover{background:var(--bf-surface-2)}
+.bf-responsive-calendar__date[data-selected="true"]{background:var(--bf-primary);color:var(--bf-primary-fg);font-weight:700}
+.bf-responsive-calendar__date:focus-visible{outline:2px solid var(--bf-primary);outline-offset:2px}
+@media(max-width:40rem){.bf-responsive-calendar[data-expanded="false"] .bf-responsive-calendar__cell:not(.bf-responsive-calendar__cell--week){display:none}}

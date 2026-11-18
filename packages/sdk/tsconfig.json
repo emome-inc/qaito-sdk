@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@qaito/schemas": ["../../internal/schemas/src/index.ts"],
+      "@qaito/schemas/*": ["../../internal/schemas/src/*"],
+      "@qaito/vocabulary/*": ["../../internal/vocabulary/src/*"]
+    }
+  },
+  "include": ["src"]
+}

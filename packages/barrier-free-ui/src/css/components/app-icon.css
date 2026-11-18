@@ -1,0 +1,39 @@
+.bf-app-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bf-fg);
+}
+
+.bf-app-icon--logo {
+  position: relative;
+}
+.bf-app-icon--logo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 var(--bf-border-w) var(--bf-border);
+  pointer-events: none;
+}
+
+.bf-app-icon--plate {
+  background: color-mix(in oklch, var(--bf-app-color, var(--bf-muted-fg)) 18%, var(--bf-bg));
+}
+
+.bf-app-icon--solid {
+  background: var(--bf-app-color, var(--bf-muted-fg));
+  color: #fff;
+}
+
+.bf-app-icon--muted {
+  color: var(--bf-muted-fg);
+}
+.bf-app-icon--solid.bf-app-icon--muted {
+  background: color-mix(in oklch, var(--bf-muted-fg) 55%, var(--bf-bg));
+  color: #fff;
+}
+.bf-app-icon--muted > img {
+  filter: grayscale(1);
+  opacity: 0.6;
+}

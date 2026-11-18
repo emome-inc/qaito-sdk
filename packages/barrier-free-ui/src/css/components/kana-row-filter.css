@@ -1,0 +1,38 @@
+
+.bf-kana-rows {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--bf-space-1);
+}
+.bf-kana-rows__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--bf-tap-min);
+  min-height: var(--bf-tap-min);
+  padding: 0 var(--bf-space-2);
+  font-size: var(--bf-font-base);
+  font-weight: var(--bf-weight-bold);
+  line-height: 1;
+  color: var(--bf-fg);
+  background: var(--bf-bg);
+  border: var(--bf-border-w) solid var(--bf-control-border, var(--bf-border));
+  border-radius: var(--bf-radius-sm);
+  cursor: pointer;
+  transition: background-color var(--bf-duration-fast) var(--bf-ease-standard),
+    border-color var(--bf-duration-fast) var(--bf-ease-standard);
+}
+.bf-kana-rows__btn:hover {
+  background: var(--bf-hover-bg);
+}
+.bf-kana-rows__btn[aria-pressed="true"] {
+  color: var(--bf-primary-fg);
+  background: var(--bf-primary);
+  border-color: var(--bf-primary);
+  font-weight: var(--bf-weight-bold);
+}
+.bf-kana-rows__btn:focus-visible {
+  outline: var(--bf-focus-ring-w, 3px) solid var(--bf-focus-ring, var(--bf-primary));
+  outline-offset: 2px;
+}

@@ -1,0 +1,26 @@
+
+:root {
+  --bf-duration-instant: 90ms;
+  --bf-duration-fast: 140ms;
+  --bf-duration-base: 200ms;
+  --bf-duration-slow: 280ms;
+
+  --bf-delay-hover: 150ms;
+
+  --bf-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --bf-ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --bf-ease-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+
+  --bf-motion-shift: calc(0.75rem * var(--bf-scale, 1));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --bf-duration-instant: 0.01ms;
+    --bf-duration-fast: 0.01ms;
+    --bf-duration-base: 0.01ms;
+    --bf-duration-slow: 0.01ms;
+    --bf-delay-hover: 0ms;
+    --bf-motion-shift: 0px;
+  }
+}

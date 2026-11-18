@@ -1,0 +1,41 @@
+.bf-op-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bf-space-1);
+  min-height: var(--bf-tap-min);
+  padding: 0 var(--bf-space-3);
+  border: var(--bf-border-w) solid var(--bf-border);
+  border-radius: var(--bf-radius-sm);
+  background: var(--bf-surface);
+  color: var(--bf-muted-fg);
+  font-size: var(--bf-font-sm);
+  line-height: 1.2;
+  cursor: pointer;
+}
+.bf-op-toggle__icon {
+  width: 1.1em;
+  height: 1.1em;
+  flex-shrink: 0;
+}
+.bf-op-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.bf-op-toggle[aria-pressed="true"] {
+  font-weight: var(--bf-weight-bold);
+}
+.bf-op-toggle[data-op="read"][aria-pressed="true"] {
+  color: var(--bf-surface);
+  background: var(--bf-fg);
+  border-color: var(--bf-fg);
+}
+.bf-op-toggle[data-op="write"][aria-pressed="true"] {
+  color: var(--bf-primary-fg);
+  background: var(--bf-primary);
+  border-color: var(--bf-primary);
+}
+.bf-op-toggle[data-op="delete"][aria-pressed="true"] {
+  color: var(--bf-danger-fg);
+  background: var(--bf-danger);
+  border-color: var(--bf-danger);
+}

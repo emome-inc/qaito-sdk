@@ -1,0 +1,33 @@
+
+@keyframes bf-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes bf-enter-up {
+  from { opacity: 0; transform: translateY(var(--bf-motion-shift)); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes bf-enter-right {
+  from { opacity: 0; clip-path: inset(0 0 0 100%); }
+  to { opacity: 1; clip-path: inset(0 0 0 0); }
+}
+
+@keyframes bf-slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.bf-page-enter {
+  animation: bf-fade-in var(--bf-duration-base) var(--bf-ease-decelerate) backwards;
+}
+.bf-enter-fade {
+  animation: bf-fade-in var(--bf-duration-base) var(--bf-ease-standard) backwards;
+}
+.bf-enter-up {
+  animation: bf-enter-up var(--bf-duration-base) var(--bf-ease-decelerate) backwards;
+}
+.bf-enter-right {
+  animation: bf-enter-right var(--bf-duration-slow) var(--bf-ease-decelerate) backwards;
+}

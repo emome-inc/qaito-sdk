@@ -1,0 +1,20 @@
+
+.bf-kana-initial {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2em;
+  height: 2em;
+  margin-inline-end: var(--bf-space-2);
+  font-size: var(--bf-font-base);
+  font-weight: var(--bf-weight-bold);
+  line-height: 1;
+  color: var(--bf-primary);
+  background: color-mix(in srgb, var(--bf-primary) 12%, var(--bf-bg));
+  border-radius: var(--bf-radius-sm);
+  vertical-align: middle;
+}
+.bf-kana-initial[data-empty] {
+  background: transparent;
+}

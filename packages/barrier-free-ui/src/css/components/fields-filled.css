@@ -1,0 +1,8 @@
+[data-fields="filled"] :is(.bf-input, .bf-textarea, .bf-select__trigger, .bf-datefield__chip, .bf-timefield__input) {
+  background: var(--bf-surface-2);
+  border-color: transparent;
+  border-bottom-color: var(--bf-control-border);
+}
+[data-fields="filled"] :is(.bf-input, .bf-textarea, .bf-select__trigger, .bf-datefield__chip, .bf-timefield__input):hover:not(:disabled) {
+  background: color-mix(in oklch, var(--bf-surface-2) 85%, var(--bf-fg));
+}

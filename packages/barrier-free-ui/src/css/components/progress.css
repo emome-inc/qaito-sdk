@@ -1,0 +1,147 @@
+
+.bf-progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bf-space-1);
+}
+.bf-progress__bar {
+  height: calc(var(--bf-space-2) * 1.5);
+  background: var(--bf-surface-2);
+  border: var(--bf-border-w) solid var(--bf-border);
+  overflow: hidden;
+}
+.bf-progress__fill {
+  height: 100%;
+  background: var(--bf-primary);
+  transition: width var(--bf-duration-base) var(--bf-ease-standard);
+}
+.bf-progress__label {
+  font-size: var(--bf-font-sm);
+  color: var(--bf-muted-fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.bf-spinner {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bf-space-2);
+  font-size: var(--bf-font-base);
+  color: var(--bf-muted-fg);
+}
+.bf-spinner__ring {
+  width: var(--bf-icon);
+  height: var(--bf-icon);
+  border: var(--bf-border-w-strong) solid var(--bf-border);
+  border-top-color: var(--bf-primary);
+  border-radius: var(--bf-radius-circle);
+  animation: bf-spin 0.7s linear infinite;
+}
+@keyframes bf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bf-spinner__ring {
+    animation-duration: 2s;
+  }
+}
+
+.bf-skeleton {
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklch, var(--bf-fg) 8%, transparent) 25%,
+    color-mix(in oklch, var(--bf-fg) 4%, transparent) 50%,
+    color-mix(in oklch, var(--bf-fg) 8%, transparent) 75%
+  );
+  background-size: 200% 100%;
+  height: var(--bf-font-base);
+  border-radius: var(--bf-radius-sm);
+  opacity: 0;
+  animation:
+    bf-shimmer 1.2s ease-in-out infinite,
+    bf-skeleton-appear 0s linear 150ms forwards;
+}
+.bf-skeleton--circle {
+  border-radius: var(--bf-radius-circle);
+}
+.bf-skeleton--block {
+  border-radius: var(--bf-radius-md);
+}
+@keyframes bf-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.bf-page-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bf-space-5);
+  opacity: 0;
+  animation: bf-skeleton-appear 0s linear 150ms forwards;
+}
+@keyframes bf-skeleton-appear {
+  to {
+    opacity: 1;
+  }
+}
+.bf-page-skeleton .bf-skeleton {
+  display: block;
+}
+.bf-page-skeleton__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bf-space-2);
+}
+.bf-page-skeleton__title {
+  width: 32%;
+  height: var(--bf-font-title);
+}
+.bf-page-skeleton__desc {
+  width: 56%;
+  height: var(--bf-font-sm);
+}
+.bf-page-skeleton__table {
+  display: flex;
+  flex-direction: column;
+  border-top: var(--bf-border-w) solid var(--bf-border);
+}
+.bf-page-skeleton__row {
+  display: grid;
+  grid-template-columns: 34% 24% 22% 1fr;
+  gap: var(--bf-space-4);
+  align-items: center;
+  min-height: var(--bf-line-h);
+  padding-inline: var(--bf-space-2);
+  border-bottom: var(--bf-border-w) solid var(--bf-border);
+}
+.bf-page-skeleton__row--head {
+  background: var(--bf-surface);
+}
+.bf-page-skeleton__cell {
+  height: var(--bf-font-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bf-skeleton {
+    animation: none;
+    opacity: 1;
+    background: color-mix(in oklch, var(--bf-fg) 8%, transparent);
+  }
+  .bf-page-skeleton {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bf-progress__fill--animated {
+    background-image: repeating-linear-gradient(135deg, transparent 0 8px, rgb(255 255 255 / 24%) 8px 16px);
+    background-size: 23px 23px;
+    animation: bf-progress-stripes 0.9s linear infinite;
+  }
+}
+@keyframes bf-progress-stripes {
+  to { background-position: 23px 0; }
+}

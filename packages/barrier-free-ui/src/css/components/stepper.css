@@ -1,0 +1,46 @@
+
+.bf-stepper {
+  display: inline-flex;
+  align-items: stretch;
+  gap: var(--bf-space-2);
+}
+
+.bf-stepper__btn {
+  width: var(--bf-control-h);
+  height: var(--bf-control-h);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--bf-font-xl);
+  font-weight: var(--bf-weight-bold);
+  color: var(--bf-fg);
+  background: var(--bf-surface);
+  border: var(--bf-border-w-strong) solid var(--bf-border);
+  cursor: pointer;
+  user-select: none;
+}
+.bf-stepper__btn:hover:not(:disabled) {
+  background: var(--bf-hover-bg);
+}
+.bf-stepper__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.bf-stepper__value {
+  width: calc(var(--bf-control-h) * 1.6);
+  height: var(--bf-control-h);
+  text-align: center;
+  font-size: var(--bf-font-lg);
+  font-weight: var(--bf-weight-semibold);
+  color: var(--bf-fg);
+  background: var(--bf-bg);
+  border: var(--bf-border-w) solid var(--bf-control-border);
+  border-radius: var(--bf-radius-control);
+  -moz-appearance: textfield;
+}
+.bf-stepper__value::-webkit-outer-spin-button,
+.bf-stepper__value::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

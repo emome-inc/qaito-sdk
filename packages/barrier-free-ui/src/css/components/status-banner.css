@@ -1,0 +1,29 @@
+
+.bf-statusbanner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  padding: var(--bf-space-3) var(--bf-space-4);
+  background: var(--bf-surface);
+  border: var(--bf-border-w) solid var(--bf-border);
+}
+.bf-statusbanner__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bf-space-1);
+  padding-inline: var(--bf-space-4);
+  border-inline-start: var(--bf-border-w) solid var(--bf-border);
+}
+.bf-statusbanner__item:first-child {
+  border-inline-start: 0;
+  padding-inline-start: 0;
+}
+.bf-statusbanner__label {
+  font-size: var(--bf-font-sm);
+  color: var(--bf-muted-fg);
+}
+.bf-statusbanner__value {
+  font-size: var(--bf-font-lg);
+  font-weight: var(--bf-weight-semibold);
+  color: var(--bf-fg);
+}

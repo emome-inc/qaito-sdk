@@ -1,0 +1,64 @@
+
+.bf-root :focus-visible,
+[class*="bf-"]:focus-visible {
+  outline: var(--bf-border-w-strong) solid var(--bf-ring);
+  outline-offset: 2px;
+}
+
+:is(.bf-input, .bf-textarea, .bf-select__trigger, .bf-stepper__value, .bf-otp__box, .bf-datefield__chip, .bf-timefield__input):focus-visible,
+.bf-taginput:focus-within {
+  outline: var(--bf-border-w-strong) solid transparent;
+  outline-offset: calc(var(--bf-border-w) * -1);
+  border-color: var(--bf-ring);
+  box-shadow: inset 0 0 0 1px var(--bf-ring);
+}
+:is(.bf-input, .bf-textarea)[aria-invalid="true"]:focus-visible {
+  border-color: var(--bf-danger);
+  box-shadow: inset 0 0 0 1px var(--bf-danger);
+}
+
+@media (prefers-contrast: more) {
+  .bf-root :focus-visible,
+  [class*="bf-"]:focus-visible {
+    outline-width: 3px;
+  }
+  :is(.bf-input, .bf-textarea, .bf-select__trigger, .bf-stepper__value, .bf-otp__box, .bf-datefield__chip, .bf-timefield__input):focus-visible,
+  .bf-taginput:focus-within {
+    box-shadow: inset 0 0 0 2px var(--bf-ring);
+  }
+}
+
+.bf-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.bf-skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+}
+.bf-skip-link:focus-visible {
+  left: 0;
+  padding: var(--bf-space-3) var(--bf-space-4);
+  background: var(--bf-bg);
+  color: var(--bf-fg);
+  border: var(--bf-border-w-strong) solid var(--bf-ring);
+}
+
+.bf-link {
+  color: var(--bf-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+.bf-link:hover {
+  text-decoration-thickness: 2px;
+}

@@ -1,0 +1,119 @@
+
+.bf-photogrid {
+  --bf-photogrid-min: calc(7.5rem * var(--bf-scale, 1));
+  --bf-photogrid-gap: var(--bf-space-2);
+  max-block-size: var(--bf-photogrid-max-h, min(60vh, 36rem));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--bf-space-1);
+}
+.bf-photogrid[data-size="sm"] { --bf-photogrid-min: calc(5.5rem * var(--bf-scale, 1)); }
+.bf-photogrid[data-size="lg"] { --bf-photogrid-min: calc(10rem * var(--bf-scale, 1)); }
+
+.bf-photogrid__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--bf-photogrid-min), 1fr));
+  gap: var(--bf-photogrid-gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bf-photogrid__item {
+  min-width: 0;
+}
+
+.bf-photogrid__tile {
+  position: relative;
+  display: block;
+  inline-size: 100%;
+  aspect-ratio: 3 / 4;
+  padding: 0;
+  overflow: hidden;
+  background: var(--bf-surface-2);
+  border: var(--bf-border-w) solid var(--bf-border);
+  border-radius: var(--bf-radius-sm);
+  cursor: pointer;
+  transition: border-color var(--bf-duration-fast) var(--bf-ease-standard);
+}
+.bf-photogrid[data-ratio="square"] .bf-photogrid__tile { aspect-ratio: 1 / 1; }
+.bf-photogrid[data-ratio="landscape"] .bf-photogrid__tile { aspect-ratio: 4 / 3; }
+.bf-photogrid__tile:hover:not(:disabled) {
+  border-color: var(--bf-primary);
+}
+.bf-photogrid__tile[aria-pressed="true"] {
+  border-color: var(--bf-primary);
+  outline: calc(var(--bf-border-w) * 2) solid var(--bf-primary);
+  outline-offset: 0;
+}
+.bf-photogrid__tile:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.bf-photogrid__img {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.bf-photogrid__tile[data-unavailable]:disabled {
+  opacity: 1;
+}
+.bf-photogrid__unavailable {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--bf-space-1);
+  block-size: 100%;
+  padding: var(--bf-space-2);
+  font-size: var(--bf-font-xs);
+  color: var(--bf-muted-fg);
+  text-align: center;
+}
+
+.bf-photogrid__caption {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  padding: var(--bf-space-1) var(--bf-space-2);
+  font-size: var(--bf-font-xs);
+  line-height: 1.3;
+  color: #fff;
+  text-align: start;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: linear-gradient(to top, color-mix(in oklch, #000 65%, transparent), transparent);
+}
+
+.bf-photogrid__mark {
+  position: absolute;
+  inset-block-start: var(--bf-space-1);
+  inset-inline-end: var(--bf-space-1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: calc(1.5rem * var(--bf-scale, 1));
+  block-size: calc(1.5rem * var(--bf-scale, 1));
+  padding-inline: var(--bf-space-1);
+  font-size: var(--bf-font-sm);
+  font-weight: 700;
+  color: var(--bf-primary-fg);
+  background: var(--bf-primary);
+  border-radius: var(--bf-radius-circle);
+  box-shadow: 0 0 0 2px var(--bf-bg);
+}
+
+.bf-photogrid__sentinel {
+  block-size: 1px;
+}
+
+.bf-photogrid__loading,
+.bf-photogrid__footer {
+  display: flex;
+  justify-content: center;
+  padding-block: var(--bf-space-3);
+}

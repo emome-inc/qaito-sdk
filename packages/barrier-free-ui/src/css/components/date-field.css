@@ -1,0 +1,239 @@
+
+.bf-datefield,
+.bf-timefield {
+  position: relative;
+  display: inline-block;
+  font-size: var(--bf-font-base);
+}
+
+.bf-datefield__chip,
+.bf-timefield__input {
+  height: var(--bf-control-h);
+  padding-inline: var(--bf-pad-control);
+  color: var(--bf-fg);
+  background: var(--bf-bg);
+  border: var(--bf-border-w) solid var(--bf-control-border);
+  border-radius: var(--bf-radius-control);
+  white-space: nowrap;
+}
+.bf-datefield .bf-datefield__chip,
+.bf-timefield .bf-timefield__input {
+  padding-block: 0;
+  line-height: calc(var(--bf-control-h) - var(--bf-border-w) * 2);
+}
+.bf-datefield .bf-datefield__chip {
+  padding-block: 2px 0;
+  line-height: calc(var(--bf-control-h) - var(--bf-border-w) * 2 - 2px);
+}
+.bf-timefield .bf-timefield__input {
+  padding-block: 0 2px;
+  line-height: calc(var(--bf-control-h) - var(--bf-border-w) * 2 - 2px);
+}
+.bf-datefield__chip {
+  cursor: pointer;
+  text-align: start;
+}
+.bf-datefield__chip[data-placeholder="true"] {
+  color: var(--bf-muted-fg);
+}
+.bf-timefield__input {
+  inline-size: calc(var(--bf-font-base) * 5.5 + var(--bf-pad-control) * 2);
+}
+.bf-timefield__input::placeholder {
+  color: var(--bf-muted-fg);
+  opacity: 1;
+}
+.bf-timefield__box {
+  position: relative;
+  display: inline-block;
+}
+.bf-timefield__box .bf-timefield__input {
+  padding-inline: calc(var(--bf-pad-control) + var(--bf-icon) + var(--bf-space-2));
+  inline-size: calc(var(--bf-font-base) * 5.5 + (var(--bf-pad-control) + var(--bf-icon) + var(--bf-space-2)) * 2);
+  cursor: pointer;
+}
+.bf-timefield__clock,
+.bf-timefield__caret {
+  position: absolute;
+  top: 0;
+  display: inline-flex;
+  align-items: center;
+  inline-size: var(--bf-icon);
+  block-size: var(--bf-control-h);
+  color: var(--bf-muted-fg);
+  pointer-events: none;
+}
+.bf-timefield__clock {
+  inset-inline-start: var(--bf-pad-control);
+}
+.bf-timefield__caret {
+  inset-inline-end: var(--bf-pad-control);
+}
+.bf-timefield__caret > svg {
+  transition: transform var(--bf-duration-fast) var(--bf-ease-standard);
+}
+.bf-timefield__input[aria-expanded="true"] ~ .bf-timefield__caret > svg {
+  transform: rotate(180deg);
+}
+.bf-datefield__chip:disabled,
+.bf-timefield__input:disabled {
+  background: var(--bf-surface-2);
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.bf-datefield__panel,
+.bf-timefield__panel {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 100%;
+  margin-top: var(--bf-space-1);
+  z-index: 40;
+  border: var(--bf-border-w) solid var(--bf-control-border);
+  border-radius: var(--bf-radius-control);
+  background: var(--bf-bg);
+  box-shadow: var(--bf-shadow-raised);
+}
+
+.bf-datefield__panel {
+  padding: var(--bf-space-3) var(--bf-space-3) var(--bf-space-2);
+  border-color: var(--bf-border);
+  border-radius: var(--bf-radius-md);
+  box-shadow: var(--bf-shadow-overlay);
+}
+.bf-datefield__head {
+  display: flex;
+  align-items: center;
+  gap: var(--bf-space-1);
+  margin-block-end: var(--bf-space-1);
+  padding-inline-start: var(--bf-space-2);
+}
+.bf-datefield__panel[data-placement="up"] {
+  top: auto;
+  bottom: 100%;
+  margin-top: 0;
+  margin-bottom: var(--bf-space-1);
+}
+.bf-datefield__month {
+  order: -1;
+  flex: 1;
+  font-size: var(--bf-font-base);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.bf-datefield__nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--bf-control-h);
+  block-size: var(--bf-control-h);
+  color: var(--bf-muted-fg);
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.bf-datefield__nav:hover {
+  color: var(--bf-fg);
+  background: var(--bf-hover-bg);
+}
+.bf-datefield__nav:focus-visible {
+  outline: 3px solid var(--bf-focus, var(--bf-primary));
+  outline-offset: -3px;
+}
+.bf-datefield__nav > svg {
+  inline-size: 20px;
+  block-size: 20px;
+}
+.bf-datefield__row {
+  display: grid;
+  grid-template-columns: repeat(7, var(--bf-control-h));
+}
+.bf-datefield__dow {
+  text-align: center;
+  font-size: var(--bf-font-xs);
+  color: var(--bf-muted-fg);
+  padding-block: var(--bf-space-1);
+}
+.bf-datefield__row:first-child > .bf-datefield__dow:first-child { color: var(--bf-danger); }
+.bf-datefield__row:first-child > .bf-datefield__dow:last-child { color: var(--bf-info, var(--bf-primary)); }
+.bf-datefield__day {
+  position: relative;
+  isolation: isolate;
+  display: inline-grid;
+  place-items: center;
+  inline-size: var(--bf-control-h);
+  block-size: var(--bf-control-h);
+  padding: 0;
+  font-size: var(--bf-font-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--bf-fg);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.bf-datefield__day::before {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  inline-size: calc(var(--bf-control-h) * 0.78);
+  block-size: calc(var(--bf-control-h) * 0.78);
+  translate: -50% -50%;
+  border-radius: 50%;
+  z-index: -1;
+}
+.bf-datefield__day:hover::before {
+  background: var(--bf-hover-bg);
+}
+.bf-datefield__day:focus-visible {
+  outline: none;
+}
+.bf-datefield__day:focus-visible::before {
+  box-shadow: 0 0 0 3px var(--bf-focus, var(--bf-primary));
+}
+.bf-datefield__day[data-outside="true"] {
+  color: color-mix(in oklch, var(--bf-muted-fg) 70%, transparent);
+}
+.bf-datefield__day[data-today="true"] {
+  font-weight: var(--bf-weight-bold);
+  color: var(--bf-primary);
+}
+.bf-datefield__day[data-today="true"]::before {
+  box-shadow: inset 0 0 0 2px var(--bf-primary);
+}
+.bf-datefield__day[data-selected="true"] {
+  color: var(--bf-primary-fg);
+  font-weight: var(--bf-weight-bold);
+}
+.bf-datefield__day[data-selected="true"]::before {
+  background: var(--bf-primary);
+}
+
+.bf-timefield__panel {
+  min-inline-size: 100%;
+  inline-size: max-content;
+  max-block-size: calc(var(--bf-control-h) * 6);
+  overflow-y: auto;
+  padding-block: var(--bf-space-1);
+}
+.bf-timefield__option {
+  display: flex;
+  align-items: center;
+  gap: var(--bf-space-2);
+  min-block-size: var(--bf-tap-min);
+  padding: var(--bf-space-2) var(--bf-pad-control);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.bf-timefield__option[data-highlighted="true"] {
+  background: var(--bf-hover-bg);
+}
+.bf-timefield__option[aria-selected="true"] {
+  color: var(--bf-primary);
+  background: color-mix(in oklch, var(--bf-primary) 14%, transparent);
+  font-weight: var(--bf-weight-bold);
+}
+.bf-timefield__note {
+  color: var(--bf-muted-fg);
+  font-size: var(--bf-font-sm);
+}

@@ -1,0 +1,123 @@
+
+.bf-tooltip__bubble,
+.bf-hoverhint__bubble,
+.bf-flow-hint {
+  --bf-bubble-arrow: calc(0.625rem * var(--bf-scale, 1));
+  --bf-bubble-gap: calc(var(--bf-bubble-arrow) * 0.71 + 2px);
+  color: var(--bf-fg);
+  background: var(--bf-bg);
+  border: var(--bf-border-w) solid var(--bf-input-border);
+  border-radius: var(--bf-radius-md);
+  box-shadow: var(--bf-shadow-overlay);
+}
+
+.bf-tooltip__bubble::after,
+.bf-hoverhint__bubble::after,
+.bf-flow-hint::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: clamp(
+    calc(var(--bf-radius-md) + var(--bf-bubble-arrow)),
+    calc(50% - var(--bf-bubble-shift, 0px)),
+    calc(100% - var(--bf-radius-md) - var(--bf-bubble-arrow))
+  );
+  width: var(--bf-bubble-arrow);
+  height: var(--bf-bubble-arrow);
+  background: var(--bf-bg);
+  border: 0 solid var(--bf-input-border);
+}
+.bf-tooltip__bubble::after,
+.bf-flow-hint::after {
+  inset-block-end: 0;
+  border-inline-end-width: var(--bf-border-w);
+  border-block-end-width: var(--bf-border-w);
+  transform: translate(-50%, 50%) rotate(45deg);
+}
+.bf-hoverhint__bubble::after {
+  inset-block-start: 0;
+  border-inline-start-width: var(--bf-border-w);
+  border-block-start-width: var(--bf-border-w);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+:is(.bf-tooltip__bubble, .bf-hoverhint__bubble, .bf-flow-hint)[data-bf-side="bottom"] {
+  inset-block-end: auto;
+  inset-block-start: calc(100% + var(--bf-bubble-gap));
+}
+:is(.bf-tooltip__bubble, .bf-hoverhint__bubble, .bf-flow-hint)[data-bf-side="top"] {
+  inset-block-start: auto;
+  inset-block-end: calc(100% + var(--bf-bubble-gap));
+}
+:is(.bf-tooltip__bubble, .bf-hoverhint__bubble, .bf-flow-hint)[data-bf-side="bottom"]::after {
+  inset-block-end: auto;
+  inset-block-start: 0;
+  border-width: var(--bf-border-w) 0 0 var(--bf-border-w);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+:is(.bf-tooltip__bubble, .bf-hoverhint__bubble, .bf-flow-hint)[data-bf-side="top"]::after {
+  inset-block-start: auto;
+  inset-block-end: 0;
+  border-width: 0 var(--bf-border-w) var(--bf-border-w) 0;
+  transform: translate(-50%, 50%) rotate(45deg);
+}
+
+:is(.bf-tooltip > .bf-tooltip__bubble, .bf-hoverhint > .bf-hoverhint__bubble) {
+  position: fixed;
+  inset-inline-start: var(--bf-bubble-host-x, -100vw);
+}
+.bf-hoverhint > .bf-hoverhint__bubble,
+:is(.bf-tooltip, .bf-hoverhint) > :is(.bf-tooltip__bubble, .bf-hoverhint__bubble)[data-bf-side="bottom"] {
+  inset-block-start: calc(var(--bf-bubble-host-bottom, -100vh) + var(--bf-bubble-gap));
+  inset-block-end: auto;
+  --bf-bubble-rise: calc(-1 * var(--bf-space-1));
+}
+.bf-tooltip > .bf-tooltip__bubble,
+:is(.bf-tooltip, .bf-hoverhint) > :is(.bf-tooltip__bubble, .bf-hoverhint__bubble)[data-bf-side="top"] {
+  inset-block-start: auto;
+  inset-block-end: calc(100% - var(--bf-bubble-host-top, -100vh) + var(--bf-bubble-gap));
+  --bf-bubble-rise: var(--bf-space-1);
+}
+:is(.bf-tooltip > .bf-tooltip__bubble, .bf-hoverhint > .bf-hoverhint__bubble) {
+  translate: 0 var(--bf-bubble-rise, 0);
+  transition:
+    opacity var(--bf-duration-base) var(--bf-ease-standard) var(--bf-delay-hover),
+    translate var(--bf-duration-base) var(--bf-ease-standard) var(--bf-delay-hover);
+}
+@media (hover: hover) {
+  :is(.bf-tooltip:hover > .bf-tooltip__bubble, .bf-hoverhint:hover > .bf-hoverhint__bubble) {
+    translate: 0 0;
+  }
+}
+:is(.bf-tooltip:focus-within > .bf-tooltip__bubble, .bf-hoverhint:focus-within > .bf-hoverhint__bubble) {
+  translate: 0 0;
+}
+:is(.bf-tooltip, .bf-hoverhint)[data-bf-dismissed] > :is(.bf-tooltip__bubble, .bf-hoverhint__bubble) {
+  opacity: 0 !important;
+  visibility: hidden;
+}
+
+.bf-tooltip {
+  position: relative;
+  display: inline-flex;
+}
+.bf-tooltip__bubble {
+  position: absolute;
+  inset-block-end: calc(100% + var(--bf-bubble-gap));
+  inset-inline-start: 50%;
+  transform: translateX(calc(-50% + var(--bf-bubble-shift, 0px)));
+  z-index: 30;
+  white-space: nowrap;
+  padding: var(--bf-space-2) var(--bf-space-3);
+  font-size: var(--bf-font-sm);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--bf-duration-fast) var(--bf-ease-standard);
+}
+@media (hover: hover) {
+  .bf-tooltip:hover .bf-tooltip__bubble {
+    opacity: 1;
+  }
+}
+.bf-tooltip:focus-within .bf-tooltip__bubble {
+  opacity: 1;
+}

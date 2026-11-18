@@ -1,0 +1,46 @@
+# main に入った版が npm にまだ無ければ、npm に「仮置き」する（staged publishing。版を上げるのは本体リポジトリ側）。
+# 仮置きした版は、npm の画面（Staged Packages）で人がセキュリティキーで承認して初めて公開される。
+# CI やこのリポジトリが乗っ取られても、承認なしに偽の版は出ない（Trusted Publisher は stage だけを許す設定）。
+# 公開は npm の Trusted Publishing（OIDC）で行う。npm のトークンはどこにも置かない。
+name: release
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+concurrency: release
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d # v4.1.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      # npm stage publish（Trusted Publishing と組み合わせる仮置き）は npm 11.15.0 以上が要る
+      - run: npm install -g npm@^11.15.0
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: 公開されていない版だけを出す
+        run: |
+          set -euo pipefail
+          for dir in packages/sdk packages/barrier-free-ui; do
+            name=$(node -p "require('./$dir/package.json').name")
+            version=$(node -p "require('./$dir/package.json').version")
+            if npm view "$name@$version" version >/dev/null 2>&1; then
+              echo "$name@$version は公開済み"
+            elif npm stage list "$name" 2>/dev/null | grep -q "$version"; then
+              echo "$name@$version は仮置き済み（npm の Staged Packages で承認を待っている）"
+            else
+              echo "$name@$version を仮置きする（npm の Staged Packages で承認すると公開される）"
+              # pnpm pack が workspace: の指定を実際の版に直す。仮置きは npm（OIDC と provenance に対応）
+              tgz=$(cd "$dir" && pnpm pack --pack-destination "$RUNNER_TEMP" | tail -1)
+              npm stage publish "$tgz" --access public --provenance
+              echo "::notice title=npm の承認待ち::$name@$version を仮置きした。https://www.npmjs.com/settings/~/staged-packages で承認すると公開される"
+            fi
+          done

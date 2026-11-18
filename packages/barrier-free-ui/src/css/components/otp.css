@@ -1,0 +1,20 @@
+
+.bf-otp {
+  display: inline-flex;
+  gap: var(--bf-space-2);
+}
+.bf-otp__box {
+  width: var(--bf-control-h);
+  height: var(--bf-control-h-lg);
+  text-align: center;
+  font-size: var(--bf-font-xl);
+  font-weight: var(--bf-weight-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--bf-fg);
+  background: var(--bf-bg);
+  border: var(--bf-border-w-strong) solid var(--bf-control-border);
+  border-radius: var(--bf-radius-control);
+}
+.bf-otp__box:focus-visible {
+  border-color: var(--bf-primary);
+}

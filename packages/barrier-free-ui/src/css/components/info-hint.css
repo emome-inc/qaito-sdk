@@ -1,0 +1,14 @@
+
+button.bf-info-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--bf-control-h-sm);
+  height: var(--bf-control-h-sm);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--bf-muted-fg);
+  cursor: help;
+  border-radius: var(--bf-radius-circle);
+}

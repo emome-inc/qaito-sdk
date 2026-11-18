@@ -1,0 +1,43 @@
+
+:root {
+  --bf-scale: 1;
+
+  --bf-control-h: max(2.75rem, calc(2.75rem * var(--bf-scale))); 
+  --bf-control-h-sm: max(2.75rem, calc(2.25rem * var(--bf-scale))); 
+  --bf-control-h-lg: calc(3.25rem * var(--bf-scale)); 
+  --bf-line-h: calc(2.75rem * var(--bf-scale));
+  --bf-line-h-sm: calc(2.25rem * var(--bf-scale));
+  --bf-header-h: calc(max(2.75rem, calc(2.75rem * var(--bf-scale))) + var(--bf-space-1));
+  --bf-tap-min: max(2.75rem, calc(2.75rem * var(--bf-scale)));
+
+  --bf-font-xs: calc(0.75rem * var(--bf-scale));
+  --bf-font-sm: calc(0.875rem * var(--bf-scale));
+  --bf-font-base: calc(1rem * var(--bf-scale));
+  --bf-font-lg: calc(1.125rem * var(--bf-scale));
+  --bf-font-xl: calc(1.25rem * var(--bf-scale));
+  --bf-font-title: calc(1.5rem * var(--bf-scale));
+
+  --bf-space-1: calc(0.25rem * var(--bf-scale));
+  --bf-space-2: calc(0.5rem * var(--bf-scale));
+  --bf-space-3: calc(0.75rem * var(--bf-scale));
+  --bf-space-4: calc(1rem * var(--bf-scale));
+  --bf-space-5: calc(1.25rem * var(--bf-scale));
+  --bf-space-6: calc(1.5rem * var(--bf-scale));
+  --bf-space-7: calc(1.75rem * var(--bf-scale));
+  --bf-space-8: calc(2rem * var(--bf-scale));
+
+  --bf-tile-min: calc(7rem * var(--bf-scale)); 
+  --bf-row-h: calc(4rem * var(--bf-scale)); 
+  --bf-icon: calc(1.5rem * var(--bf-scale)); 
+  --bf-icon-lg: calc(2rem * var(--bf-scale)); 
+}
+
+.bf-size-sm {
+  --bf-scale: 0.875;
+} 
+.bf-size-md {
+  --bf-scale: 1;
+} 
+.bf-size-lg {
+  --bf-scale: 1.15;
+} 

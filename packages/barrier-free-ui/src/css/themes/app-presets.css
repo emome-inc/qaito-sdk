@@ -1,0 +1,82 @@
+
+.bf-theme-preset-purple { 
+  --bf-primary: oklch(0.55 0.12 301);
+  --bf-ring: oklch(0.55 0.12 301);
+}
+.bf-theme-preset-blue { 
+  --bf-primary: oklch(0.55 0.13 210);
+  --bf-ring: oklch(0.55 0.13 210);
+}
+.bf-theme-preset-green { 
+  --bf-primary: oklch(0.545 0.110 160);
+  --bf-ring: oklch(0.545 0.110 160);
+}
+.bf-theme-preset-orange { 
+  --bf-primary: oklch(0.55 0.12 60);
+  --bf-ring: oklch(0.55 0.12 60);
+}
+.bf-theme-preset-red { 
+  --bf-primary: oklch(0.55 0.14 25);
+  --bf-ring: oklch(0.55 0.14 25);
+}
+.bf-theme-preset-indigo { 
+  --bf-primary: oklch(0.55 0.10 250);
+  --bf-ring: oklch(0.55 0.10 250);
+}
+.bf-theme-preset-lime { 
+  --bf-primary: oklch(0.55 0.09 120);
+  --bf-ring: oklch(0.55 0.09 120);
+}
+.bf-theme-preset-gray { 
+  --bf-primary: oklch(0.45 0.02 270);
+  --bf-ring: oklch(0.45 0.02 270);
+}
+.bf-theme-preset-teal { 
+  --bf-primary: oklch(0.54 0.13 187);
+  --bf-ring: oklch(0.54 0.13 187);
+}
+.bf-theme-preset-pink { 
+  --bf-primary: oklch(0.55 0.14 350);
+  --bf-ring: oklch(0.55 0.14 350);
+}
+
+.dark .bf-theme-preset-purple {
+  --bf-primary: oklch(0.70 0.12 301);
+  --bf-ring: oklch(0.70 0.12 301);
+}
+.dark .bf-theme-preset-blue {
+  --bf-primary: oklch(0.68 0.13 210);
+  --bf-ring: oklch(0.68 0.13 210);
+}
+.dark .bf-theme-preset-green {
+  --bf-primary: oklch(0.65 0.11 160);
+  --bf-ring: oklch(0.65 0.11 160);
+}
+.dark .bf-theme-preset-orange {
+  --bf-primary: oklch(0.70 0.12 60);
+  --bf-ring: oklch(0.70 0.12 60);
+}
+.dark .bf-theme-preset-red {
+  --bf-primary: oklch(0.66 0.14 25);
+  --bf-ring: oklch(0.66 0.14 25);
+}
+.dark .bf-theme-preset-indigo {
+  --bf-primary: oklch(0.68 0.10 250);
+  --bf-ring: oklch(0.68 0.10 250);
+}
+.dark .bf-theme-preset-lime {
+  --bf-primary: oklch(0.68 0.09 120);
+  --bf-ring: oklch(0.68 0.09 120);
+}
+.dark .bf-theme-preset-gray {
+  --bf-primary: oklch(0.70 0.02 270);
+  --bf-ring: oklch(0.70 0.02 270);
+}
+.dark .bf-theme-preset-teal {
+  --bf-primary: oklch(0.68 0.13 187);
+  --bf-ring: oklch(0.68 0.13 187);
+}
+.dark .bf-theme-preset-pink {
+  --bf-primary: oklch(0.68 0.14 350);
+  --bf-ring: oklch(0.68 0.14 350);
+}

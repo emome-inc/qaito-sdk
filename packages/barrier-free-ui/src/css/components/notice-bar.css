@@ -1,0 +1,82 @@
+
+.bf-noticebar {
+  background: var(--bf-surface-2);
+  color: var(--bf-fg);
+  font-size: var(--bf-font-base);
+  line-height: var(--bf-leading-normal);
+}
+
+button.bf-noticebar__toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--bf-space-3);
+  width: 100%;
+  min-height: var(--bf-control-h);
+  padding: var(--bf-space-1) var(--bf-space-4);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+button.bf-noticebar__toggle:hover {
+  background: color-mix(in oklch, var(--bf-fg) 5%, transparent);
+}
+.bf-noticebar__summary {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: var(--bf-weight-bold);
+}
+.bf-noticebar__chevron {
+  flex: none;
+  color: var(--bf-muted-fg);
+  transition: transform var(--bf-duration-fast) var(--bf-ease-standard);
+}
+.bf-noticebar[data-open] .bf-noticebar__chevron {
+  transform: rotate(180deg);
+}
+
+.bf-noticebar__list {
+  margin: 0;
+  padding: 0 var(--bf-space-4) var(--bf-space-3);
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--bf-space-2);
+}
+.bf-noticebar__list[hidden] {
+  display: none;
+}
+.bf-noticebar__item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: var(--bf-space-3);
+  align-items: start;
+  padding-block-start: var(--bf-space-2);
+  border-block-start: var(--bf-border-w) solid var(--bf-border);
+}
+.bf-noticebar__body {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.bf-noticebar__icon {
+  display: flex;
+  align-items: center;
+  height: calc(1em * var(--bf-leading-normal));
+}
+.bf-noticebar__icon svg {
+  display: block;
+  width: 1.25em;
+  height: 1.25em;
+}
+.bf-noticebar__icon[data-tone="error"]   { --bf-feedback-tone: var(--bf-danger);  --bf-feedback-tone-fg: var(--bf-danger-fg); }
+.bf-noticebar__icon[data-tone="warning"] { --bf-feedback-tone: var(--bf-warning); --bf-feedback-tone-fg: var(--bf-warning-fg); }
+.bf-noticebar__icon[data-tone="info"]    { --bf-feedback-tone: var(--bf-primary); --bf-feedback-tone-fg: var(--bf-primary-fg); }
+
+@media (prefers-reduced-motion: reduce) {
+  .bf-noticebar__chevron {
+    transition-duration: 0s;
+  }
+}

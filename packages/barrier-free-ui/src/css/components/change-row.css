@@ -1,0 +1,27 @@
+.bf-change-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--bf-space-2);
+  font-size: var(--bf-font-sm);
+}
+.bf-change-row__label {
+  min-width: 5.5em;
+  color: var(--bf-muted-fg);
+  font-size: var(--bf-font-xs);
+}
+.bf-change-row__from {
+  color: var(--bf-muted-fg);
+  overflow-wrap: anywhere;
+}
+.bf-change-row__from--changed {
+  text-decoration: line-through;
+}
+.bf-change-row__arrow {
+  color: var(--bf-muted-fg);
+}
+.bf-change-row__to {
+  color: var(--bf-fg);
+  font-weight: var(--bf-weight-semibold);
+  overflow-wrap: anywhere;
+}

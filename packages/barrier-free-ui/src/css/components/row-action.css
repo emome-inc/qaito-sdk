@@ -1,0 +1,60 @@
+
+.bf-rowaction {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bf-space-1);
+  height: var(--bf-control-h-sm);
+  padding-inline: var(--bf-space-2);
+  font: inherit;
+  font-size: var(--bf-font-sm);
+  font-weight: var(--bf-weight-medium);
+  line-height: 1;
+  color: var(--bf-fg);
+  background: transparent;
+  border: 0;
+  border-radius: var(--bf-radius-sm);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--bf-duration-fast) var(--bf-ease-standard);
+}
+.bf-rowaction:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--bf-hover-bg);
+}
+.bf-rowaction:focus-visible {
+  outline: var(--bf-border-w-strong, 2px) solid var(--bf-ring, var(--bf-primary));
+  outline-offset: 1px;
+}
+.bf-rowaction:disabled,
+.bf-rowaction[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.bf-rowaction[aria-disabled="true"] {
+  pointer-events: none;
+}
+.bf-rowaction[data-tone="danger"] {
+  color: var(--bf-danger);
+}
+.bf-rowaction svg {
+  flex: none;
+  width: 1.15em;
+  height: 1.15em;
+}
+.bf-rowaction[data-icon-only] {
+  justify-content: center;
+  width: var(--bf-control-h-sm);
+  padding: 0;
+}
+.bf-rowaction[data-icon-only] svg {
+  width: 1.25em;
+  height: 1.25em;
+}
+
+.bf-rowactions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 0;
+  row-gap: var(--bf-space-1);
+}

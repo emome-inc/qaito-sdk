@@ -1,0 +1,100 @@
+
+.bf-fsdialog {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  background: var(--bf-bg);
+  animation: bf-fade-in var(--bf-duration-fast) var(--bf-ease-standard) backwards;
+}
+
+.bf-fsdialog__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--bf-space-2);
+  padding: var(--bf-space-2) var(--bf-space-3);
+  border-bottom: var(--bf-border-w) solid var(--bf-border);
+  flex-shrink: 0;
+}
+
+.bf-fsdialog__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--bf-control-h);
+  height: var(--bf-control-h);
+  color: var(--bf-fg);
+  background: transparent;
+  border: 0;
+  border-radius: var(--bf-radius-sm);
+  cursor: pointer;
+}
+.bf-fsdialog__close:hover {
+  background: var(--bf-hover-bg);
+}
+.bf-fsdialog__close svg {
+  width: var(--bf-icon);
+  height: var(--bf-icon);
+}
+
+.bf-fsdialog__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--bf-font-lg);
+  font-weight: var(--bf-weight-bold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bf-fsdialog__title:focus {
+  outline: none;
+}
+
+.bf-fsdialog__slot {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.bf-fsdialog__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--bf-space-2);
+  flex-shrink: 0;
+}
+
+.bf-fsdialog__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.bf-fsdialog__content {
+  width: 100%;
+  max-width: 48rem;
+  margin-inline: auto;
+  padding: var(--bf-pad-card);
+  min-width: 0;
+}
+.bf-fsdialog[data-bar-align="content"] .bf-fsdialog__bar {
+  padding-inline-start: max(var(--bf-space-3), calc((100% - var(--bf-fsdialog-max)) / 2 + var(--bf-pad-card) - var(--bf-control-h) - var(--bf-space-2)));
+  padding-inline-end: max(var(--bf-space-3), calc((100% - var(--bf-fsdialog-max)) / 2 + var(--bf-pad-card)));
+}
+.bf-fsdialog { --bf-fsdialog-max: 48rem; }
+.bf-fsdialog[data-width="md"] { --bf-fsdialog-max: 32rem; }
+.bf-fsdialog[data-width="xl"] { --bf-fsdialog-max: 64rem; }
+.bf-fsdialog[data-width="full"] { --bf-fsdialog-max: 100%; }
+.bf-fsdialog[data-width="wide"] { --bf-fsdialog-max: 72rem; }
+.bf-fsdialog[data-width="wide"] .bf-fsdialog__content { max-width: 72rem; }
+.bf-fsdialog[data-width="md"] .bf-fsdialog__content { max-width: 32rem; }
+.bf-fsdialog[data-width="xl"] .bf-fsdialog__content { max-width: 64rem; }
+.bf-fsdialog[data-width="full"] .bf-fsdialog__content { max-width: none; }
+
+.bf-fsdialog__desc {
+  margin: 0 0 var(--bf-space-3);
+  color: var(--bf-muted-fg);
+  overflow-wrap: anywhere;
+}

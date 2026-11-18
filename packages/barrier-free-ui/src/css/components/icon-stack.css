@@ -1,0 +1,20 @@
+.bf-icon-stack {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bf-space-1);
+  vertical-align: middle;
+}
+.bf-icon-stack__item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.bf-icon-stack__item svg {
+  width: 1.2em;
+  height: 1.2em;
+}
+.bf-icon-stack__more {
+  font-size: var(--bf-font-xs);
+  color: var(--bf-muted-fg);
+  padding: 0 var(--bf-space-1);
+}

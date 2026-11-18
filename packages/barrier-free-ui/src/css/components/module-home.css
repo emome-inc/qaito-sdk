@@ -1,0 +1,139 @@
+
+.bf-home {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--bf-space-5);
+}
+@media (max-width: 56rem) {
+  .bf-home {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 30rem) {
+  .bf-home {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bf-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--bf-space-3);
+  min-height: calc(10rem * var(--bf-scale));
+  padding: var(--bf-space-6);
+  padding-inline-end: var(--bf-space-8);
+  background: var(--bf-bg);
+  border: var(--bf-border-w) solid var(--bf-border);
+  border-bottom: var(--bf-border-w-strong) solid var(--bf-primary);
+  text-align: start;
+  cursor: pointer;
+  color: var(--bf-fg);
+  transition: background-color var(--bf-duration-fast) var(--bf-ease-standard), box-shadow var(--bf-duration-fast) var(--bf-ease-standard),
+    transform var(--bf-duration-instant) var(--bf-ease-standard);
+}
+.bf-tile:hover {
+  background: color-mix(in oklch, var(--bf-primary) 8%, transparent);
+  border-color: var(--bf-primary);
+  box-shadow: var(--bf-shadow-raised);
+}
+.bf-tile:active {
+  transform: translateY(1px);
+}
+
+.bf-tile::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: var(--bf-space-5);
+  inset-block-end: var(--bf-space-5);
+  width: var(--bf-font-xl);
+  height: var(--bf-font-xl);
+  background-color: var(--bf-muted-fg);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14'/%3E%3Cpath d='m12 5 7 7-7 7'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14'/%3E%3Cpath d='m12 5 7 7-7 7'/%3E%3C/svg%3E") center / contain no-repeat;
+  transition: transform var(--bf-duration-fast) var(--bf-ease-standard), background-color var(--bf-duration-fast) var(--bf-ease-standard);
+}
+.bf-tile:hover::after {
+  background-color: var(--bf-primary);
+  transform: translateX(3px);
+}
+
+.bf-tile__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--bf-control-h-lg);
+  height: var(--bf-control-h-lg);
+  background: var(--bf-primary);
+  color: var(--bf-primary-fg);
+}
+
+.bf-tile__label {
+  font-size: var(--bf-font-xl);
+  font-weight: var(--bf-weight-semibold);
+  line-height: var(--bf-leading-tight);
+}
+.bf-tile__sub {
+  font-size: var(--bf-font-sm);
+  color: var(--bf-fg);
+  opacity: 0.7;
+  line-height: var(--bf-leading-normal);
+}
+.bf-tile__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bf-space-1);
+  margin-top: var(--bf-space-1);
+}
+.bf-tile__meta > * {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--bf-space-2);
+  min-height: calc(1.5rem * var(--bf-scale, 1));
+  font-size: var(--bf-font-xs);
+  color: var(--bf-muted-fg);
+  background: color-mix(in oklch, var(--bf-fg) 6%, transparent);
+}
+
+.bf-home[data-density="compact"] {
+  grid-template-columns: repeat(auto-fill, minmax(min(15rem, 100%), 1fr));
+  gap: var(--bf-space-3);
+}
+.bf-home[data-density="compact"] .bf-tile {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  column-gap: var(--bf-space-3);
+  row-gap: 2px;
+  align-items: start;
+  min-height: 0;
+  padding: var(--bf-space-3) var(--bf-space-4);
+}
+.bf-home[data-density="compact"] .bf-tile::after {
+  content: none;
+}
+.bf-home[data-density="compact"] .bf-tile__icon {
+  grid-row: 1 / span 2;
+  width: var(--bf-control-h);
+  height: var(--bf-control-h);
+}
+.bf-home[data-density="compact"] .bf-tile__icon svg {
+  width: 55%;
+  height: 55%;
+}
+.bf-home[data-density="compact"] .bf-tile__label {
+  font-size: var(--bf-font-base);
+  line-height: var(--bf-leading-normal);
+}
+.bf-home[data-density="compact"] .bf-tile__sub {
+  font-size: var(--bf-font-xs);
+}
+
+@media (forced-colors: active) {
+  .bf-tile::after,
+  .bf-tile:hover::after {
+    forced-color-adjust: none;
+    background-color: CanvasText;
+  }
+}

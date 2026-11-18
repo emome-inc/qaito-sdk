@@ -1,0 +1,54 @@
+{
+  "name": "@qaito/sdk",
+  "version": "0.1.1",
+  "description": "Qaito プラットフォームの TypeScript クライアント（API・ログイン）",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emome-inc/qaito-sdk.git",
+    "directory": "packages/sdk"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./app-auth": {
+      "types": "./dist/app-auth/index.d.ts",
+      "default": "./dist/app-auth/index.js"
+    },
+    "./app-auth/session-guard": {
+      "types": "./dist/app-auth/session-guard.d.ts",
+      "default": "./dist/app-auth/session-guard.js"
+    },
+    "./verify": {
+      "types": "./dist/verify/index.d.ts",
+      "default": "./dist/verify/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.46",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
