@@ -1,6 +1,6 @@
 {
   "name": "@qaito/sdk",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Qaito プラットフォームの TypeScript クライアント（API・ログイン）",
   "license": "MIT",
   "type": "module",

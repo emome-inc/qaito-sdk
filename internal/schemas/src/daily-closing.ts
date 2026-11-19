@@ -1,11 +1,6 @@
 import { z } from "zod";
 import { jstYearMonth } from "./jst";
 
-/**
- * 自動の欄（`field_key`）。事業所の種別から規則で決まる（`daily-closing/pure/field-rules.ts`）。
- * 給付管理の人数（`kyotaku_clients`・居宅 43 / 46）・貸与の月額（`rental_monthly`・千円・福祉用具 17 / 67）は
- * 月の欄（役割 `monthly`。値は月の 1 日に持つ）で、請求・貸与の契約から読む（段 3）。
- */
 export const CLOSING_AUTO_FIELD_KEYS = [
   "attendance",
   "attendance_evening",
@@ -235,7 +230,6 @@ export const closingUnitFieldInputSchema = z
     activeTo: closingMonthSchema.nullable().optional(),
     sortOrder: z.number().int().min(0).max(9999).optional(),
     priceReason: z.string().trim().max(CLOSING_TEXT_MAX).optional(),
-    /** 手入力の自費の欄（請求書に自費の行がある月は月の実績に足さない・段 3 の M2）。手入力の欄だけ */
     selfPay: z.boolean().optional(),
   })
   .strict();
@@ -308,7 +302,6 @@ export type ClosingUnit = {
   serviceTypeCode: string | null;
   divisionId: string | null;
   sortOrder: number;
-  /** 元のシステムの数字が正の最後の月（YYYY-MM）。この月以前は取り込んだ値だけを数える（段 4） */
   legacyUntil: string | null;
   createdAt: string;
 };
@@ -400,13 +393,6 @@ export type ClosingMonthSummary = {
   workingDayEquiv: number;
 };
 
-/**
- * 月の実績の根拠（段 3・設計 §4.1）。
- *   billing     … 請求から出した（明細書・請求書のどちらかがある月）
- *   flash       … 請求の無い部署（障害福祉・介護外・種別の無い事業所）。実績 = 速報
- *   unavailable … 請求が準備中か、その月の請求がまだ無い、または数える明細書の金額がすべて未算出。実績は空（0 にしない）
- *   legacy      … 切替前の月（部署の legacy_until 以前）。元のシステムの売上が正で、実績 = 速報（❓17・段 4）
- */
 export const CLOSING_ACTUAL_BASES = ["billing", "flash", "unavailable", "legacy"] as const;
 export type ClosingActualBasis = (typeof CLOSING_ACTUAL_BASES)[number];
 
@@ -428,10 +414,6 @@ export type ClosingClaimsStage = (typeof CLOSING_CLAIMS_STAGES)[number];
 export const CLOSING_ACTUAL_SOURCES = ["live", "snapshot"] as const;
 export type ClosingActualSource = (typeof CLOSING_ACTUAL_SOURCES)[number];
 
-/**
- * 部署 × 月の「速報 | 実績 | 差」と根拠（段 3・設計 §4.1）。金額のうち `flash` `actual` `diff` `manualSales` は千円（小数 1 桁）、
- * 内訳の `…Yen` は円。読むのは事業所 × 月の合計だけで、利用者は出さない。
- */
 export type ClosingMonthActual = {
   basis: ClosingActualBasis;
   source: ClosingActualSource;
@@ -496,7 +478,6 @@ export type ClosingUnitMonth = {
   asOf: string;
   /** 確定した月か（確定した月は自動の値も確定時の写しを使い、補正・手入力を断る） */
   locked: boolean;
-  /** 切替前の月か（部署の legacy_until 以前。取り込んだ元の値だけを数え、補正・手入力を断る・段 4） */
   legacy: boolean;
   fields: ClosingField[];
   days: ClosingDay[];

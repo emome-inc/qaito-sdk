@@ -136,11 +136,6 @@ export function instructionReviewKeys(formData: unknown): string[] {
     .map(([key]) => key);
 }
 
-/**
- * 指示書の交付の上限（foundation §2.1 の逐語転記）。期間の日数は開始日を含めて数える。
- *   普通・精神科 = 6 月まで / 特別・精神科特別 = 14 日まで（月の交付回数: 原則 1 回・別表8 分類1 該当なら 2 回）/ 点滴注射 = 7 日まで
- * 保存の口・画面・保険の判定・請求の検査 V17 が同じ表を引く（二重に持たない）。
- */
 export const INSTRUCTION_VALIDITY_LIMITS: Record<
   (typeof instructionTypeValues)[number],
   { maxDays: number | null; maxMonths: number | null; maxIssuesPerMonth?: number; maxIssuesPerMonthBesshi8Class1?: number }
@@ -157,10 +152,6 @@ export function instructionMaxDays(type: string): number | null {
   return (INSTRUCTION_VALIDITY_LIMITS as Record<string, { maxDays: number | null } | undefined>)[type]?.maxDays ?? null;
 }
 
-/**
- * 1 枚の原本で「訪問看護」と「点滴注射」の両方に○があるとき、点滴注射の指示書をもう 1 件作るための入力
- * （新しく作るときだけ。交付日・医療機関・医師・原本は 1 件目と同じ）。設計 nursing-doctor-instruction-form.md §2
- */
 export const infusionInstructionSchema = z.object({
   validFrom: z.string().date("validFrom は YYYY-MM-DD 形式です"),
   validUntil: z.string().date("validUntil は YYYY-MM-DD 形式です"),

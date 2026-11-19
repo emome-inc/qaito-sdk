@@ -135,10 +135,6 @@ const templateDaysSchema = z
   .array(z.number().int().min(1, "曜日は 1〜7 です").max(7, "曜日は 1〜7 です"))
   .max(7, "曜日は 7 つまでです");
 
-/**
- * テンプレートの曜日ごとの時間（2026-10-06 ユーザー指示「時間まで含めて、カタチを覚えておくのが
- * テンプレート」）。時間が空（null）の曜日は、週間予定を作るときに契約の提供時間を使う。
- */
 export const scheduleTemplateDayTimeSchema = z
   .object({
     day:       z.number().int().min(1, "曜日は 1〜7 です").max(7, "曜日は 1〜7 です"),
@@ -159,11 +155,6 @@ export const createScheduleTemplateSchema = z.object({
   copyFromTemplateId: z.string().uuid("copyFromTemplateId は UUID 形式です").optional().nullable(),
   /** テンプレートが空のとき、利用者の契約の通う曜日を初期値として写すか */
   copyFromServicePlans: z.boolean().optional(),
-  /**
-   * 過去の週から作る: 確定した週の月曜（週の途中の日付でもその週の月曜に丸める）。その週の確定したマス
-   * （利用者 × 曜日・時間）を写す。週間予定の「過去から複製する」と同じ写し方（2026-10-07 ユーザー決定）。
-   * 元の指定は 1 つだけ（copyFromTemplateId / copyFromWeekStart / copyFromServicePlans のどれか）
-   */
   copyFromWeekStart: z.string().date("copyFromWeekStart は YYYY-MM-DD 形式です").optional().nullable(),
 }).superRefine((v, ctx) => {
   const sources = [Boolean(v.copyFromTemplateId), Boolean(v.copyFromWeekStart), Boolean(v.copyFromServicePlans)];

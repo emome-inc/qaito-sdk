@@ -57,7 +57,6 @@ export const nursingPlanPrintDetailsSchema = z.object({
   secondOccupation: z.string().max(NURSING_PLAN_PRINT_LIMITS.secondOccupation).optional(),
   documentDate: z.string().max(NURSING_PLAN_PRINT_LIMITS.documentDate).optional(),
   managerName: z.string().max(NURSING_PLAN_PRINT_LIMITS.managerName).optional(),
-  /** 訪問予定の職種（看護職員・PT・OT・ST）。原本に欄が無いので印刷には出ない（設計 nursing-rehab-visits.md §5） */
   plannedStaffTypes: z.array(z.enum(nursingPlannedStaffTypes)).max(nursingPlannedStaffTypes.length).optional(),
 });
 export const nursingIntakePrintDetailsSchema = z.object({

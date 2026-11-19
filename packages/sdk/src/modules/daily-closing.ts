@@ -108,7 +108,7 @@ export function createDailyClosingNamespace(tx: SdkTransport) {
       get: (params: ClosingCompanyParams) =>
         tx.request<ClosingCompanySummary>("GET", `/daily-closing/company${buildQueryString(params)}`),
     },
-    /** 過去分の取り込みと突き合わせ（段 4） */
+    /** 過去分の取り込みと突き合わせ */
     legacy: {
       /** 過去分の取り込み（部署 × 月の塊・dryRun つき）POST /daily-closing/legacy/import */
       import: (input: ImportClosingLegacyInput) =>

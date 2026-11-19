@@ -6,7 +6,7 @@
 
 .bf-infoitem {
   display: grid;
-  grid-template-columns: minmax(6em, 10em) 1fr;
+  grid-template-columns: 11em 1fr;
   gap: var(--bf-space-4);
   align-items: baseline;
   padding: var(--bf-space-3) 0;
@@ -22,8 +22,8 @@
 
 .bf-infoitem__label {
   font-size: var(--bf-font-sm);
-  font-weight: var(--bf-weight-normal);
-  color: var(--bf-muted-fg);
+  font-weight: var(--bf-weight-medium, 500);
+  color: color-mix(in oklch, var(--bf-fg) 72%, var(--bf-bg));
 }
 
 .bf-infoitem__value {
@@ -46,11 +46,33 @@
 }
 
 .bf-density-compact .bf-infoitem__label {
-  font-size: var(--bf-font-xs);
+  font-size: var(--bf-font-sm);
 }
 
 .bf-density-compact .bf-infoitem__value {
   font-size: var(--bf-font-base);
-  font-weight: var(--bf-weight-semibold, 600);
+  font-weight: var(--bf-weight-normal);
   gap: 0;
+}
+
+.bf-infoitem {
+  --bf-infoitem-line: calc(var(--bf-font-base) * 1.5);
+}
+.bf-infoitem .bf-iconbutton {
+  margin-block: calc((var(--bf-infoitem-line) - var(--bf-control-h)) / 2);
+}
+.bf-infoitem button.bf-info-hint,
+.bf-infoitem .bf-button[data-size="sm"] {
+  margin-block: calc((var(--bf-infoitem-line) - var(--bf-control-h-sm)) / 2);
+}
+.bf-infoitem .bf-button:not([data-size]) {
+  margin-block: calc((var(--bf-infoitem-line) - var(--bf-control-h)) / 2);
+}
+.bf-infoitem .bf-copyfield__row {
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+.bf-infoitem .bf-copyfield__value {
+  font-size: inherit;
 }

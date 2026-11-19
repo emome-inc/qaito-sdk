@@ -70,7 +70,6 @@ export const kaipokeClientDaySchema = z.object({
   treatment: z.string().max(4000).nullable(),
   /** ケース記録（複数行は改行連結済み。要配慮の可能性） */
   caseNotes: z.string().max(8000).nullable(),
-  /** 記録者名（原文。staff 突合は Phase 2） */
   recorderNames: z.array(z.string().max(100)),
 });
 

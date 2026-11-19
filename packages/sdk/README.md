@@ -154,7 +154,7 @@ API はモジュールごとの名前空間に分かれています（`qaito.{�
 | `directive` | 業務連絡 |
 | `feedback` | ご意見箱 |
 | `calendar` | カレンダー（予定・参加者・共有・空き時間 など） |
-| `library` | ライブラリ（組織の Wiki） |
+| `library` | Qaito ライブラリ（組織・事業所・個人の置き場のフォルダとページ・公開 / 非公開と見せる人・検索・複製・公式） |
 | `meeting` / `meetingRecording` | 会議と会議の録音 |
 | `phone` / `phoneRecording` | 電話の受付と録音 |
 
@@ -486,6 +486,18 @@ export const GET = qaitoAppManifest({
 - [セマンティック バージョニング](https://semver.org/lang/ja/) に従います
 - 1.0 になるまで（`0.x` の間）は、`0.1 → 0.2` のような版で使い方が変わることがあります。`0.1.x` のような小さな版の中では、使い方を変えないようにします
 - 変更の内容は、GitHub のリポジトリのタグ（版の一覧）で確かめてください
+
+## 0.2.0 での変更
+
+互換のない変更を含みます。
+
+- **ライブラリ（`library`）を作り直しました。** スペース・共有・下書き・公開・slug の口はなくなり、置き場（組織 / 事業所 / 個人）のフォルダとページになりました。
+  - 置き場の木は `library.tree.get({ area, facilityId })`、フォルダ・ページは `library.nodes.*`、検索は `library.search`、複製は `library.copy`（公式からの複製もこの口）です
+  - 公開 / 非公開は `library.nodes.visibility.*`、非公開の見せる人は `library.nodes.names.*` です
+  - 本文の保存は `library.nodes.saveBody`（保存したらすぐ反映。`baseVersionNo` が必須）です
+  - 画像はページごとに `library.nodes.assets.*`、公式は `library.official.tree` / `library.official.get` です
+  - 組織の置き場は、今は読むだけです（書き込みの口はエラーを返します）
+- **メンバーの事業所の所属が必須になりました。** `accessControl.members.list` の各メンバーに、所属の事業所が無いか（`facility_missing`）と候補の事業所（`facility_candidate`）が付きます。`{ without_facility: true }` を渡すと、所属の無い人だけを返します（足しただけで、今の呼び方はそのまま動きます）。
 
 ## ライセンス
 

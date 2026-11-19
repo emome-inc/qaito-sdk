@@ -135,13 +135,6 @@ export const uploadUrlRequestSchema = z.object({
 );
 export type UploadUrlRequestInput = z.infer<typeof uploadUrlRequestSchema>;
 
-/**
- * 生成物の保存（QaitoChat の Agent Runner の heavy レーン → `POST /chat/files/store`）の入力。
- * 本文（バイト列）は multipart の別の欄で受け、ここでは形だけを見る。
- *
- * - `job_id` はツール呼び出しの id（`toolu_…` 等）。同じ id の再実行は同じ行・同じ S3 キーに上書きする
- * - 受ける形式はファイル生成（`chat_generate_file`）が作るものだけ（HTML は作らない・持ち出さない）
- */
 export const storeGeneratedFileSchema = z.object({
   job_id: z.string().trim().min(1).max(200).regex(/^[A-Za-z0-9_.:-]+$/),
   file_name: z.string().trim().min(1).max(500),

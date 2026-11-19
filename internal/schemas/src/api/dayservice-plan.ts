@@ -10,10 +10,6 @@ const dailyProgramItemApiSchema = z.object({
   content: z.string().max(500),
 });
 
-/**
- * サービス提供内容 ①〜⑤ サブスキーマ（tsushoplan_services 1 行・forms-module.md §5.1.1）
- * sortOrder は API では配列インデックス（1-5）で決まるため受け取らない。
- */
 export const dayservicePlanServiceItemApiSchema = z.object({
   periodFrom: z.string().date().optional(),
   periodTo: z.string().date().optional(),

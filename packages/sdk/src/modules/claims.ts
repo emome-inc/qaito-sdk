@@ -196,7 +196,7 @@ export function createClaimsNamespace(tx: SdkTransport) {
       /** POST /claims/batches/:batchId/withdraw-submission — 提出の取り下げ（submitted の月締めと配下の明細書を取り消す） */
       withdrawSubmission: (batchId: string, input: WithdrawClaimsBatchSubmissionInput) =>
         tx.request<{ batchId: string; voidedStatementCount: number }>("POST", `/claims/batches/${pathParam(batchId, "batchId")}/withdraw-submission`, input),
-      /** POST /claims/exports/:batchId/export — exportBatchCsv（S8a レンダラ→S3 保存→locked→exported。§5.2） */
+      /** POST /claims/exports/:batchId/export — exportBatchCsv（CSV を作って保存し、locked → exported にする） */
       exportCsv: (batchId: string) =>
         tx.request<ExportClaimsBatchResult>("POST", `/claims/exports/${pathParam(batchId, "batchId")}/export`),
       /** GET /claims/exports/:batchId/csv — 再ダウンロード用 pre-signed URL（300 秒・何度でも再取得可） */
@@ -223,7 +223,7 @@ export function createClaimsNamespace(tx: SdkTransport) {
       /** GET /claims/statements/:statementId — 詳細（明細行/日次根拠/集計/検証/計算履歴） */
       get: (statementId: string) =>
         tx.request<ClaimsStatementDetail>("GET", `/claims/statements/${pathParam(statementId, "statementId")}`),
-      /** POST /claims/statements/:statementId/recalculate — draft のみ再計算可（§4.8） */
+      /** POST /claims/statements/:statementId/recalculate — draft のみ再計算可 */
       recalculate: (statementId: string) =>
         tx.request<RecalculateClaimsStatementResult>("POST", `/claims/statements/${pathParam(statementId, "statementId")}/recalculate`),
       /** POST /claims/statements/:statementId/transition — recordStatementStatus（前方遷移のみ） */

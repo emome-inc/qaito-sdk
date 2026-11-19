@@ -35,7 +35,6 @@ export function createAppsNamespace(tx: SdkTransport) {
      *
      * モジュール scope ではなく**アプリの付与行**で絞られる（ポータルの棚と同じ解決）。
      * 「棚に何が並ぶか」を知りたいときは `modules.list()` ではなくこちらを使う
-     * （migration 0289 でアプリはモジュールから分離された）。
      */
     list: (): Promise<App[]> => tx.request("GET", "/apps") as Promise<App[]>,
   };

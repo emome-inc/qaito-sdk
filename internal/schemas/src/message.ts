@@ -32,10 +32,6 @@ export const messageEventTypeValues = [
   "reaction_removed",
   /** 既読が進んだ（チャンネル / スレッド）。**本人の接続にだけ**届く（別の端末の未読を揃えるため） */
   "read_updated",
-  /**
-   * 「入力中」（§5.5）。打っている間は 3 秒に 1 回届き、受けた画面は最後に届いてから 7 秒で取り下げる。
-   * スレッドで打っているときは parent_id が付く（チャンネル本体とは別の部屋）。DB には残らない
-   */
   "typing",
   /** 「入力中」の取り下げ（送信した・画面を離れた）。届かなくても受けた画面が 7 秒で捨てる */
   "typing_stopped",
@@ -45,11 +41,6 @@ export const messageEventTypeValues = [
    * read_count はそのチャンネルで既読にした件数（画面はアクティビティの未読を取り直すか、この数だけ減らす）
    */
   "notifications_read",
-  /**
-   * 自分あての通知（アクティビティ）が増えた。**宛先の本人の接続にだけ**届く（`target_user_ids` は配る側だけが見て、
-   * 本人へは channel_id だけを流す）。画面はこれを合図にアクティビティの未読を数え直す
-   * （投稿・リアクションのたびに全員が数え直すと、読み取りの枠が人数 × 投稿数で減る・2026-11-12 本番の 429）
-   */
   "notifications_created",
   /** チャンネルが作られた（見える人にだけ届く。非公開は作った人だけ） */
   "channel_created",
@@ -263,10 +254,6 @@ export const createFacilityChannelSchema = z.object({
 });
 export type CreateFacilityChannelInput = z.infer<typeof createFacilityChannelSchema>;
 
-/**
- * クエリ文字列の boolean（`?favoriteOnly=true`）。`z.coerce.boolean()` は `Boolean("false") === true`
- * なので **"false" が true に反転する**（セルフレビュー 2026-09-14 で検出）。job-role.ts と同じ transform で受ける。
- */
 const queryBoolean = z
   .union([z.boolean(), z.enum(["true", "false", "1", "0"])])
   .optional()
@@ -316,10 +303,6 @@ export const listMessagesQuerySchema = z.object({
 });
 export type ListMessagesQueryInput = z.infer<typeof listMessagesQuerySchema>;
 
-/**
- * POST /message/channels/:id/typing — 「入力中」の合図（§5.5。DB に書かず SSE に流すだけ）。
- * `parentId` はスレッドで打っているとき（チャンネル本体の「入力中」とは別の部屋）。`stopped` は送信・離脱で取り下げる
- */
 export const messageTypingSchema = z.object({
   parentId: uuidField.nullish(),
   stopped: z.boolean().optional(),
@@ -906,7 +889,6 @@ export type MessagePermissionContext = {
   userId: string;
   /** 組織の管理者（管理コンソールに入れる人）。常に Piazza の管理者（`role` は admin） */
   isAdmin: boolean;
-  /** Piazza の役（§8.3.1）。画面は `@qaito/modules/message/permissions` の規則に渡して出し分ける */
   role: MessageRole;
 };
 

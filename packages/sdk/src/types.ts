@@ -589,7 +589,7 @@ export type Facility = {
   company_id: string | null;
   /** office_number: 介護保険事業所番号（旧 facility_number は削除済み）*/
   office_number: string | null;
-  /** 事業所番号を 10 桁に正規化（migration 0172）する前の生の値。復旧用で、アプリからは書き換えない */
+  /** 事業所番号を 10 桁に正規化する前の生の値。復旧用で、アプリからは書き換えない */
   office_number_legacy_raw: string | null;
   name: string;
   name_kana: string | null;
@@ -601,7 +601,7 @@ export type Facility = {
   city: string | null;
   /** address_line: 住所（旧 address は削除済み）*/
   address_line: string | null;
-  /** 位置（numeric(9,6) なので文字列で返る。緯度・経度の 2 つで 1 組。migration 0391） */
+  /** 位置（numeric(9,6) なので文字列で返る。緯度・経度の 2 つで 1 組） */
   latitude: string | null;
   longitude: string | null;
   phone: string | null;
@@ -1264,7 +1264,7 @@ export type ChatSession = {
   updated_at: string;
   /** メッセージ数 */
   message_count?: number;
-  /** 履歴の状態（QaitoChat の BFF / Runner が読む・qaito-chat-harness.md §6.4） */
+  /** 履歴の状態（QaitoChat が読む） */
   history?: ChatSessionHistoryState;
 };
 
@@ -6187,7 +6187,7 @@ export type CreateLifeSubmissionInput = {
   submission_type: LifeSubmissionType;
   status?: LifeSubmissionStatus;
   submitted_data?: Record<string, unknown>;
-  /** 提出対象月（YYYY-MM）。開始/終了の 2 列ではなく単一列（migration 0085） */
+  /** 提出対象月（YYYY-MM） */
   submission_period?: string;
   submitted_at?: string;
   memo?: string;
@@ -6618,7 +6618,7 @@ export type ClaimsStatementStatus =
   | "kago_pending"
   | "voided"
   | "void";
-/** recordStatementStatus() が受け付ける手動記録可能な状態（§6.13） */
+/** recordStatementStatus() が受け付ける手動記録可能な状態 */
 export type ClaimsManualStatementStatus =
   | "submitted"
   | "accepted"
@@ -6747,7 +6747,7 @@ export type ClaimsKohiClaim = {
   legal_category: string;
   payer_number: string;
   claim_yen: number;
-  /** 公費 n（1〜3。2026-10-29 より前に確定した明細書には無い） */
+  /** 公費 n（1〜3。この項目を足す前に確定した明細書には無い） */
   slot?: number;
   /** 公費分単位数（記載要領 ク） */
   units?: number;
@@ -6817,7 +6817,7 @@ export type ClaimsValidationFinding = {
   createdAt: string;
 };
 
-/** GET /claims/statements/:statementId の runs（calculation_runs の抜粋列 — §6.5.2） */
+/** GET /claims/statements/:statementId の runs（calculation_runs の抜粋列） */
 export type ClaimsCalculationRunSummary = {
   id: string;
   engineVersion: string;
@@ -6845,14 +6845,14 @@ export type ClaimsBatchDetail = {
   statements: ClaimsStatement[];
 };
 
-/** バッチ全体の再計算差分要約（§6.3.2 ②） */
+/** バッチ全体の再計算差分要約 */
 export type ClaimsBatchDiffSummary = {
   statementsChanged: number;
   unitsDelta: number;
   claimYenDelta: number;
 };
 
-/** calculate/create バッチ計算で validation_findings に未添付だった finding（§4.6） */
+/** calculate/create バッチ計算で validation_findings に未添付だった finding */
 export type ClaimsPersistFinding = {
   ruleId: string;
   severity: string;
@@ -6860,7 +6860,7 @@ export type ClaimsPersistFinding = {
   message: string;
 };
 
-/** createBatch(input) — §6.13 */
+/** createBatch(input) */
 export type CreateClaimsBatchInput = {
   facilityId: string;
   billingYearMonth: string;
@@ -6922,7 +6922,7 @@ export type ValidateClaimsBatchResult = {
   warnings: number;
 };
 
-/** confirmBatch(batchId, input) — §6.13 */
+/** confirmBatch(batchId, input) */
 export type ConfirmClaimsBatchInput = {
   waivedFindingIds?: string[];
 };
@@ -6932,12 +6932,12 @@ export type ConfirmClaimsBatchResult = {
   confirmedCount: number;
 };
 
-/** recordBatchSubmitted(batchId, input) — §6.13・Phase A 手動記録 */
+/** recordBatchSubmitted(batchId, input) — 手動記録 */
 export type RecordClaimsBatchSubmittedInput = {
   submittedAt: string;
 };
 
-/** voidBatch(batchId, input) — §6.13 */
+/** voidBatch(batchId, input) */
 export type VoidClaimsBatchInput = {
   reason: string;
 };
@@ -6973,7 +6973,7 @@ export type RecalculateClaimsStatementResult = {
   diffSummary: ClaimsBatchDiffSummary;
 };
 
-/** recordStatementStatus(statementId, input) — §6.13（前方遷移のみサーバ検証） */
+/** recordStatementStatus(statementId, input) — 前方遷移のみサーバ検証 */
 export type RecordClaimsStatementStatusInput = {
   to: ClaimsManualStatementStatus;
   notedAt: string;
@@ -7171,7 +7171,7 @@ export type ClaimsInvoiceDetail = {
 };
 
 /**
- * upsertSelfPayLine(invoiceId, line) の line 入力（user_invoice_lines・kind 固定 'self_pay'・§6.13）。
+ * upsertSelfPayLine(invoiceId, line) の line 入力（user_invoice_lines・kind 固定 'self_pay'）。
  * 自費の項目から足す形（`{ selfPayItemId, quantity }`・名前・単価 × 数・課税・控除は項目から写す）か、
  * 項目に無いものを手で足す形。
  */
@@ -7191,7 +7191,7 @@ export type AddClaimsSelfPayLineResult = {
   lineNo: number;
 };
 
-/** issueReceipt(invoiceId, input?) — 再発行時のみ必須（§5.6.3） */
+/** issueReceipt(invoiceId, input?) — 再発行時のみ必須 */
 export type IssueClaimsReceiptInput = {
   reissueReason: string;
 };
@@ -9710,7 +9710,7 @@ export type UpdateAnnouncementInput = Partial<CreateAnnouncementInput>;
 
 /** カレンダーの持ち主の種類（個人のカレンダーだけ） */
 export type CalendarOwnerKind = "user";
-/** カレンダーの出どころ（段 4 まで `local` だけ） */
+/** カレンダーの出どころ（いまは `local` だけ） */
 export type CalendarSourceKind = "local" | "google";
 
 /** 自分の実効レベル（view < edit < full = 持ち主） */
@@ -10004,371 +10004,62 @@ export type CreateCalendarEventInput = {
 /** 送った項目だけを変える（カレンダーの付け替えはしない）。繰り返しの予定は scope と occurrenceStart で範囲を選ぶ */
 export type UpdateCalendarEventInput = Partial<Omit<CreateCalendarEventInput, "calendarId">> & CalendarOccurrenceTarget;
 
-/** レベル（`view < comment < edit < full`）。`none` は実効だけ（行には付けない） */
-export type LibraryLevel = "none" | "view" | "comment" | "edit" | "full";
-export type LibraryGrantLevel = Exclude<LibraryLevel, "none">;
-/** スペースの既定のアクセス（full は配らない） */
-export type LibraryGeneralAccess = "none" | "view" | "comment" | "edit";
-export type LibrarySpaceKind = "org" | "facility";
-export type LibraryPrincipalKind = "user" | "facility" | "group";
-export type LibraryAccessMode = "inherit" | "restricted";
-
-/** 自分の「だれが」（画面・外部アプリが capabilities を評価する材料） */
-export type LibraryActor = {
-  userId: string | null;
-  /** 組織の管理者（コンソール柱・root） */
-  isAdmin: boolean;
-  facilityScope: { kind: "unrestricted" } | { kind: "restricted"; facilityIds: string[] };
-  groupIds: string[];
-  scopes: { write: boolean; delete: boolean };
-};
-
-/** 見えるスペース（自分の実効レベルと、できることつき） */
-export type LibrarySpace = {
-  id: string;
-  kind: LibrarySpaceKind;
-  facilityId: string | null;
-  name: string;
-  description: string | null;
-  iconName: string | null;
-  sortOrder: number;
-  generalAccess: LibraryGeneralAccess;
-  myLevel: LibraryLevel;
-  capabilities: { settings: boolean; members: boolean; delete: boolean };
-};
-
-/** スペースの行（作成・更新の結果） */
-export type LibrarySpaceRecord = {
-  id: string;
-  organizationId: string;
-  kind: LibrarySpaceKind;
-  facilityId: string | null;
-  name: string;
-  description: string | null;
-  iconName: string | null;
-  sortOrder: number;
-  generalAccess: LibraryGeneralAccess;
-  createdBy: string | null;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt: string | null;
-};
-
-export type CreateLibrarySpaceInput = {
-  kind: LibrarySpaceKind;
-  /** 事業所スペースは必須（自分の範囲の事業所）、組織スペースは持たない */
-  facilityId?: string | null;
-  name: string;
-  description?: string | null;
-  iconName?: string | null;
-  sortOrder?: number;
-  /** 省略 = view */
-  generalAccess?: LibraryGeneralAccess;
-};
-/** 送った項目だけを変える（1 つ以上） */
-export type UpdateLibrarySpaceInput = Partial<Omit<CreateLibrarySpaceInput, "kind" | "facilityId">>;
-
-/** 共有先 1 件（人・事業所・グループ）とレベル */
-export type LibraryPrincipalInput = { principalKind: LibraryPrincipalKind; id: string; level: LibraryGrantLevel };
-
-/** スペースのメンバー */
-export type LibrarySpaceMember = {
-  id: string;
-  principalKind: LibraryPrincipalKind;
-  principalId: string;
-  name: string | null;
-  level: LibraryGrantLevel;
-  /** 管理者が自分を追加した（admin_self）・作った人（creator） */
-  grantedVia: "member" | "creator" | "admin_self";
-};
-/** メンバーを全部置き換える（有効な full の人が 0 になる変更は 409） */
-export type SetLibrarySpaceMembersInput = { members: LibraryPrincipalInput[] };
-
-/** ページの共有 1 件 */
-export type LibraryPageGrant = {
-  id: string;
-  pageId: string;
-  principalKind: LibraryPrincipalKind;
-  principalId: string;
-  name: string | null;
-  level: LibraryGrantLevel;
-  /** スペースの事業所と違う事業所への共有（事業所の境界を越えた共有の印） */
-  crossFacility: boolean;
-};
-/** 共有のダイアログの材料 */
-export type LibraryPageAccess = {
-  pageId: string;
-  accessMode: LibraryAccessMode;
-  /** 継承の基準点。null ならスペース、あれば制限されたページ */
-  restrictedRootId: string | null;
-  /** このページに直接付いた共有 */
-  direct: LibraryPageGrant[];
-  /** 基準点からの経路の上のページから継承している共有 */
-  inherited: LibraryPageGrant[];
-};
-/** 直接の共有を全部置き換える（継承している共有は含めない） */
-export type SetLibraryPageGrantsInput = { grants: LibraryPrincipalInput[] };
-/** 制限する / 継承に戻す */
-export type SetLibraryPageAccessModeInput = { mode: LibraryAccessMode };
-/** 確認ダイアログの人数を出す変更 */
-export type PreviewLibraryAccessChangeInput =
-  | { kind: "accessMode"; mode: LibraryAccessMode }
-  | { kind: "move"; parentId: string | null }
-  | { kind: "grants"; grants: LibraryPrincipalInput[] };
-/** 見えるようになる人 / 見えなくなる人の数 */
-export type LibraryAccessChangePreview = { gain: number; lose: number };
-
+export type LibraryArea = import("@qaito/schemas/library").LibraryArea;
+export type LibraryNodeKind = import("@qaito/schemas/library").LibraryNodeKind;
+export type LibraryVisibility = import("@qaito/schemas/library").LibraryVisibility;
+export type LibraryMemberLevel = import("@qaito/schemas/library").LibraryMemberLevel;
 /** 本文の形式。`blocks` は Notion の形のブロック（`body` は `LibraryBlocksBody` の JSON の文字列）。新しいページの既定は `blocks` */
-export type LibraryPageFormat = "markdown" | "html" | "text" | "blocks";
-/** 形式 blocks の本文（`JSON.parse(page.body)` の形・ProseMirror の JSON。許すノードと mark は @qaito/schemas/library） */
+export type LibraryPageFormat = import("@qaito/schemas/library").LibraryPageFormat;
 export type LibraryBlocksBody = import("@qaito/schemas/library").LibraryBlocksBody;
-export type LibraryPageStatus = "draft" | "published";
-export type LibraryVersionState = "draft" | "published" | "superseded";
 
-/** 木の 1 ノード（見えるページだけ・親子は parentId） */
-export type LibraryTreeNode = {
-  id: string;
-  parentId: string | null;
-  position: number;
-  title: string;
-  slug: string;
-  status: LibraryPageStatus;
-  accessMode: LibraryAccessMode;
-  format: LibraryPageFormat;
-  summary: string | null;
-  helpKey: string | null;
-  /** ページのアイコン（絵文字 1 つ） */
-  icon: string | null;
-  /** テンプレートの印 */
-  isTemplate: boolean;
-  /** 最後に変えた日時（ISO 8601） */
-  updatedAt: string;
-};
-
-/** ページを探す条件（公開版の題名と本文・見えるページだけ） */
-export type SearchLibraryPagesQuery = {
-  /** 探す言葉（1〜100 字） */
-  q: string;
-  /** スペースで絞る */
-  spaceId?: string;
-  /** 件数（1〜50・既定 20） */
-  limit?: number;
-};
-
-/** 検索の 1 件（snippet は本文の当たった前後） */
+/** 中に入れるノード（本文は含めない） */
+export type LibraryNode = import("@qaito/schemas/library").LibraryNode;
+/** 本文つきのノード */
+export type LibraryNodeWithBody = import("@qaito/schemas/library").LibraryNodeWithBody;
+/** 1 つ開いたときのノード（本文・できること・非公開の根の名前・見せる人の数） */
+export type LibraryNodeView = import("@qaito/schemas/library").LibraryNodeView;
+export type LibraryNodeSaved = import("@qaito/schemas/library").LibraryNodeSaved;
+export type LibraryDesignReport = import("@qaito/schemas/library").LibraryDesignReport;
+export type LibraryDesignReportItem = import("@qaito/schemas/library").LibraryDesignReportItem;
+export type LibraryDesignPreview = import("@qaito/schemas/library").LibraryDesignPreview;
+/** 名前だけ見える非公開の根（中は読めない） */
+export type LibraryOutlineNode = import("@qaito/schemas/library").OutlineNode;
+/** 置き場の木（入れるノードと、名前だけのノード） */
+export type LibraryTree = import("@qaito/schemas/library").LibraryTree;
 export type LibrarySearchHit = import("@qaito/schemas/library").LibrarySearchHit;
+export type LibraryVisibilityPreview = import("@qaito/schemas/library").LibraryVisibilityPreview;
+export type LibraryNames = import("@qaito/schemas/library").LibraryNames;
+export type LibraryNameEntry = import("@qaito/schemas/library").LibraryNameEntry;
 
-/** ページ 1 枚（自分ができることつき） */
-export type LibraryPage = {
-  id: string;
-  spaceId: string;
-  parentId: string | null;
-  position: number;
-  slug: string;
-  title: string;
-  summary: string | null;
-  format: LibraryPageFormat;
-  status: LibraryPageStatus;
-  /** ページの頭（版に持たない）。アイコンは絵文字 1 つ、カバーは同じスペースの画像の ID */
-  icon: string | null;
-  coverAssetId: string | null;
-  accessMode: LibraryAccessMode;
-  ancestorIds: string[];
-  restrictedRootId: string | null;
-  publishedVersionNo: number | null;
-  draftVersionNo: number | null;
-  latestVersionNo: number | null;
-  updatedAt: string;
-  createdAt: string;
-  /** 本文（html はサニタイズ済み・画像は `qaito-asset:{id}` のまま）。下書きを読める人には下書き、それ以外は公開版 */
-  body: string | null;
-  /** 文字だけの本文（検索・AI 用） */
-  bodyText: string | null;
-  bodySource: "published" | "draft" | null;
-  capabilities: {
-    edit: boolean;
-    publish: boolean;
-    share: boolean;
-    delete: boolean;
-    move: boolean;
-    readDraft: boolean;
-  };
-  /** 公式のページから複製したときの元 */
-  copiedFrom: { officialPageId: string; versionNo: number | null } | null;
-};
+export type GetLibraryTreeQuery = import("@qaito/schemas/library").GetLibraryTreeInput;
+/** `limit` は 1〜50（既定 20） */
+export type SearchLibraryNodesQuery = { q: string; area?: LibraryArea; facilityId?: string; limit?: number };
+export type CreateLibraryNodeInput = import("@qaito/schemas/library").CreateLibraryNodeInput;
+export type UpdateLibraryNodeInput = import("@qaito/schemas/library").UpdateLibraryNodeInput;
+export type SaveLibraryBodyInput = import("@qaito/schemas/library").SaveLibraryBodyInput;
+export type EditLibraryDesignInput = import("@qaito/schemas/library").EditLibraryDesignInput;
+export type StepLibraryVersionInput = import("@qaito/schemas/library").StepLibraryVersionInput;
+export type PreviewLibraryDesignInput = import("@qaito/schemas/library").PreviewLibraryDesignInput;
+export type GetLibraryNodeQuery = import("@qaito/schemas/library").GetLibraryNodeQuery;
+export type MoveLibraryNodeInput = import("@qaito/schemas/library").MoveLibraryNodeInput;
+export type SetLibraryVisibilityInput = import("@qaito/schemas/library").SetLibraryVisibilityInput;
+export type SetLibraryNamesInput = import("@qaito/schemas/library").SetLibraryNamesInput;
+export type CopyLibraryNodeInput = import("@qaito/schemas/library").CopyLibraryNodeInput;
 
-/** ページの行（作成・移動・公開をやめた結果）。`body` は公開版の写し */
-export type LibraryPageRecord = {
-  id: string;
-  organizationId: string;
-  spaceId: string;
-  parentId: string | null;
-  position: number;
-  slug: string;
-  title: string;
-  summary: string | null;
-  format: LibraryPageFormat;
-  body: string;
-  bodyText: string;
-  status: LibraryPageStatus;
-  publishedVersionId: string | null;
-  draftVersionId: string | null;
-  accessMode: LibraryAccessMode;
-  ancestorIds: string[];
-  restrictedRootId: string | null;
-  grantPath: string[];
-  copiedFromOfficialPageId: string | null;
-  copiedFromOfficialVersionNo: number | null;
-  icon: string | null;
-  coverAssetId: string | null;
-  createdBy: string | null;
-  updatedBy: string | null;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt: string | null;
-};
-
-/** 版の行（下書きの保存・公開・変換・復元の結果） */
-export type LibraryPageVersionRecord = {
-  id: string;
-  organizationId: string;
-  pageId: string;
-  versionNo: number;
-  format: LibraryPageFormat;
-  title: string;
-  body: string;
-  bodyText: string;
-  summary: string | null;
-  state: LibraryVersionState;
-  note: string | null;
-  createdBy: string | null;
-  createdAt: string;
-  publishedBy: string | null;
-  publishedAt: string | null;
-};
-
-/** 版の一覧の 1 行 */
-export type LibraryPageVersion = {
-  id: string;
-  pageId: string;
-  versionNo: number;
-  state: LibraryVersionState;
-  format: LibraryPageFormat;
-  title: string;
-  summary: string | null;
-  note: string | null;
-  createdBy: string | null;
-  createdByName: string | null;
-  createdAt: string;
-  publishedBy: string | null;
-  publishedByName: string | null;
-  publishedAt: string | null;
-};
-/** 版 1 つ（本文つき） */
-export type LibraryPageVersionDetail = LibraryPageVersion & { body: string; bodyText: string };
-
-export type CreateLibraryPageInput = {
-  spaceId: string;
-  /** 根なら null か省略 */
-  parentId?: string | null;
-  title: string;
-  summary?: string | null;
-  /** 省略すると `blocks` */
-  format?: LibraryPageFormat;
-  /** blocks は `LibraryBlocksBody` の JSON の文字列（空なら空の段落 1 つ） */
-  body?: string;
-  /** 英小文字・数字・-（省略すると題名から作る） */
-  slug?: string;
-  position?: number;
-  /** ページのアイコン（絵文字 1 つ） */
-  icon?: string | null;
-  /** カバーの画像（同じスペースの画像の ID） */
-  coverAssetId?: string | null;
-  /** テンプレートから作る（同じスペースの、印の付いた公開済みのページ。形式と本文を写す） */
-  templatePageId?: string;
-};
-/** 下書きの保存。`baseVersionNo` は元にした版（ずれていれば 409）。公開版も下書きも無いページは null */
-export type SaveLibraryPageDraftInput = {
-  title?: string;
-  summary?: string | null;
-  format?: LibraryPageFormat;
-  body?: string;
-  note?: string | null;
-  baseVersionNo: number | null;
-  /** ページのアイコン（絵文字 1 つ・null で外す）。版に持たず、保存したときにページへ入る */
-  icon?: string | null;
-  /** カバーの画像（同じスペースの画像の ID・null で外す）。版に持たず、保存したときにページへ入る */
-  coverAssetId?: string | null;
-};
-/** 移動（同じスペースの中だけ）。根へ動かすときは parentId = null */
-export type MoveLibraryPageInput = { parentId: string | null; position?: number };
-/** テンプレートの印を付ける・外す */
-export type SetLibraryPageTemplateInput = { isTemplate: boolean };
-/** 形式の変換（新しい下書きの版を作るだけ。対応しない対は 400）。`markdown → blocks` も使える */
-export type ConvertLibraryPageFormatInput = { to: LibraryPageFormat };
-export type RestoreLibraryPageVersionInput = { versionNo: number; note?: string | null };
-
-/** 公式のスペース */
-export type LibraryOfficialSpace = {
-  id: string;
-  name: string;
-  description: string | null;
-  iconName: string | null;
-  sortOrder: number;
-};
-/** 公式の木の 1 ノード */
-export type LibraryOfficialTreeNode = {
-  id: string;
-  parentId: string | null;
-  position: number;
-  title: string;
-  slug: string;
-  status: LibraryPageStatus;
-  format: LibraryPageFormat;
-  summary: string | null;
-  helpKey: string | null;
-};
-/** ライブラリの画像（置き場のキーは返さない） */
-export type LibraryAsset = {
-  id: string;
-  spaceId: string;
-  mime: string;
-  bytes: number;
-  width: number | null;
-  height: number | null;
-  createdBy: string | null;
-  createdAt: string;
-};
+/** 自分の置き場（組織・所属する事業所・個人）と、書けるか */
+export type LibraryMyAccess = import("@qaito/schemas/library").LibraryMyAccess;
+/** 版の 1 行（本文なし）と、版 1 つ（本文つき） */
+/** ライブラリの画像（置き場のキーは返さない）と、短期の署名 URL */
+export type LibraryAsset = import("@qaito/schemas/library").LibraryAsset;
+export type LibraryAssetUrl = import("@qaito/schemas/library").LibraryAssetUrl;
 /** 画像の取り込み。実体は storage のアップロード窓口（用途 `library_asset`）に置いた stagedId で渡す */
 export type UploadLibraryAssetInput = { stagedId: string; width?: number; height?: number };
-/** 公式のページ 1 枚 */
-export type LibraryOfficialPage = {
-  id: string;
-  spaceId: string;
-  parentId: string | null;
-  position: number;
-  slug: string;
-  title: string;
-  summary: string | null;
-  format: LibraryPageFormat;
-  status: LibraryPageStatus;
-  helpKey: string | null;
-  ancestorIds: string[];
-  publishedVersionNo: number | null;
-  draftVersionNo: number | null;
-  createdAt: string;
-  updatedAt: string;
-  /** 公開版の本文（html はサニタイズ済み） */
-  body: string | null;
-  bodyText: string | null;
-  bodySource: "published" | null;
-};
-/** 公式のページを自組織のスペースへ複製する（複製は下書き） */
-export type CopyOfficialLibraryPageInput = { toSpaceId: string; toParentId?: string | null; slug?: string };
-/** 公式（先頭）と見える組織・事業所のスペースを合わせた一覧の 1 件 */
-export type LibraryCombinedSpace = ({ kind: "official" } & LibraryOfficialSpace) | LibrarySpace;
-/** 「この画面の使い方」のページ（公式の help_key で引く） */
-export type LibraryHelpPage = { id: string; spaceId: string; slug: string; title: string };
+/** 公式のノード（組織を持たない・版は無い） */
+export type LibraryOfficialNode = import("@qaito/schemas/library").LibraryOfficialNode;
+export type LibraryOfficialNodeWithBody = import("@qaito/schemas/library").LibraryOfficialNodeWithBody;
+export type LibraryOfficialTree = import("@qaito/schemas/library").LibraryOfficialTree;
+/** 「この画面の使い方」（公式の help_key で引く）。`url` は web の読む画面 */
+export type LibraryHelpTarget = import("@qaito/schemas/library").LibraryHelpTarget;
 
 /** メンバーが入っているグループ（とそのグループに割り当てた権限セット） */
 export type AccessControlMemberGroup = {
@@ -10395,12 +10086,22 @@ export type AccessControlMember = {
   /** 最終ログイン日時。null = 一度もログインしていない */
   last_sign_in_at: string | null;
   user_group_members: AccessControlMemberGroup[];
-  /** 所属事業所。**空 = 未設定 = 全事業所扱い** */
+  /** 所属事業所（必須。空は直す必要のある人か、組織に有効な事業所がまだ無い間だけ） */
   facilities: { facility_id: string; name: string; is_default: boolean }[];
+  /** 所属事業所が 0 件で直す必要がある（組織に有効な事業所があり、アーカイブされていない） */
+  facility_missing: boolean;
+  /** `facility_missing` の人だけ: 職員台帳の今の主の発令の事業所（所属にする候補）。ほかは null */
+  facility_candidate: { facility_id: string; name: string } | null;
+};
+
+/** メンバー一覧の絞り込み */
+export type ListAccessControlMembersQuery = {
+  /** true なら所属事業所の無い人（`facility_missing`）だけ */
+  without_facility?: boolean;
 };
 
 /** メンバー 1 人（所属事業所は一覧の側にだけある） */
-export type AccessControlMemberDetail = Omit<AccessControlMember, "facilities">;
+export type AccessControlMemberDetail = Omit<AccessControlMember, "facilities" | "facility_missing" | "facility_candidate">;
 
 export type PortalLinkKind = "shortcut" | "site";
 
@@ -10732,7 +10433,7 @@ export type MediaLog = {
   /**
    * 保存キー。**NULL = 自前の実体を持たない**（Qaito ドライブの写真を共有した受け取り）。
    * その場合の実体は `userFileId` が指す先にあり、置き場も別のバケットになる
-   * （配信は `GET /media/logs/:id/media-url` に解決させる。migration 0361）
+   * （配信は `GET /media/logs/:id/media-url` に解決させる）
    */
   s3Key: string | null;
   /** 値あり = Qaito ドライブのファイルを共有した受け取り（実体はそちら） */
@@ -10899,14 +10600,16 @@ export type SendDirectiveInput = {
   /** YYYY-MM-DD */
   dueOn?: string | null;
   audienceKind: DirectiveAudienceKind;
-  /** 全員宛のときは空 */
+  /** 組織の全員宛（all）のときは空 */
   audienceIds?: string[];
 };
 
 /** GET /directive/audience-options（送り手が選べるものだけ） */
 export type DirectiveAudienceOptions = {
-  /** 全員宛を選べるか */
+  /** 組織の全員宛を選べるか（業務連絡を書ける人なら true。所属事業所が 0 件の送り手だけ false） */
   canSendAll: boolean;
+  /** 組織の全員宛で届く人数（自分・ルートアカウント・アーカイブ済みを除く） */
+  orgMemberCount: number;
   facilities: { id: string; name: string }[];
   groups: { id: string; name: string }[];
   users: { id: string; name: string }[];
@@ -13546,7 +13249,7 @@ export type ClosingDivisionProgress = import("@qaito/schemas/daily-closing").Clo
   name: string;
   monthActual: ClosingActualTotal;
 };
-/** 月の速報・実績（請求）・差と内訳（段 3） */
+/** 月の速報・実績（請求）・差と内訳 */
 export type ClosingMonthActual = import("@qaito/schemas/daily-closing").ClosingMonthActual;
 /** 束ねた月の速報・実績（請求）・差（全社・事業部） */
 export type ClosingActualTotal = import("@qaito/schemas/daily-closing").ClosingActualTotal;
@@ -14504,3 +14207,43 @@ export type ListVideoSessionsParams = {
 };
 /** `GET /video-analysis/camera/list` の絞り込み（事業所は必須） */
 export type ListVideoCamerasParams = { facilityId: string };
+
+export type PublicLinkStatus = "pending" | "published" | "stale" | "revoking" | "revoked" | "failed";
+
+/** 公開リンク（`ref` は照合用の hash の先頭 8 字） */
+export type PublicLink = {
+  id: string;
+  kind: "library";
+  sourceId: string;
+  status: PublicLinkStatus;
+  revokeReason: string | null;
+  generation: number;
+  expiresAt: string;
+  createdBy: string;
+  createdAt: string;
+  publishedAt: string | null;
+  publishedSourceVersion: string | null;
+  publishedSourceUpdatedAt: string | null;
+  lastErrorCode: string | null;
+  /** 公開したときの題名 */
+  title: string | null;
+  /** 作った人の名前（引けなければ null） */
+  createdByName: string | null;
+  ref: string;
+};
+
+export type ListPublicLinksQuery = {
+  /** "1" なら取り消し済み・失敗も含める */
+  includeEnded?: "1";
+  sourceId?: string;
+};
+
+/** 取り消しの結果（もう取り消し中・取り消し済みなら started は false） */
+export type RevokePublicLinkResult = { started: boolean; link: PublicLink | null };
+
+export type ShareLibraryNodeInput = { expiresInDays?: 7 | 30 | 90 };
+export type UpdateLibraryShareInput = { expiresInDays?: 7 | 30 | 90 };
+
+/** 作った結果（`url` = 外の人に渡す URL。この応答で 1 度だけ。`skippedImages` = 書き出せなかった画像の数） */
+export type LibraryShareCreated = { linkId: string; url: string; expiresAt: string; skippedImages: number };
+export type LibraryShareUpdated = { linkId: string; generation: number; expiresAt: string; skippedImages: number };

@@ -49,16 +49,16 @@ export function createTalkNamespace(tx: SdkTransport) {
 }
 
 /**
- * デバイス管理（Phase 6: Mobile Push トークン / Phase 3: デバイス台帳）
+ * デバイス管理（Mobile Push トークン / デバイス台帳）
  *
- * Mobile Push トークン管理（Phase 6, qaito-mobile-platform.md）
+ * Mobile Push トークン管理
  * - registerPushToken: APNs / FCM トークンを登録 → SNS Platform Endpoint 作成
  * - unregisterPushToken: トークンを失効 → SNS Endpoint 削除
  * - listPushTokens: 自分の有効なトークン一覧
  * - revokeOwnPushTokens: 自分のトークンをすべて失効（全製品・全端末）
  * - reportClientErrors: 端末の JS の例外の記録を送る（保存せず api のログへ・PII なし）
  *
- * デバイス台帳（Phase 3, qaito-device-pillar-phase3.md §4）
+ * デバイス台帳
  * - catalog.list: デバイス台帳一覧
  * - catalog.create: デバイス登録（固有 API Key 自動生成、rawKey は 1 回限り返却）
  * - catalog.getAuthSettings: 認証パラメータ取得

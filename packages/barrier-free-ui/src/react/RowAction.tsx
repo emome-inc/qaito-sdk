@@ -25,7 +25,6 @@ export type RowActionKind =
   | "copy";
 
 /** アイコンは**必ず文言の前**（左）。種類で位置を変えない ─ 位置が揃っていないと列が波打って見える
- * （2026-09-11 ユーザー指摘「アイコンが右にあるのか左にあるのかバラバラで気持ち悪い」）。
  * 詳細・開くの矢印も左（「› 詳細」は日本語の画面でよく使われる並び） */
 type Preset = { label: string; icon: ReactNode; danger?: boolean };
 
@@ -120,7 +119,7 @@ export function RowAction(
  * アイコンのみのボタンに文言のツールチップを添える。見た目と画面の端での寄せは
  * Tooltip と共通（tooltip.css / bubble-placement.ts）。読み上げには aria-label が
  * 名前を渡しているので、吹き出しは読み上げない（aria-hidden）─ id を振らずに済むので
- * rewrite 面の useId ずれ（framework doc §7.2）も起きない。
+ * rewrite 面の useId ずれも起きない。
  */
 function withTip(control: ReactNode, tip: ReactNode | undefined) {
   if (tip === undefined || tip === null || tip === "") return control;

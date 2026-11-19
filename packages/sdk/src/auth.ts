@@ -111,7 +111,7 @@ export class QaitoOAuth {
      * 認可サーバ（`/oauth/authorize`）はクライアント登録済みスコープを既定値として使う。
      * 有効スコープを毎回全列挙すると authorize URL のクエリ文字列が肥大化し、
      * WAF の SizeRestrictions_QUERYSTRING（2048 バイト）で 403（→ CloudFront で 404 化）
-     * になる事故が起きたため、原則は省略を推奨する（2026-08-17 本番障害の恒久修正）。
+     * になるため、原則は省略を推奨する。
      */
     scope?: string;
     state?: string;

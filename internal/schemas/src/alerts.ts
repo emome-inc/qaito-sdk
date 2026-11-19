@@ -57,18 +57,6 @@ export type AlertItem = {
   module_slug: string;
 };
 
-/**
- * 判定 1 件の**下書き**。alerts モジュールの解体（2026-09-09）で、期限・未実施の判定は
- * 「判定対象データを所有するモジュール」の `functions/` へ配った。
- *
- * その判定関数は **DB も環境変数も触らない純関数**なので、`AlertItem.link`（絶対 URL）を
- * 組み立てられない（`buildModuleDeeplink` は `QAITO_APP_DOMAIN` / `NODE_ENV` に依存する
- * 表示層の関心事）。そこで判定側は「どのアプリの・どのパスへ飛ばすか」だけを返し、
- * URL 化は横断一覧を組む側（`@qaito/modules/analytics` の `functions/alerts`）が行う。
- *
- * `module_slug` は**判定の所有モジュール**（誰の権限で出す情報か）、`link_app` は
- * **遷移先アプリ**（例: 利用者台帳の判定 → 顧客管理アプリの利用者カルテ）で、両者は一致しない。
- */
 export type AlertDraft = Omit<AlertItem, "link"> & {
   /** 遷移先アプリの slug（deeplink のホスト部になる） */
   link_app: string;

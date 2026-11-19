@@ -53,7 +53,6 @@ export const UPLOAD_MAX_BYTES: Record<UploadPurpose, number> = {
 
 export const checksumSha256Schema = z.string().regex(/^[A-Za-z0-9+/]{43}=$/);
 
-/** presigned PUT の有効期限（秒）。qaito-security.md §11「PUT 60–300 秒」に従う */
 export const UPLOAD_PRESIGN_EXPIRES_SEC = 300;
 
 /** 用途 + 宣言サイズ + 宣言 MIME が受理可能か（① issue の事前チェック用・信頼しない） */
@@ -80,7 +79,6 @@ export type UploadIssueRequest = z.infer<typeof uploadIssueRequestSchema>;
 export const uploadIssueResponseSchema = z.object({
   /** staging の識別子（サーバ生成 UUID）。以降の API はこれだけを受け取る */
   staged_id: z.string().uuid(),
-  /** ブラウザが PUT する先。prod = S3 presigned / dev = 同一オリジンの中継ルート（§9） */
   upload_url: z.string().min(1),
   /** PUT 時に必ず付ける Content-Type（署名に含まれるため一致必須） */
   content_type: z.string().min(1),

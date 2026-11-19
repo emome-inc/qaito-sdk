@@ -112,7 +112,7 @@ export function createTransportPlanNamespace(tx: SdkTransport) {
           tx.request<void>("PUT", `/transport/routes/${pathParam(routeId, "routeId")}/stops/reorder`, input),
       },
     },
-    /** 利用者別 送迎設定（旧 client.transportSettings から移管・client-module-split.md §1）*/
+    /** 利用者別 送迎設定*/
     settings: {
       get: (clientId: string) =>
         tx.request<ClientTransportSettings | null>("GET", `/transport/clients/${pathParam(clientId, "clientId")}/transport`),

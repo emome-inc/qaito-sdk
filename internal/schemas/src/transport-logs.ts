@@ -31,7 +31,6 @@ export const createTransportLogSchema = z.object({
 
   /** 乗降日（YYYY-MM-DD）*/
   serviceDate: z.string().date("serviceDate は YYYY-MM-DD 形式です"),
-  /** 制度コード 2 軸（§2.3）*/
   serviceCategory: z.enum(serviceCategoryValues).default("kaigo_hoken"),
   serviceTypeCode: z.string().max(2, "serviceTypeCode は 2 文字以内です").default("15"),
 
@@ -75,10 +74,6 @@ export const createTransportLogSchema = z.object({
   driverNote: z.string().max(1000).optional().nullable(),
   /** 備考 */
   memo: z.string().max(1000).optional().nullable(),
-  /**
-   * キャンセル日時（forms-module.md §5.1 送迎表用）。boardingStatus='cancelled' と併用可能な
-   * 別枠（時刻と理由を分けて保持する）。
-   */
   canceledAt: z.string().datetime({ offset: true }).optional().nullable(),
   /** キャンセル理由 */
   canceledReason: z.string().max(500).optional().nullable(),

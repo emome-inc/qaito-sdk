@@ -5,7 +5,6 @@ import { jstToday } from "./jst";
 import { ocrExtraPartsSchema } from "./ocr-images";
 import { isNursingServiceType } from "./shared-options";
 
-/** statements.status — §3.6.1 全 14 状態（Phase A で全予約、submitted 以降は手動記録） */
 export const statementStatuses = [
   "draft",
   "validated",
@@ -24,11 +23,6 @@ export const statementStatuses = [
 ] as const;
 export type StatementStatus = (typeof statementStatuses)[number];
 
-/**
- * recordStatementStatus() が受け付ける手動記録可能な状態（§6.13・§3.6.1 の
- * 「exported 以降 = A 手動記録 / B は W2/W3 で自動遷移」の対象部分集合）。
- * 'void' は exported 前の取消専用（別導線）、'draft'〜'exported' はシステム内 API が管理するため対象外。
- */
 export const manualStatementStatuses = [
   "submitted",
   "accepted",
@@ -41,19 +35,15 @@ export const manualStatementStatuses = [
 ] as const;
 export type ManualStatementStatus = (typeof manualStatementStatuses)[number];
 
-/** billing_batches.status — §3.5（open→locked→exported→submitted + void の薄い状態） */
 export const billingBatchStatuses = ["open", "locked", "exported", "submitted", "void"] as const;
 export type BillingBatchStatus = (typeof billingBatchStatuses)[number];
 
-/** user_invoices.status — §3.8 */
 export const userInvoiceStatuses = ["draft", "issued", "superseded", "void"] as const;
 export type UserInvoiceStatus = (typeof userInvoiceStatuses)[number];
 
-/** statements.benefit_category — (a) 要介護⇔要支援またぎの正規分割軸（§3.5） */
 export const benefitCategories = ["kaigo", "yobo", "sogo"] as const;
 export type BenefitCategory = (typeof benefitCategories)[number];
 
-/** care_certifications.care_level 相当（§4.3 CareLevel と同型） */
 export const careLevels = [
   "support1",
   "support2",
@@ -65,19 +55,15 @@ export const careLevels = [
 ] as const;
 export type CareLevel = (typeof careLevels)[number];
 
-/** facility_scale_classifications.scale_class（§3.3.2） */
 export const scaleClasses = ["normal", "large1", "large2"] as const;
 export type ScaleClass = (typeof scaleClasses)[number];
 
-/** facility_scale_classifications.method — saveScaleClassification は auto を受け付けない（§6.13: バッチ自動提案専用） */
 export const scaleClassificationInputMethods = ["manual", "exception"] as const;
 export type ScaleClassificationInputMethod = (typeof scaleClassificationInputMethods)[number];
 
-/** facility_billing_profiles.designation_kind（§3.3.2） */
 export const designationKinds = ["honai", "minashi"] as const;
 export type DesignationKind = (typeof designationKinds)[number];
 
-/** facility_billing_profiles.region_grade_override（§3.3.2・regional_grades と同型 8 値） */
 export const regionGradeOverrides = ["1", "2", "3", "4", "5", "6", "7", "other"] as const;
 export type RegionGradeOverride = (typeof regionGradeOverrides)[number];
 
@@ -266,18 +252,14 @@ export const yearMonthSchema = z
 
 export const claimsFacilityMonthQuerySchema = z.object({ year_month: yearMonthSchema });
 
-/** 保険者番号（6桁）— §3.4 insurance_registrations.insurer_number */
 export const insurerNumberSchema = z.string().regex(/^\d{6}$/, "insurerNumber は 6桁です");
 
-/** 被保険者番号（10桁）— 'H' 始まり = 生保単独（§4.3 KohiFact 参照） */
 export const insuredNumberSchema = z
   .string()
   .regex(/^[Hh0-9]\d{9}$|^\d{10}$/, "insuredNumber は 10桁（生保単独は先頭 H）です");
 
-/** 公費負担者番号（8桁）— §3.4 kohi_certificates.payer_number */
 export const payerNumberSchema = z.string().regex(/^\d{8}$/, "payerNumber は 8桁です");
 
-/** 公費受給者番号（7桁）— §3.4 kohi_certificates.recipient_number */
 export const recipientNumberSchema = z.string().regex(/^\d{7}$/, "recipientNumber は 7桁です");
 
 /** 事業所番号 10 桁の構成分解（`parseOfficeNumber` の戻り値）。 */
@@ -325,13 +307,11 @@ export const officeNumberStructureSchema = z
 
 /** createBatch(input) */
 
-/** 月ヘッダの新規作成（`draft`）。対象年月は day=1 固定（§4.2 の CHECK） */
 export const createRiyohyoMonthSchema = z.object({
   clientId: z.string().uuid(),
   carePlanId: z.string().uuid().nullish(),
   targetMonth: z.string().regex(/^\d{4}-\d{2}-01$/),
   hokenshaNo: z.string().regex(/^\d{6}$/).nullish(),
-  /** 生保 'H' + 9 桁に対応（§4.2） */
   hihokenshaNo: z.string().regex(/^[H0-9][0-9]{9}$/).nullish(),
   careLevelCode: z.string().max(2).nullish(),
   facilityId: recordFacilityIdField,
@@ -359,11 +339,6 @@ export const riyohyoMonthOpSchema = z.object({
 });
 export type RiyohyoMonthOpBody = z.infer<typeof riyohyoMonthOpSchema>;
 
-/**
- * TransmitResult（§7.7.2）。job_id 冪等キー + status。
- * error.message に PII は載らない前提（bridge 側で raw を出さない）。
- * 国保連の伝送ブリッジの callback（POST /claims/internal/transmission-results）の本文。
- */
 export const transmitResultSchema = z.object({
   job_id: z.string().uuid(),
   status: z.enum(["sent", "arrived", "error"]),
@@ -385,7 +360,6 @@ export const createBatchSchema = z.object({
 });
 export type CreateBatchInput = z.infer<typeof createBatchSchema>;
 
-/** confirmBatch(batchId, input) — error>0 はサーバ側でも拒否（§6.13 コメント） */
 export const confirmBatchSchema = z.object({
   waivedFindingIds: z.array(z.string().uuid()).default([]),
 });
@@ -406,13 +380,11 @@ export const withdrawBatchSubmissionSchema = z.object({
 });
 export type WithdrawBatchSubmissionInput = z.infer<typeof withdrawBatchSubmissionSchema>;
 
-/** assignStatementsToBatch(batchId, statementIds) — 月遅れ取込（§6.5.1） */
 export const assignStatementsToBatchSchema = z.object({
   statementIds: z.array(z.string().uuid()).min(1),
 });
 export type AssignStatementsToBatchInput = z.infer<typeof assignStatementsToBatchSchema>;
 
-/** voidBatch(batchId, input) — 請求取消条件: exported 前のみ（§3.6.2） */
 export const voidBatchSchema = z.object({
   reason: z.string().min(1, "取消理由は必須です").max(2000),
 });
@@ -458,16 +430,6 @@ export const selfPayLineSchema = z.object({
 });
 export type SelfPayLineInput = z.infer<typeof selfPayLineSchema>;
 
-/**
- * issueReceipt(invoiceId, input?) — 差替時のみ理由必須（§3.8 receipts.reissue_reason）
- *
- * ⚠️ **`reissueReason` はここでは optional にする。** 初回発行は理由を持たないが、
- * 呼び出し側が全経路で `{}` を送ってくる（web の Server Action は `input ?? {}`、
- * MCP は body を必ず JSON 化する）。オブジェクト全体の `.optional()` が許すのは
- * `undefined` だけなので、キー側を optional にしないと**初回発行が常に 400 になる**。
- * 「差替のときは理由が要る」の判定は既存行の有無を知っている core が持つ
- * （`user-billing/core/invoices.ts` の `receipt_reissue_reason_required`）。
- */
 export const issueReceiptSchema = z
   .object({
     reissueReason: z.string().min(1, "再発行理由は必須です").max(2000).optional(),
@@ -475,14 +437,9 @@ export const issueReceiptSchema = z
   .optional();
 export type IssueReceiptInput = z.infer<typeof issueReceiptSchema>;
 
-/**
- * facility_billing_profiles.riha_provider_kind — 事業所の種類（介護予防通所リハ 66 の基本のコードが分かれる。
- * 病院又は診療所 / 介護老人保健施設 / 介護医療院）。DB の CHECK と 1:1（migration 0454）。
- */
 export const rihaProviderKinds = ["hospital_clinic", "roken", "iryoin"] as const;
 export type RihaProviderKind = (typeof rihaProviderKinds)[number];
 
-/** saveBillingProfile(facilityId, input) = BillingProfileInput（facility_billing_profiles・§3.3.2） */
 export const billingProfileInputSchema = z.object({
   regionGradeOverride: z.enum(regionGradeOverrides).optional().nullable(),
   shoguKaizenTier: z.enum(shoguKaizenTierValues).optional().nullable(),
@@ -498,10 +455,6 @@ export const billingProfileInputSchema = z.object({
 });
 export type BillingProfileInput = z.infer<typeof billingProfileInputSchema>;
 
-/**
- * saveAdditionFiling(facilityId, input) — §6.13 明示シグネチャそのまま。
- * billableFrom はサーバの日付ゲート関数（§3.3.2 の受理日→翌月/翌々月ルール）が導出するため入力に含めない。
- */
 export const saveAdditionFilingSchema = z
   .object({
     additionGroup: z.enum(additionGroups),
@@ -581,7 +534,6 @@ export function additionGroupsForServiceType(serviceTypeCode: string | null): Ad
  */
 export const claimsFiscalYearSchema = z.coerce.number().int().min(2000).max(2100);
 
-/** saveScaleClassification(facilityId, input) — §6.13 明示シグネチャ（method は 'manual'|'exception' のみ） */
 export const saveScaleClassificationSchema = z.object({
   fiscalYear: claimsFiscalYearSchema,
   scaleClass: z.enum(scaleClasses),
@@ -599,10 +551,6 @@ export const confirmScaleClassificationSchema = z.object({
 });
 export type ConfirmScaleClassificationInput = z.infer<typeof confirmScaleClassificationSchema>;
 
-/**
- * assignTransmissionAgent(input) — 事業所への伝送代理人の割付（§7.7.1）。
- * `agentId: null` は割付解除。代理人 ID は英数（例 'HD1399999999'）。
- */
 export const assignTransmissionAgentSchema = z.object({
   facilityId: z.string().uuid("facilityId は UUID 形式です"),
   agentId: z
@@ -732,11 +680,6 @@ export const kohiCertificateInputSchema = z.object({
 });
 export type KohiCertificateInput = z.infer<typeof kohiCertificateInputSchema>;
 
-/**
- * createPaymentNotice(input) — payment_notices ヘッダー作成（§3.8）。元は取り込んだ支払決定額通知（noticeId）。
- * 支払決定額通知書の機械可読詳細は一次未確認（notice-parsers/shiharai-kettei.ts が
- * layoutConfirmed=false のまま）のため、明細（決定額）は消込（reconcilePayments の lines）で人手入力する。
- */
 export const paymentNoticeInputSchema = z.object({
   facilityId: z.string().uuid("facilityId は UUID 形式です"),
   paymentYearMonth: z.string().date("paymentYearMonth は YYYY-MM-DD 形式です"),
@@ -772,7 +715,6 @@ export const voidPaymentNoticeInputSchema = z.object({
 });
 export type VoidPaymentNoticeInput = z.infer<typeof voidPaymentNoticeInputSchema>;
 
-/** 国保連の通知帳票の 9 種（`tool.notices.notice_kind` の CHECK と同じ・§3.7）。 */
 export const kokuhorenNoticeKinds = [
   "shinsa_zogen",
   "zogen_tanisu",
@@ -805,7 +747,6 @@ export const importNoticeInputSchema = z.object({
 });
 export type ImportNoticeInput = z.infer<typeof importNoticeInputSchema>;
 
-/** reconcilePayments(paymentNoticeId, input) — 決定額ラインの人手入力 + 消込実行（§7.4.1） */
 export const reconcilePaymentsInputSchema = z.object({
   lines: z
     .array(
@@ -836,10 +777,6 @@ export const userPaymentToolInputSchema = userPaymentInputSchema.omit({ matched:
 export const receivableStatuses = ["unpaid", "partial", "settled"] as const;
 export type ReceivableStatus = (typeof receivableStatuses)[number];
 
-/**
- * facility_compliance_periods.kind（§3.3.3・月次コンプライアンス申告）。
- * pt_kajo = 訪問看護の訪問回数超過等減算（理学療法士等の訪問が看護職員より多い等・年度ごと・訪問看護の事業所だけ）
- */
 export const compliancePeriodKinds = ["bcp", "gyakutai", "teicho", "jinketsu", "pt_kajo"] as const;
 export type CompliancePeriodKind = (typeof compliancePeriodKinds)[number];
 
@@ -888,7 +825,6 @@ export const COMPLIANCE_DEDUCTIONS = {
   ptKajoYoboOver12UnitsPerVisit: 15,
 } as const;
 
-/** openCompliancePeriod(facilityId, input) — 期間の開始（§6.10.4 月次申告確定） */
 export const openCompliancePeriodInputSchema = z.object({
   kind: z.enum(compliancePeriodKinds),
   appliesFrom: z.string().date("appliesFrom は YYYY-MM-DD 形式です"),
@@ -952,14 +888,6 @@ export const STATEMENT_TRANSITIONS: Record<StatementStatus, readonly StatementSt
   void: [],
 } as const;
 
-/**
- * バッチステートマシン（§3.5・§3.6.2「open→locked→exported→submitted + void の薄い状態」）。
- *   open → locked   : confirmBatch（配下 statement 全 confirmed・validation error 0）
- *   open → void     : 取消（exported 前）
- *   locked → exported: CSV 出力
- *   locked → void   : 取消（exported 前）
- *   exported → submitted: 伝送記録（recordBatchSubmitted）
- */
 export const BATCH_TRANSITIONS: Record<BillingBatchStatus, readonly BillingBatchStatus[]> = {
   open: ["locked", "void"],
   locked: ["exported", "void"],
@@ -1005,12 +933,10 @@ export function isAllowedBatchTransition(from: string, to: BillingBatchStatus): 
   return (BATCH_TRANSITIONS as Record<string, readonly BillingBatchStatus[]>)[from]?.includes(to) ?? false;
 }
 
-/** exported 前（= void 可能な状態）か。§3.6.2「void = exported 前の任意時点」。 */
 export function isPreExport(status: StatementStatus): boolean {
   return status === "draft" || status === "validated" || status === "needs_fix" || status === "confirmed";
 }
 
-/** adjustment_cases.trigger（§3.7 CHECK と一致）。 */
 export const adjustmentTriggers = [
   "returned",
   "assessed",
@@ -1020,14 +946,9 @@ export const adjustmentTriggers = [
 ] as const;
 export type AdjustmentTrigger = (typeof adjustmentTriggers)[number];
 
-/** adjustment_cases.detected_by（§3.7 CHECK と一致）。 */
 export const adjustmentDetectedBys = ["notice", "local_diff", "manual"] as const;
 export type AdjustmentDetectedBy = (typeof adjustmentDetectedBys)[number];
 
-/**
- * adjustment_cases.status（§3.7 CHECK と一致）。前方専有: detected → reviewing → approved → settled。
- * withdrawn = 消込の取り消しで取り下げた detected（行は残す・一覧と件数に出さない・終わりの状態）。
- */
 export const adjustmentStatuses = ["detected", "reviewing", "approved", "settled", "withdrawn"] as const;
 export type AdjustmentStatus = (typeof adjustmentStatuses)[number];
 
@@ -1050,7 +971,6 @@ export const openAdjustmentCaseInputSchema = z.object({
 });
 export type OpenAdjustmentCaseInput = z.infer<typeof openAdjustmentCaseInputSchema>;
 
-/** POST /claims/adjustments/:caseId/approve — reviewing → approved（重厚操作・§7.3.4）。 */
 export const approveAdjustmentCaseInputSchema = z.object({
   actions: z.object({
     reviseStatement: z.boolean(),
@@ -1060,28 +980,20 @@ export const approveAdjustmentCaseInputSchema = z.object({
 });
 export type ApproveAdjustmentCaseInput = z.infer<typeof approveAdjustmentCaseInputSchema>;
 
-/** kago_claims.kind（§3.7 CHECK と一致）。 */
 export const kagoKinds = ["same_month", "normal"] as const;
 export type KagoKind = (typeof kagoKinds)[number];
 
-/** kago_claims.decision（§3.7 CHECK と一致）。 */
 export const kagoDecisions = ["approved", "rejected"] as const;
 export type KagoDecision = (typeof kagoDecisions)[number];
 
-/**
- * POST /claims/kago — 過誤申立の起票（§7.1.4 ①）。
- * `submittedAt` は ISO 日時文字列（省略時は DB 時刻の JST 暦日）。
- */
 export const submitKagoClaimInputSchema = z.object({
   statementId: z.string().uuid(),
   kind: z.enum(kagoKinds),
-  /** 申立先は必ず保険者（国保連直接不可・§7.1.4） */
   insurerNumber: insurerNumberSchema,
   submittedAt: z.string().min(1).optional(),
 });
 export type SubmitKagoClaimInput = z.infer<typeof submitKagoClaimInputSchema>;
 
-/** POST /claims/kago/:kagoClaimId/decision — 決定反映（§7.1.4 ②）。 */
 export const recordKagoDecisionInputSchema = z.object({
   decision: z.enum(kagoDecisions),
   decidedAt: z.string().min(1).optional(),
@@ -1092,12 +1004,6 @@ export type RecordKagoDecisionInput = z.infer<typeof recordKagoDecisionInputSche
 export const manualNoticeMatchTargets = ["returned", "held"] as const;
 export type ManualNoticeMatchTarget = (typeof manualNoticeMatchTargets)[number];
 
-/**
- * POST /claims/notices/:noticeId/items/:itemId/match — 手動突合（§6.6.2 / §7.2.3 の人手フォールバック）。
- * `apply=true` で notice_kind に応じた明細書の遷移も適用する。
- * `to` は返戻一覧（henrei_ichiran）で `apply=true` のときだけ必須（返戻か保留かを人が原本を見て選ぶ）。
- * ほかの kind・`apply` が無いときに送ると INVALID_INPUT（遷移先は帳票の種類から決まるので、選ぶ余地が無い）。
- */
 export const manualNoticeMatchInputSchema = z.object({
   statementId: z.string().uuid(),
   apply: z.boolean().optional(),
@@ -1143,7 +1049,6 @@ export const confirmProvisionSheetSchema = returnProvisionSheetSchema.extend({
 });
 export type ConfirmProvisionSheetBody = z.infer<typeof confirmProvisionSheetSchema>;
 
-/** GET /claims/nursing-billing — 訪問看護の実績の確定（事業所 × 月の利用者ごと・visiting-nursing-billing.md §2.1） */
 export const listNursingBillingMonthQuerySchema = z.object({
   facilityId: z.string().uuid(),
   month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/),

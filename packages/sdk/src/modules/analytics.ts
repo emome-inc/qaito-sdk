@@ -36,7 +36,7 @@ export function createAlertsNamespace(tx: SdkTransport) {
       },
     },
     settings: {
-      /** アラート種別カタログ + org 別 ON/OFF 設定の一覧（B改・§8.5） */
+      /** アラート種別カタログ + org 別 ON/OFF 設定の一覧 */
       list: () => tx.request<AlertSettingItem[]>("GET", "/analytics/alerts/settings"),
       /** PUT /analytics/alerts/settings/:kind — アラート種別の ON/OFF を設定（analytics:write） */
       update: (kind: string, input: { enabled: boolean }) =>

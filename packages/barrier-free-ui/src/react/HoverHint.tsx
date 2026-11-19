@@ -16,7 +16,7 @@ export function HoverHint({
   block?: boolean;
   /**
    * 安定 id。**subdomain rewrite で配信される面（console / portal / モジュール画面）では必須**
-   * （useId は rewrite 面で SSR/CSR がズレて hydration mismatch を起こす — framework doc §7.2 の一般則）。
+   * （useId は rewrite 面で SSR/CSR がズレて hydration mismatch を起こす）。
    * chat 等の直接配信面では省略可（useId フォールバック）。
    */
   id?: string;

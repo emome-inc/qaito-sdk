@@ -1,125 +1,47 @@
 import { z } from "zod";
 
-/** レベル（`view < comment < edit < full`）。行に付けるのはこの 4 つ */
-export const libraryLevelValues = ["view", "comment", "edit", "full"] as const;
-export type LibraryGrantLevel = (typeof libraryLevelValues)[number];
-/** スペースの既定のアクセス（full は配らない） */
-export const libraryGeneralAccessValues = ["none", "view", "comment", "edit"] as const;
-export type LibraryGeneralAccess = (typeof libraryGeneralAccessValues)[number];
-export const librarySpaceKindValues = ["org", "facility"] as const;
-export type LibrarySpaceKind = (typeof librarySpaceKindValues)[number];
-export const libraryPrincipalKindValues = ["user", "facility", "group"] as const;
-export type LibraryPrincipalKind = (typeof libraryPrincipalKindValues)[number];
-export const libraryAccessModeValues = ["inherit", "restricted"] as const;
-export type LibraryAccessMode = (typeof libraryAccessModeValues)[number];
-/** メンバー行がどう足されたか（一覧に「管理者が自分を追加」の印を出す） */
-export const librarySpaceMemberViaValues = ["member", "creator", "admin_self"] as const;
-export type LibrarySpaceMemberVia = (typeof librarySpaceMemberViaValues)[number];
+/** 置き場（組織 = 組織の全員 / 事業所 = その事業所の所属者 / 個人 = 本人だけ） */
+export const libraryAreaValues = ["org", "facility", "personal"] as const;
+export type LibraryArea = (typeof libraryAreaValues)[number];
 
-/** 1 回に置ける共有先の上限（メンバー・ページの共有とも） */
-export const LIBRARY_PRINCIPALS_MAX = 200;
+/** ノードの種類 */
+export const libraryNodeKindValues = ["folder", "page"] as const;
+export type LibraryNodeKind = (typeof libraryNodeKindValues)[number];
 
-const name = z.string().trim().min(1).max(100);
-const description = z.string().trim().max(500);
-const iconName = z.string().trim().max(50);
+/** 公開 = 置き場の対象の全員 / 非公開 = 持ち主・見せる人・ルートだけが中に入れる（名前は対象の全員に見える） */
+export const libraryVisibilityValues = ["public", "private"] as const;
+export type LibraryVisibility = (typeof libraryVisibilityValues)[number];
 
-export const createLibrarySpaceSchema = z
-  .object({
-    kind: z.enum(librarySpaceKindValues),
-    facilityId: z.string().uuid().nullable().optional(),
-    name,
-    description: description.nullable().optional(),
-    iconName: iconName.nullable().optional(),
-    sortOrder: z.number().int().min(0).max(100_000).optional(),
-    generalAccess: z.enum(libraryGeneralAccessValues).default("view"),
-  })
-  .refine((v) => (v.kind === "facility" ? typeof v.facilityId === "string" : v.facilityId == null), {
-    message: "事業所スペースは facilityId が必須、組織スペースは持たない",
-    path: ["facilityId"],
-  });
-export type CreateLibrarySpaceInput = z.infer<typeof createLibrarySpaceSchema>;
+/** 見せる人の段（見る / 編集）。持ち主は名簿に入れない */
+export const libraryMemberLevelValues = ["view", "edit"] as const;
+export type LibraryMemberLevel = (typeof libraryMemberLevelValues)[number];
 
-export const updateLibrarySpaceSchema = z
-  .object({
-    name: name.optional(),
-    description: description.nullable().optional(),
-    iconName: iconName.nullable().optional(),
-    sortOrder: z.number().int().min(0).max(100_000).optional(),
-    generalAccess: z.enum(libraryGeneralAccessValues).optional(),
-  })
-  .refine((v) => Object.values(v).some((x) => x !== undefined), { message: "変える項目がありません" });
-export type UpdateLibrarySpaceInput = z.infer<typeof updateLibrarySpaceSchema>;
+/** 1 回に置ける見せる人の上限 */
+export const LIBRARY_NAMES_MAX = 200;
 
-/** 共有先 1 件（人・事業所・グループ）とレベル */
-export const libraryPrincipalInputSchema = z.object({
-  principalKind: z.enum(libraryPrincipalKindValues),
-  id: z.string().uuid(),
-  level: z.enum(libraryLevelValues),
-});
-export type LibraryPrincipalInput = z.infer<typeof libraryPrincipalInputSchema>;
-
-const principals = z
-  .array(libraryPrincipalInputSchema)
-  .max(LIBRARY_PRINCIPALS_MAX)
-  .refine((rows) => new Set(rows.map((r) => `${r.principalKind}:${r.id}`)).size === rows.length, {
-    message: "同じ共有先が 2 回あります",
-  });
-
-/** スペースのメンバーを全部置き換える */
-export const setLibrarySpaceMembersSchema = z.object({ members: principals });
-export type SetLibrarySpaceMembersInput = z.infer<typeof setLibrarySpaceMembersSchema>;
-
-/** ページに直接付ける共有を全部置き換える（継承している共有は含めない） */
-export const setLibraryPageGrantsSchema = z.object({ grants: principals });
-export type SetLibraryPageGrantsInput = z.infer<typeof setLibraryPageGrantsSchema>;
-
-/** 制限する / 継承に戻す */
-export const setLibraryPageAccessModeSchema = z.object({ mode: z.enum(libraryAccessModeValues) });
-export type SetLibraryPageAccessModeInput = z.infer<typeof setLibraryPageAccessModeSchema>;
-
-/** 確認ダイアログの「見えるようになる人 / 見えなくなる人」の数を出す変更 */
-export const previewLibraryAccessChangeSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("accessMode"), mode: z.enum(libraryAccessModeValues) }),
-  z.object({ kind: z.literal("move"), parentId: z.string().uuid().nullable() }),
-  z.object({ kind: z.literal("grants"), grants: principals }),
-]);
-export type PreviewLibraryAccessChangeInput = z.infer<typeof previewLibraryAccessChangeSchema>;
-
-export const libraryPageFormatValues = ["markdown", "html", "text", "blocks"] as const;
+export const libraryPageFormatValues = ["blocks", "design"] as const;
 export type LibraryPageFormat = (typeof libraryPageFormatValues)[number];
-/** 新しく作るページの既定の形式（library-blocks.md §3.4） */
 export const LIBRARY_DEFAULT_PAGE_FORMAT: LibraryPageFormat = "blocks";
-/**
- * 公式のページ（`tool.library_official_*`）の形式。`blocks` はまだ入れない（公式の表の CHECK は 0452 のまま・
- * 0504 は組織・事業所のページだけ）
- */
-export const libraryOfficialPageFormatValues = ["markdown", "html", "text"] as const;
+/** 公式のページ（`tool.library_official_*`）の形式。組織のページと同じ 2 つ */
+export const libraryOfficialPageFormatValues = libraryPageFormatValues;
 export type LibraryOfficialPageFormat = (typeof libraryOfficialPageFormatValues)[number];
 
-/** ページの状態（公開版の有無） */
-export const libraryPageStatusValues = ["draft", "published"] as const;
-export type LibraryPageStatus = (typeof libraryPageStatusValues)[number];
-
-/** 版の状態（直すだけ・公開・置き換わった） */
-export const libraryVersionStateValues = ["draft", "published", "superseded"] as const;
-export type LibraryVersionState = (typeof libraryVersionStateValues)[number];
-
-/** 木の深さの上限（根を 1 とする・§5.1）。`permissions/paths.ts` の `LIBRARY_MAX_DEPTH` と一致させる */
-export const LIBRARY_MAX_DEPTH = 5;
-/** ページの題名の長さの上限 */
+/** 木の深さの上限（根を 1 とする・フォルダを含む）。`permissions/paths.ts` が使う */
+export const LIBRARY_MAX_DEPTH = 8;
+/**
+ * 置き場あたりの生きたノード（フォルダとページ）の上限。超えると作る・複製が CONFLICT（TREE_FULL）。
+ * 木を読むときは全部返す（黙って欠ける木を作らない）。数えるのは core の `areaRoomLeft`（木の鍵を取った tx の中）
+ */
+export const LIBRARY_MAX_NODES_PER_AREA = 5000;
+/** フォルダ・ページの名前の長さの上限 */
 export const LIBRARY_PAGE_TITLE_MAX = 200;
-/** 要約（検索・一覧のまえがき）の長さの上限 */
-export const LIBRARY_PAGE_SUMMARY_MAX = 200;
-/** 下書きの保存のメモ（版の note）の長さの上限 */
-export const LIBRARY_VERSION_NOTE_MAX = 200;
+export const LIBRARY_VERSIONS_KEPT = 10;
 /** 本文の長さの上限（約 65k 字。表の 1 行に収まる上限で切る）。blocks は JSON の文字列の上限が別（`LIBRARY_BLOCKS_BODY_MAX`） */
 export const LIBRARY_PAGE_BODY_MAX = 65_000;
-/** ヘルプキーの形（§10）: `アプリ/画面` の軽い英数字 */
+/** デザインページの本文（検査したあとの HTML + CSS）の長さの上限。STORIES の 1 枚（約 110KB）の約 2.5 倍 */
+export const LIBRARY_DESIGN_BODY_MAX = 300_000;
+/** ヘルプキーの形: `アプリ/画面` の軽い英数字 */
 export const LIBRARY_HELP_KEY_RE = /^[a-z][a-z0-9-]*(?:\/[a-z][a-z0-9-]*)*$/u;
-
-/** スペースの中で一意になるページの slug。URL と内部リンク（`[[slug]]`）に使う */
-export const LIBRARY_PAGE_SLUG_RE = /^[a-z0-9][a-z0-9-]*$/u;
-export const LIBRARY_PAGE_SLUG_MAX = 100;
 
 /** 今の blocks の形の版。上げるときは `migrateBlocksDoc`（library/pure）に移行を足す */
 export const LIBRARY_BLOCKS_SCHEMA_VERSION = 1 as const;
@@ -132,43 +54,31 @@ export const LIBRARY_BLOCKS_MAX_NODES = 10_000;
 /** 文字の合計の上限（text・alt・コードの文字。他の形式の本文の上限と同じ） */
 export const LIBRARY_BLOCKS_MAX_TEXT = LIBRARY_PAGE_BODY_MAX;
 
-/** Notion の 10 色（既定・灰・茶・橙・黄・緑・青・紫・桃・赤）。文字色の名前（mark `textColor`） */
-export const libraryBlockTextColorValues = [
-  "default", "gray", "brown", "orange", "yellow", "green", "blue", "purple", "pink", "red",
-] as const;
-export type LibraryBlockTextColor = (typeof libraryBlockTextColorValues)[number];
-/**
- * 背景色の名前（callout の色・mark `bgColor`）。値は bf-ui のトークンの名前で持ち、CSS 変数に写す（直接の色の値は保存しない・
- * ダークで読めなくなるため）
- */
-export const libraryBlockBgColorValues = [
-  "default", "gray_bg", "brown_bg", "orange_bg", "yellow_bg", "green_bg", "blue_bg", "purple_bg", "pink_bg", "red_bg",
-] as const;
-export type LibraryBlockBgColor = (typeof libraryBlockBgColorValues)[number];
-
 /** コードブロックの言語の名前（小文字の英数字と `+ # . -`・30 字まで。null は無し） */
 export const LIBRARY_BLOCKS_CODE_LANGUAGE_RE = /^[a-z0-9][a-z0-9+#.-]{0,29}$/u;
-/** 列の数（columns の中の column） */
-export const LIBRARY_BLOCKS_COLUMNS_MIN = 2;
-export const LIBRARY_BLOCKS_COLUMNS_MAX = 4;
 /** 画像の alt の長さの上限 */
 export const LIBRARY_BLOCKS_ALT_MAX = 500;
-
-const EMOJI_RE =
-  /^(?:\p{Regional_Indicator}{2}|[#*0-9]️?⃣|\p{Extended_Pictographic}(?:️|\p{Emoji_Modifier})?(?:‍\p{Extended_Pictographic}(?:️|\p{Emoji_Modifier})?)*(?:[\u{E0020}-\u{E007E}]+\u{E007F})?)$/u;
-/** 絵文字 1 つか（ページのアイコン・callout のアイコン） */
-export function isSingleEmoji(value: string): boolean {
-  return typeof value === "string" && value.length > 0 && value.length <= 32 && EMOJI_RE.test(value);
-}
+/** 1 つの表の行の上限（見出しの行を含む） */
+export const LIBRARY_BLOCKS_TABLE_MAX_ROWS = 100;
+/** 1 つの表の列の上限 */
+export const LIBRARY_BLOCKS_TABLE_MAX_COLS = 20;
+/** 1 つの本文の表の数の上限 */
+export const LIBRARY_BLOCKS_MAX_TABLES = 50;
 
 /**
- * リンクの行き先として許すか（https と `/library/…` だけ）。`javascript:` `data:` `//host` `http:` は断る。
+ * 本文の中のライブラリへの内部リンク: `/library/n/{nodeId}`（見出しへの印 `#…` だけ付けてよい）。
+ * `..`・`%2e`・`?`・ほかのパスは入れない（相対の任意パスへ飛ばさない・審査 L8）。web の描画も同じ正規表現で絞る
+ */
+export const LIBRARY_INTERNAL_LINK_RE = /^\/library\/n\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:#[A-Za-z0-9_-]{1,128})?$/u;
+
+/**
+ * リンクの行き先として許すか（https と `/library/n/{nodeId}` だけ）。`javascript:` `data:` `//host` `http:` は断る。
  * 読む表示（static の描画）も同じ関数で絞る
  */
 export function isAllowedBlocksHref(href: string): boolean {
   if (typeof href !== "string" || href.length === 0 || href.length > 2048) return false;
   if (/[\u0000- \u007f]/u.test(href)) return false;
-  if (href.startsWith("/library/")) return /^\/library\/[A-Za-z0-9\-._~/%?=&#+]*$/u.test(href);
+  if (href.startsWith("/")) return LIBRARY_INTERNAL_LINK_RE.test(href);
   if (!href.startsWith("https://")) return false;
   try {
     const url = new URL(href);
@@ -181,22 +91,14 @@ export function isAllowedBlocksHref(href: string): boolean {
 const linkMarkSchema = z.strictObject({
   type: z.literal("link"),
   attrs: z.strictObject({
-    href: z.string().refine(isAllowedBlocksHref, { message: "リンクは https と /library/ だけ" }),
+    href: z.string().refine(isAllowedBlocksHref, { message: "リンクは https と /library/n/{nodeId} だけ" }),
     target: z.enum(["_blank"]).nullable().optional(),
     rel: z.string().max(100).nullable().optional(),
     class: z.null().optional(),
   }),
 });
-const plainMarkSchema = z.strictObject({ type: z.enum(["bold", "italic", "underline", "strike", "code"]) });
-const textColorMarkSchema = z.strictObject({
-  type: z.literal("textColor"),
-  attrs: z.strictObject({ color: z.enum(libraryBlockTextColorValues).exclude(["default"]) }),
-});
-const bgColorMarkSchema = z.strictObject({
-  type: z.literal("bgColor"),
-  attrs: z.strictObject({ color: z.enum(libraryBlockBgColorValues).exclude(["default"]) }),
-});
-export const libraryBlocksMarkSchema = z.union([linkMarkSchema, plainMarkSchema, textColorMarkSchema, bgColorMarkSchema]);
+const plainMarkSchema = z.strictObject({ type: z.enum(["bold", "italic", "strike", "code"]) });
+export const libraryBlocksMarkSchema = z.union([linkMarkSchema, plainMarkSchema]);
 export type LibraryBlocksMark = z.infer<typeof libraryBlocksMarkSchema>;
 
 const textNodeSchema = z.strictObject({
@@ -219,16 +121,23 @@ export type LibraryBlocksNode =
   | { type: "bulletList"; content: LibraryBlocksListItem[] }
   | { type: "orderedList"; attrs?: { start?: number; type?: string | null }; content: LibraryBlocksListItem[] }
   | { type: "taskList"; content: LibraryBlocksTaskItem[] }
-  | { type: "callout"; attrs: { icon?: string | null; color?: LibraryBlockBgColor }; content: LibraryBlocksNode[] }
-  | { type: "details"; attrs?: { open?: boolean }; content: [LibraryBlocksDetailsSummary, LibraryBlocksDetailsContent] }
-  | { type: "columns"; content: LibraryBlocksColumn[] }
-  | { type: "image"; attrs: { assetId: string; alt: string; width?: number | null } };
+  | { type: "image"; attrs: { assetId: string; alt: string } };
 export type LibraryBlocksListItem = { type: "listItem"; content: LibraryBlocksNode[] };
 export type LibraryBlocksTaskItem = { type: "taskItem"; attrs: { checked: boolean }; content: LibraryBlocksNode[] };
-export type LibraryBlocksDetailsSummary = { type: "detailsSummary"; content?: LibraryBlocksInline[] };
-export type LibraryBlocksDetailsContent = { type: "detailsContent"; content: LibraryBlocksNode[] };
-export type LibraryBlocksColumn = { type: "column"; attrs: { ratio: number }; content: LibraryBlocksNode[] };
-export type LibraryBlocksDoc = { type: "doc"; content: LibraryBlocksNode[] };
+/**
+ * 表（Tiptap の @tiptap/extension-table の名前・GFM の表に写せる形だけ）。置けるのは本文の一番上の並びだけ（引用・リストの中には置かない）。
+ * 1 行目は全部 tableHeader・2 行目からは全部 tableCell・どの行もセルの数は 1 行目と同じ。セルの中は段落 1 つ（インラインだけ）。
+ * 結合・幅・揃えは持たない（attrs は Tiptap が既定で付ける colspan 1・rowspan 1・colwidth null だけ受ける）
+ */
+export type LibraryBlocksCellAttrs = { colspan?: 1; rowspan?: 1; colwidth?: null };
+export type LibraryBlocksParagraph = { type: "paragraph"; content?: LibraryBlocksInline[] };
+export type LibraryBlocksTableHeader = { type: "tableHeader"; attrs?: LibraryBlocksCellAttrs; content: [LibraryBlocksParagraph] };
+export type LibraryBlocksTableCell = { type: "tableCell"; attrs?: LibraryBlocksCellAttrs; content: [LibraryBlocksParagraph] };
+export type LibraryBlocksTableRow = { type: "tableRow"; content: (LibraryBlocksTableHeader | LibraryBlocksTableCell)[] };
+export type LibraryBlocksTable = { type: "table"; content: LibraryBlocksTableRow[] };
+/** 本文の一番上の並びに置けるもの（ブロック + 表） */
+export type LibraryBlocksTopNode = LibraryBlocksNode | LibraryBlocksTable;
+export type LibraryBlocksDoc = { type: "doc"; content: LibraryBlocksTopNode[] };
 /** 本文（`body` の JSON） */
 export type LibraryBlocksBody = { schemaVersion: typeof LIBRARY_BLOCKS_SCHEMA_VERSION; doc: LibraryBlocksDoc };
 
@@ -242,11 +151,6 @@ const taskItemSchema: z.ZodType<LibraryBlocksTaskItem> = z.strictObject({
   type: z.literal("taskItem"),
   attrs: z.strictObject({ checked: z.boolean() }),
   content: blockList(() => blockSchema),
-});
-const columnSchema: z.ZodType<LibraryBlocksColumn> = z.strictObject({
-  type: z.literal("column"),
-  attrs: z.strictObject({ ratio: z.number().min(5).max(95) }),
-  content: blockList(() => blockInColumnSchema),
 });
 
 const simpleBlockSchemas = {
@@ -275,7 +179,6 @@ const simpleBlockSchemas = {
     attrs: z.strictObject({
       assetId: z.string().uuid(),
       alt: z.string().trim().min(1).max(LIBRARY_BLOCKS_ALT_MAX),
-      width: z.number().int().min(16).max(4000).nullable().optional(),
     }),
   }),
 };
@@ -295,22 +198,6 @@ function containerSchemas(inner: () => z.ZodType<LibraryBlocksNode>) {
       content: z.array(listItemSchema).min(1),
     }),
     z.strictObject({ type: z.literal("taskList"), content: z.array(taskItemSchema).min(1) }),
-    z.strictObject({
-      type: z.literal("callout"),
-      attrs: z.strictObject({
-        icon: z.string().refine(isSingleEmoji, { message: "アイコンは絵文字 1 つ" }).nullable().optional(),
-        color: z.enum(libraryBlockBgColorValues).optional(),
-      }),
-      content: blockList(inner),
-    }),
-    z.strictObject({
-      type: z.literal("details"),
-      attrs: z.strictObject({ open: z.boolean().optional() }).optional(),
-      content: z.tuple([
-        z.strictObject({ type: z.literal("detailsSummary"), content: inlineContent }),
-        z.strictObject({ type: z.literal("detailsContent"), content: blockList(inner) }),
-      ]),
-    }),
   ] as const;
 }
 
@@ -319,33 +206,37 @@ function blockOptions(inner: () => z.ZodType<LibraryBlocksNode>) {
   return [S.paragraph, S.heading, S.codeBlock, S.horizontalRule, S.image, ...containerSchemas(inner)] as const;
 }
 
-/** 列の中に置けるブロック（columns 以外） */
-const blockInColumnSchema: z.ZodType<LibraryBlocksNode> = z.lazy(() =>
-  z.discriminatedUnion("type", blockOptions(() => blockInColumnSchema)),
-) as z.ZodType<LibraryBlocksNode>;
-
-const columnsSchema = z
-  .strictObject({
-    type: z.literal("columns"),
-    content: z.array(columnSchema).min(LIBRARY_BLOCKS_COLUMNS_MIN).max(LIBRARY_BLOCKS_COLUMNS_MAX),
-  })
-  .refine((v) => Math.abs(v.content.reduce((sum, c) => sum + c.attrs.ratio, 0) - 100) <= 1, {
-    message: "列の幅の合計は 100",
-    path: ["content"],
-  });
-
-/** ブロック（doc・引用・リストの項目・callout・toggle の中身に置けるもの） */
+/** ブロック（doc・引用・リストの項目の中に置けるもの） */
 const blockSchema: z.ZodType<LibraryBlocksNode> = z.lazy(() =>
-  z.union([
-    z.discriminatedUnion("type", blockOptions(() => blockSchema)),
-    columnsSchema,
-  ]),
+  z.discriminatedUnion("type", blockOptions(() => blockSchema)),
 ) as z.ZodType<LibraryBlocksNode>;
 
-const docSchema: z.ZodType<LibraryBlocksDoc> = z.strictObject({
-  type: z.literal("doc"),
-  content: z.array(blockSchema).min(1),
-});
+const cellAttrsSchema = z
+  .strictObject({ colspan: z.literal(1).optional(), rowspan: z.literal(1).optional(), colwidth: z.null().optional() })
+  .optional();
+const cellParagraphSchema = z.tuple([simpleBlockSchemas.paragraph]);
+const tableHeaderSchema = z.strictObject({ type: z.literal("tableHeader"), attrs: cellAttrsSchema, content: cellParagraphSchema });
+const tableCellSchema = z.strictObject({ type: z.literal("tableCell"), attrs: cellAttrsSchema, content: cellParagraphSchema });
+const tableRowSchema = <C extends z.ZodTypeAny>(cell: C) =>
+  z.strictObject({ type: z.literal("tableRow"), content: z.array(cell).min(1).max(LIBRARY_BLOCKS_TABLE_MAX_COLS) });
+
+const tableSchema: z.ZodType<LibraryBlocksTable> = z
+  .strictObject({
+    type: z.literal("table"),
+    content: z
+      .tuple([tableRowSchema(tableHeaderSchema)], tableRowSchema(tableCellSchema))
+      .refine((rows) => rows.length <= LIBRARY_BLOCKS_TABLE_MAX_ROWS, { message: "表の行が多すぎます" }),
+  })
+  .refine((t) => t.content.every((r) => r.content.length === t.content[0].content.length), {
+    message: "表の行ごとのセルの数がそろっていません",
+  }) as z.ZodType<LibraryBlocksTable>;
+
+const docSchema: z.ZodType<LibraryBlocksDoc> = z
+  .strictObject({
+    type: z.literal("doc"),
+    content: z.array(z.union([tableSchema, blockSchema])).min(1),
+  })
+  .refine((d) => d.content.filter((n) => n.type === "table").length <= LIBRARY_BLOCKS_MAX_TABLES, { message: "表が多すぎます" });
 
 /** 深さ・ノードの数・文字の合計を先に数える（再帰の Zod に深すぎる入れ子を渡さない） */
 export function measureBlocksTree(value: unknown): { depth: number; nodes: number; text: number } | null {
@@ -372,7 +263,7 @@ export function measureBlocksTree(value: unknown): { depth: number; nodes: numbe
 
 /**
  * blocks の本文の形（`JSON.parse(body)` のあと）。許可リストの外・深すぎ・大きすぎは断る。
- * ⚠️ 他のスペースの画像（assetId）は Zod では分からないので、core が `library_assets` と突き合わせて断る
+ * ⚠️ ほかのページの画像（assetId）は Zod では分からないので、core が `library_node_assets` と突き合わせて断る
  */
 export const libraryBlocksDocSchema: z.ZodType<LibraryBlocksBody> = z
   .unknown()
@@ -397,14 +288,8 @@ export const LIBRARY_EMPTY_BLOCKS_BODY: LibraryBlocksBody = {
   doc: { type: "doc", content: [{ type: "paragraph" }] },
 };
 
+const uuid = z.string().uuid();
 const title = z.string().trim().min(1).max(LIBRARY_PAGE_TITLE_MAX);
-const summary = z.string().trim().max(LIBRARY_PAGE_SUMMARY_MAX);
-const slug = z
-  .string()
-  .trim()
-  .min(1)
-  .max(LIBRARY_PAGE_SLUG_MAX)
-  .refine((v) => LIBRARY_PAGE_SLUG_RE.test(v), { message: "slug は英数字と `-` のみ（先頭は英数字）" });
 /** 本文の文字列。blocks は JSON の分だけ長いので上限を分ける（形式ごとの上限は `bodyFitsFormat`） */
 const body = z.string().max(LIBRARY_BLOCKS_BODY_MAX);
 const helpKey = z
@@ -412,185 +297,508 @@ const helpKey = z
   .trim()
   .max(100)
   .refine((v) => LIBRARY_HELP_KEY_RE.test(v), { message: "help_key の形が正しくありません" });
+const position = z.number().int().min(0).max(100_000);
 
-/** 形式ごとの本文の長さの上限（blocks 以外は 65k 字・blocks は JSON の文字列で `LIBRARY_BLOCKS_BODY_MAX`） */
+/** 形式ごとの本文の長さの上限（blocks は JSON の文字列で `LIBRARY_BLOCKS_BODY_MAX`・design は `LIBRARY_DESIGN_BODY_MAX`） */
 export function bodyFitsFormat(format: LibraryPageFormat, value: string): boolean {
-  return value.length <= (format === "blocks" ? LIBRARY_BLOCKS_BODY_MAX : LIBRARY_PAGE_BODY_MAX);
+  return value.length <= (format === "blocks" ? LIBRARY_BLOCKS_BODY_MAX : LIBRARY_DESIGN_BODY_MAX);
 }
 
-/** ページのアイコン（絵文字 1 つ・null で外す）とカバー（同じスペースの画像の ID・null で外す） */
-const pageIcon = z.string().refine(isSingleEmoji, { message: "アイコンは絵文字 1 つ" });
-const coverAssetId = z.string().uuid();
+const EMOJI_RE =
+  /^(?:\p{Regional_Indicator}{2}|[#*0-9]\uFE0F?\u20E3|\p{Extended_Pictographic}(?:\uFE0F|\p{Emoji_Modifier})?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F|\p{Emoji_Modifier})?)*(?:[\u{E0020}-\u{E007E}]+\u{E007F})?)$/u;
+/** 絵文字 1 つか（1 つの書記素・32 字まで・国旗 / キーキャップ / 肌の色 / ZWJ で結んだ絵文字 / タグ付きの旗。英数字・記号だけ・制御文字は通さない） */
+export function isSingleEmoji(value: string): boolean {
+  return typeof value === "string" && value.length > 0 && value.length <= 32 && EMOJI_RE.test(value);
+}
+
+const nodeIcon = z.string().refine(isSingleEmoji, { message: "アイコンは絵文字 1 つ" });
+/**
+ * 文書の本文を Markdown で受けるときの長さの上限（直したあとの blocks は blocks の上限で見る）。
+ * library の pure の MARKDOWN_SOURCE_MAX（取り込みの解析の上限）と同じ値にする（schemas は modules を読めないので値で持つ）
+ */
+export const LIBRARY_MARKDOWN_INPUT_MAX = 100_000;
+const markdown = z.string().max(LIBRARY_MARKDOWN_INPUT_MAX);
+
+/** 置き場と事業所の組み合わせ（事業所は facilityId が要る・組織と個人は持たない）。個人の持ち主は呼んだ本人 */
+function placementFits(v: { area: LibraryArea; facilityId?: string | null }): boolean {
+  return v.area === "facility" ? typeof v.facilityId === "string" : v.facilityId == null;
+}
+const placementMessage = { message: "事業所の置き場は facilityId が必須、組織と個人は持たない", path: ["facilityId"] };
+
+/** 見せる人 1 人と段 */
+export const libraryNameInputSchema = z.object({
+  userId: uuid,
+  level: z.enum(libraryMemberLevelValues),
+});
+export type LibraryNameInput = z.infer<typeof libraryNameInputSchema>;
+
+const names = z
+  .array(libraryNameInputSchema)
+  .max(LIBRARY_NAMES_MAX)
+  .refine((rows) => new Set(rows.map((r) => r.userId)).size === rows.length, { message: "同じ人が 2 回あります" });
 
 /**
- * 新しいページを作る。`format` を省くと `blocks`（library-blocks.md §3.4）。
- * blocks の本文の形（許可リスト）は core が `libraryBlocksDocSchema` で確かめる（文字列の JSON を開くため）
+ * 公開 / 非公開と見せる人。公開は見せる人を持たない。非公開の見せる人は省いてよい（持ち主とルートだけになる）。
+ * 個人の置き場では受けない（core が個人を非公開に固定する）
  */
-export const createLibraryPageSchema = z
+export const libraryVisibilityInputSchema = z.discriminatedUnion("visibility", [
+  z.object({ visibility: z.literal("public") }),
+  z.object({ visibility: z.literal("private"), names: names.default([]) }),
+]);
+export type LibraryVisibilityInput = z.infer<typeof libraryVisibilityInputSchema>;
+
+export const createLibraryNodeSchema = z
   .object({
-    spaceId: z.string().uuid(),
-    parentId: z.string().uuid().nullable().optional(),
+    area: z.enum(libraryAreaValues),
+    facilityId: uuid.nullable().optional(),
+    parentId: uuid.nullable().optional(),
+    kind: z.enum(libraryNodeKindValues),
     title,
-    summary: summary.nullable().optional(),
-    format: z.enum(libraryPageFormatValues).default(LIBRARY_DEFAULT_PAGE_FORMAT),
-    body: body.default(""),
-    slug: slug.optional(),
-    position: z.number().int().min(0).max(100_000).optional(),
-    icon: pageIcon.nullable().optional(),
-    coverAssetId: coverAssetId.nullable().optional(),
-    /**
-     * テンプレートから作る（同じスペースの、テンプレートの印が付いた公開済みのページ）。形式と本文はそのページの公開版を写し、
-     * アイコンとカバーは渡さなければそのページのものを写す（library-blocks.md §6）
-     */
-    templatePageId: z.string().uuid().optional(),
+    position: position.optional(),
+    visibility: libraryVisibilityInputSchema.optional(),
+    format: z.enum(libraryPageFormatValues).optional(),
+    body: body.optional(),
+    /** 文書の本文を Markdown で（core が blocks に直して、ふつうの本文と同じ保存の道を通す）。body と一緒には渡さない */
+    markdown: markdown.optional(),
   })
-  .refine((v) => bodyFitsFormat(v.format, v.body), { message: "本文が長すぎます", path: ["body"] });
-export type CreateLibraryPageInput = z.infer<typeof createLibraryPageSchema>;
+  .refine((v) => v.markdown === undefined || v.body === undefined, { message: "本文は body か markdown のどちらか", path: ["markdown"] })
+  .refine(placementFits, placementMessage)
+  .refine((v) => v.area !== "personal" || v.visibility === undefined, {
+    message: "個人の置き場は公開 / 非公開を持たない",
+    path: ["visibility"],
+  })
+  .refine(
+    (v) =>
+      v.kind === "page" ||
+      (v.format === undefined && v.body === undefined && v.markdown === undefined),
+    { message: "フォルダは本文・形式を持たない", path: ["kind"] },
+  )
+  .refine((v) => v.body === undefined || bodyFitsFormat(v.format ?? LIBRARY_DEFAULT_PAGE_FORMAT, v.body), {
+    message: "本文が長すぎます",
+    path: ["body"],
+  });
+export type CreateLibraryNodeInput = z.infer<typeof createLibraryNodeSchema>;
+
+/** 名前・アイコン（null で外す）を変える（本文は `saveLibraryBodySchema`）。フォルダ・文書・デザインページのどれでも */
+export const updateLibraryNodeSchema = z
+  .object({
+    title: title.optional(),
+    icon: nodeIcon.nullable().optional(),
+  })
+  .refine((v) => Object.values(v).some((x) => x !== undefined), { message: "変える項目がありません" });
+export type UpdateLibraryNodeInput = z.infer<typeof updateLibraryNodeSchema>;
 
 /**
- * 下書きの版を保存する。
- *
- * `baseVersionNo`:
- * - 整数 → その版を元にした下書き（ずれていれば CONFLICT）
- * - `null` → 公開版の無いページで最初の下書きを保存する（新規作成の直後）
+ * 本文を保存する（保存したらすぐ反映）。`baseVersionNo` は必須で、ノードの今の版番号と違えば CONFLICT
+ * （ほかの人の保存を黙って上書きしない）。保存のたびに版が 1 つ増える
  */
-export const saveLibraryPageDraftSchema = z.object({
-  title: title.optional(),
-  summary: summary.nullable().optional(),
-  format: z.enum(libraryPageFormatValues).optional(),
-  body: body.optional(),
-  note: z.string().trim().max(LIBRARY_VERSION_NOTE_MAX).nullable().optional(),
-  baseVersionNo: z.number().int().min(0).nullable(),
-  /** ページの頭（版に持たない。保存したときにページへ直に入る・公開を待たない） */
-  icon: pageIcon.nullable().optional(),
-  coverAssetId: coverAssetId.nullable().optional(),
+export const saveLibraryBodySchema = z
+  .object({
+    baseVersionNo: z.number().int().min(1),
+    title: title.optional(),
+    format: z.enum(libraryPageFormatValues).optional(),
+    body: body.optional(),
+    /** 文書の本文を Markdown で（作るときと同じ）。body と一緒には渡さない */
+    markdown: markdown.optional(),
+  })
+  .refine((v) => v.markdown === undefined || v.body === undefined, { message: "本文は body か markdown のどちらか", path: ["markdown"] })
+  .refine((v) => v.body === undefined || v.format === undefined || bodyFitsFormat(v.format, v.body), {
+    message: "本文が長すぎます",
+    path: ["body"],
+  });
+export type SaveLibraryBodyInput = z.infer<typeof saveLibraryBodySchema>;
+
+/** 移す（同じ置き場の中だけ。親を変える・並べ替える。`parentId` が null なら置き場の根） */
+export const moveLibraryNodeSchema = z.object({
+  parentId: uuid.nullable(),
+  position: position.optional(),
 });
-export type SaveLibraryPageDraftInput = z.infer<typeof saveLibraryPageDraftSchema>;
+export type MoveLibraryNodeInput = z.infer<typeof moveLibraryNodeSchema>;
 
-/** テンプレートの印を付ける・外す（edit 以上） */
-export const setLibraryPageTemplateSchema = z.object({ isTemplate: z.boolean() });
-export type SetLibraryPageTemplateInput = z.infer<typeof setLibraryPageTemplateSchema>;
+/**
+ * 公開 / 非公開を切り替える（非公開の根だけ・個人は不可）。公開 → 非公開は作った人とルートだけで、切り替えた人が持ち主になる。
+ * 非公開 → 公開で見せる人の行は消える
+ */
+export const setLibraryVisibilitySchema = libraryVisibilityInputSchema;
+export type SetLibraryVisibilityInput = LibraryVisibilityInput;
 
-/** ページを動かす（親を変える・並べ替える） */
-export const moveLibraryPageSchema = z.object({
-  parentId: z.string().uuid().nullable(),
-  position: z.number().int().min(0).max(100_000).optional(),
+/** 切り替える前に影響を見る（副作用なし）。入力は切り替えと同じ */
+export const previewLibraryVisibilitySchema = libraryVisibilityInputSchema;
+export type PreviewLibraryVisibilityInput = LibraryVisibilityInput;
+
+/** 影響を受ける人（切り替えられる人〔作った人・持ち主・ルート〕にだけ返す） */
+export type LibraryAffectedPerson = { userId: string; name: string };
+
+/** 影響を受ける人の数と名前（名前は先頭から `LIBRARY_PREVIEW_PEOPLE_MAX` 人まで・`count` は全数） */
+export type LibraryAffectedPeople = { count: number; people: LibraryAffectedPerson[] };
+
+/** 確認の画面に名前を出す人数の上限（超えた分は「ほか n 人」） */
+export const LIBRARY_PREVIEW_PEOPLE_MAX = 50;
+
+/**
+ * 切り替えの影響（置き場の対象の人のうち。ルートは数えない）:
+ * - `losing` … 中に入れなくなる人（名前だけは見える）
+ * - `gaining` … 中に入れるようになる人
+ * - `absorbedRoots` … 公開のフォルダを非公開にするとき、中にある非公開の根で、新しい根に吸収されて名簿が消えるものの数
+ * - `absorbedNames` … その吸収で消える名簿の行の数
+ */
+export type LibraryVisibilityPreview = {
+  losing: LibraryAffectedPeople;
+  gaining: LibraryAffectedPeople;
+  absorbedRoots: number;
+  absorbedNames: number;
+};
+
+/** 見せる人を全部置き換える（非公開の根だけ・持ち主とルート） */
+export const setLibraryNamesSchema = z.object({ names });
+export type SetLibraryNamesInput = z.infer<typeof setLibraryNamesSchema>;
+
+/**
+ * 見せる人の 1 行（名簿を取る口の戻り。持ち主とルートにだけ返す）。
+ * `effective` … いまその置き場の対象に所属しているか（外れている間は効かない・行は残す）
+ */
+export type LibraryNameEntry = {
+  userId: string;
+  name: string;
+  level: LibraryMemberLevel;
+  effective: boolean;
+};
+
+/** 名簿を取る口の戻り（持ち主は名簿の外。持ち主の名前は返さない） */
+export type LibraryNames = {
+  names: LibraryNameEntry[];
+  /** 自分が持ち主か */
+  isOwner: boolean;
+};
+
+/** 複製の元（組織・事業所・個人のノード / 公式のノード）。フォルダは中ごと写す */
+export const libraryCopySourceSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("node"), id: uuid }),
+  z.object({ kind: z.literal("official"), id: uuid }),
+]);
+export type LibraryCopySource = z.infer<typeof libraryCopySourceSchema>;
+
+/**
+ * 複製する（読めるものを、自分が作れる所へ）。個人から事業所へのドラッグ & ドロップもこの口。
+ * 先が組織・事業所なら公開か非公開を選ぶ（非公開の親の下は親に従うので、公開を渡すと core が断る）。先が個人なら渡さない。
+ * 画像も写す。写したノードは元と独立する（出所を持たない）
+ */
+export const copyLibraryNodeSchema = z
+  .object({
+    source: libraryCopySourceSchema,
+    target: z
+      .object({
+        area: z.enum(libraryAreaValues),
+        facilityId: uuid.nullable().optional(),
+        parentId: uuid.nullable().optional(),
+        position: position.optional(),
+      })
+      .refine(placementFits, placementMessage),
+    visibility: libraryVisibilityInputSchema.optional(),
+  })
+  .refine((v) => (v.target.area === "personal" ? v.visibility === undefined : v.visibility !== undefined), {
+    message: "先が組織・事業所なら公開か非公開を選ぶ（個人は渡さない）",
+    path: ["visibility"],
+  });
+export type CopyLibraryNodeInput = z.infer<typeof copyLibraryNodeSchema>;
+
+/**
+ * デザインページの一部を直す（old → new の置き換え・1 か所だけ）。`oldString` が本文にちょうど 1 回だけ現れるときだけ通す
+ * （0 回・2 回以上は INVALID_INPUT。AI が大きな HTML を毎回出し直さずに済む）。置き換えたあとの本文は丸ごと検査し直す。
+ * `baseVersionNo` は保存と同じ楽観ロック（違えば CONFLICT）
+ */
+export const editLibraryDesignSchema = z.object({
+  baseVersionNo: z.number().int().min(1),
+  oldString: z.string().min(1).max(LIBRARY_DESIGN_BODY_MAX),
+  newString: z.string().max(LIBRARY_DESIGN_BODY_MAX),
 });
-export type MoveLibraryPageInput = z.infer<typeof moveLibraryPageSchema>;
+export type EditLibraryDesignInput = z.infer<typeof editLibraryDesignSchema>;
 
-/** 全文検索の文字の長さ・件数の上限（library.md §6） */
+/** デザインページの検査だけ（保存しない）。保存の前に、落とされるもの・警告・大きさを確かめる */
+export const previewLibraryDesignSchema = z.object({
+  body: z.string().max(LIBRARY_BLOCKS_BODY_MAX),
+});
+export type PreviewLibraryDesignInput = z.infer<typeof previewLibraryDesignSchema>;
+
+/**
+ * ノードを読むときの形（`as`）。module の口で省くと本文そのまま（画面）。REST（AI・MCP・SDK）は省くと markdown。
+ * - markdown … 文書（blocks）を Markdown で（デザインページは検査済みの HTML のまま）
+ * - raw … 保存の形そのまま（blocks は JSON・design は検査済みの HTML）
+ * - html / text / outline … HTML・検索用の文字・見出しの並び
+ */
+export const libraryNodeReadAsValues = ["markdown", "raw", "html", "text", "outline"] as const;
+export type LibraryNodeReadAs = (typeof libraryNodeReadAsValues)[number];
+export const getLibraryNodeQuerySchema = z.object({
+  as: z.enum(libraryNodeReadAsValues).optional(),
+});
+export type GetLibraryNodeQuery = z.infer<typeof getLibraryNodeQuerySchema>;
+
+/**
+ * 版を 1 つ戻す / 進む（取り消し / やり直し）。持っている版（直近 `LIBRARY_VERSIONS_KEPT` 件）の中で、いま出ている版の位置を動かし、
+ * その版の本文と形式をページの本文にする（版の行は作らない）。戻した位置から保存すると、それより新しい版は消える。
+ * 題名・アイコン・公開 / 非公開・置き場所は変わらない。`baseVersionNo` は保存と同じ楽観ロック
+ */
+export const libraryVersionStepValues = ["back", "forward"] as const;
+export type LibraryVersionStep = (typeof libraryVersionStepValues)[number];
+export const stepLibraryVersionSchema = z.object({
+  direction: z.enum(libraryVersionStepValues),
+  baseVersionNo: z.number().int().min(1),
+});
+export type StepLibraryVersionInput = z.infer<typeof stepLibraryVersionSchema>;
+
+/** 木を取る（置き場ごと） */
+export const getLibraryTreeSchema = z
+  .object({
+    area: z.enum(libraryAreaValues),
+    facilityId: uuid.nullable().optional(),
+  })
+  .refine(placementFits, placementMessage);
+export type GetLibraryTreeInput = z.infer<typeof getLibraryTreeSchema>;
+
+/**
+ * 中に入れるノード（本文は含めない・`LibraryNodeWithBody`）。持ち主・作った人・更新した人の id は返さない
+ * （持ち主の判定の結果は `levelOf` の段で返す）
+ */
+export type LibraryNode = {
+  id: string;
+  kind: LibraryNodeKind;
+  area: LibraryArea;
+  facilityId: string | null;
+  parentId: string | null;
+  position: number;
+  title: string;
+  /** 一覧の印（null は種類の印） */
+  icon: string | null;
+  visibility: LibraryVisibility;
+  /** 非公開の根（自分を含む祖先で最も近い非公開）。公開・個人は null */
+  accessRootId: string | null;
+  /** ページだけ。フォルダは null */
+  format: LibraryPageFormat | null;
+  /** 保存のときに `baseVersionNo` として返す */
+  versionNo: number;
+  updatedAt: string;
+};
+
+/** 本文つきのノード（読める人だけ） */
+export type LibraryNodeWithBody = LibraryNode & { body: string };
+
+/**
+ * 自分がこのノードでできること（画面の出し分け。止めるのは口のゲート）。
+ * `setVisibility` は今と逆へ切り替えられるか（公開 → 非公開は作った人とルート・非公開 → 公開は持ち主とルート・非公開の根だけ）
+ */
+export type LibraryNodeCapabilities = {
+  edit: boolean;
+  /** 中に作れるか（フォルダだけ） */
+  createChild: boolean;
+  delete: boolean;
+  setVisibility: boolean;
+  /** 見せる人を見る・決める（非公開の根の持ち主とルート） */
+  manageNames: boolean;
+  /** 複製の元にできるか */
+  copy: boolean;
+};
+
+/** 1 件を開いたときの形（本文・できること・非公開の根の題名〔中の子のとき「〇〇に従う」に使う〕） */
+export type LibraryNodeView = LibraryNodeWithBody & {
+  capabilities: LibraryNodeCapabilities;
+  /** 非公開の根の題名（自分が根なら自分の題名）。公開・個人は null */
+  accessRootTitle: string | null;
+  /** 見せる人の数（非公開の根の持ち主とルートにだけ・ほかは null） */
+  namesCount: number | null;
+  createdByName: string | null;
+  /** design の本文が今の検査の規則で描けるか（通らない旧い行は false で本文は空。blocks・フォルダは true） */
+  designRenderable: boolean;
+  /** 版を 1 つ戻せるか / 進めるか（持っている版の中で。フォルダは両方 false） */
+  canBack: boolean;
+  canForward: boolean;
+  organizationName: string | null;
+};
+
+/**
+ * 名前だけ見える非公開の根（中に入れない人に出す）。子の数・更新日・作成者・持ち主・名簿の人数・本文は返さない。
+ * 個人の置き場・置き場の対象外の人には出さない。検索にも出さない
+ */
+export type OutlineNode = {
+  id: string;
+  kind: LibraryNodeKind;
+  area: LibraryArea;
+  facilityId: string | null;
+  parentId: string | null;
+  position: number;
+  title: string;
+  icon: string | null;
+  locked: true;
+};
+
+/** 木の応答（入れるノードと、名前だけのノード） */
+export type LibraryTree = {
+  readable: LibraryNode[];
+  locked: OutlineNode[];
+};
+
+/**
+ * デザインページの検査の報告の 1 行。`code` は機械が読む印（落としたもの: `element`・`external_font`・`css_property` など /
+ * 気をつけること: `no_dark_mode`・`px_font_size` など。値の SoT は library の pure の sanitize-design・design-text）。
+ * `name` は検査器が持つ固定の語（`script`・`@import` など）だけで、入力の文字は映さない
+ */
+export type LibraryDesignReportItem = { code: string; count: number; name?: string };
+
+/** デザインページの検査の報告（落としたもの・気をつけること） */
+export type LibraryDesignReport = {
+  /** 落としたもの（保存の前に直すと良いもの） */
+  removed: LibraryDesignReportItem[];
+  /** 落とさないが気をつけること（動き・大きさ など） */
+  warnings: LibraryDesignReportItem[];
+};
+
+/** デザインページの検査の結果（preview の戻り・保存の前に AI と人が見る） */
+export type LibraryDesignPreview = LibraryDesignReport & {
+  /** 検査したあとの本文（保存されるのはこの形） */
+  body: string;
+  /** 検査したあとの長さ（字） */
+  length: number;
+};
+
+/** 作る・本文の保存・部分の直しの戻り。design のときは検査の報告が付く（blocks は null） */
+export type LibraryNodeSaved = LibraryNode & { report: LibraryDesignReport | null };
+
+/** 公開のフォルダを消せないとき（中にほかの人の非公開がある）の件数 */
+export type LibraryDeleteBlocked = { othersPrivateInside: number };
+
+/** 自分が見られる置き場と、書けるか（左の帯の区分と「作る」の出し分け）。公式は別の口 */
+export type LibraryMyAccess = {
+  areas: {
+    area: LibraryArea;
+    /** 事業所の置き場だけ */
+    facilityId: string | null;
+    /** 見出し（組織 / 事業所の名前 / 個人） */
+    title: string;
+    /** 作れるか（library:write と置き場。組織は今は常に false） */
+    canWrite: boolean;
+  }[];
+  isRoot: boolean;
+};
+
+/** 画像（ページに属する） */
+export type LibraryAsset = {
+  id: string;
+  mime: LibraryAssetMime;
+  bytes: number;
+  width: number | null;
+  height: number | null;
+  createdAt: string;
+};
+
+/** 画像を見る署名 URL（短い期限） */
+export type LibraryAssetUrl = { url: string; expiresAt: string };
+
+/** 公式のノード（組織を持たない・公開 / 非公開と版を持たない） */
+export type LibraryOfficialNode = Omit<LibraryNode, "area" | "facilityId" | "visibility" | "accessRootId" | "versionNo"> & {
+  helpKey: string | null;
+};
+export type LibraryOfficialNodeWithBody = LibraryOfficialNode & { body: string };
+
+/** 公式の木 */
+export type LibraryOfficialTree = { nodes: LibraryOfficialNode[] };
+
+/** ヘルプキー → 開く先 */
+export type LibraryHelpTarget = { title: string; url: string };
+
+/** 全文検索の文字の長さ・件数の上限 */
 export const LIBRARY_SEARCH_QUERY_MAX = 100;
 export const LIBRARY_SEARCH_LIMIT_MAX = 50;
 export const LIBRARY_SEARCH_LIMIT_DEFAULT = 20;
 
-/** ページを探す（公開版の題名と本文。見えるページだけ） */
-export const searchLibraryPagesSchema = z.object({
-  q: z.string().trim().min(1).max(LIBRARY_SEARCH_QUERY_MAX),
-  spaceId: z.string().uuid().optional(),
-  limit: z.coerce.number().int().min(1).max(LIBRARY_SEARCH_LIMIT_MAX).default(LIBRARY_SEARCH_LIMIT_DEFAULT),
-});
-export type SearchLibraryPagesInput = z.infer<typeof searchLibraryPagesSchema>;
+/** 探す（名前と本文。中に入れるノードだけ。名前だけ見える非公開は出さない） */
+export const searchLibraryNodesSchema = z
+  .object({
+    q: z.string().trim().min(1).max(LIBRARY_SEARCH_QUERY_MAX),
+    area: z.enum(libraryAreaValues).optional(),
+    facilityId: uuid.optional(),
+    limit: z.coerce.number().int().min(1).max(LIBRARY_SEARCH_LIMIT_MAX).default(LIBRARY_SEARCH_LIMIT_DEFAULT),
+  })
+  .refine((v) => v.facilityId === undefined || v.area === "facility", {
+    message: "facilityId は事業所の置き場だけ",
+    path: ["facilityId"],
+  });
+export type SearchLibraryNodesInput = z.infer<typeof searchLibraryNodesSchema>;
 
-/** 検索の 1 件。`snippet` は本文の当たった前後（題名だけ当たったときは本文の頭） */
-export type LibrarySearchHit = {
+/** 検索の 1 件。`snippet` は本文の当たった前後（名前だけ当たったときは本文の頭） */
+/** 検索の 1 件（共通の項目） */
+type LibrarySearchHitBase = {
   id: string;
-  spaceId: string;
-  spaceName: string;
+  kind: LibraryNodeKind;
+  /** ページの形式（文書とデザインページの印を分ける）。フォルダは null */
+  format: LibraryPageFormat | null;
   title: string;
   icon: string | null;
   snippet: string;
   updatedAt: string;
 };
+/**
+ * 検索の 1 件。`official` で分ける: false は組織・事業所・個人のノード（置き場つき）、true は公式（全組織で共通・置き場を持たない）。
+ * 置き場の種類に "official" は足さない（area を見る所が 4 つ目を扱うことになる）
+ */
+export type LibrarySearchHit =
+  | (LibrarySearchHitBase & { official: false; area: LibraryArea; facilityId: string | null })
+  | (LibrarySearchHitBase & { official: true; area: null; facilityId: null });
 
-/** 形式を変える（新しい下書きの版を作るだけ・§5.2） */
-export const convertLibraryPageFormatSchema = z.object({
-  to: z.enum(libraryPageFormatValues),
-});
-export type ConvertLibraryPageFormatInput = z.infer<typeof convertLibraryPageFormatSchema>;
-
-/** ライブラリの画像の MIME（SVG は入れない・§5.5） */
+/** ライブラリの画像の MIME（SVG は入れない） */
 export const LIBRARY_ASSET_ALLOWED_MIME = ["image/png", "image/jpeg", "image/webp", "image/gif"] as const;
 export type LibraryAssetMime = (typeof LIBRARY_ASSET_ALLOWED_MIME)[number];
-/** 1 ファイルの上限: 10MB（§5.5） */
+/** 1 ファイルの上限: 10MB */
 export const LIBRARY_ASSET_MAX_BYTES = 10 * 1024 * 1024;
+export const LIBRARY_ASSET_MAX_PER_PAGE = 200;
 
 /** 本文中の内部参照（`qaito-asset:{id}`）のプロトコル */
 export const LIBRARY_ASSET_SRC_PREFIX = "qaito-asset:";
 
 /**
- * 画像の取り込み。実体は staging（用途 `library_asset`）に置いたもので、MIME・サイズ・マジックバイトは
- * 取り込むときに実体に対して確かめる（`@qaito/schemas/upload`）
+ * 画像の取り込み（ページに属する。置き先のページは口のパス）。実体は staging（用途 `library_asset`）に置いたもので、
+ * MIME・サイズ・マジックバイトは取り込むときに実体に対して確かめる（`@qaito/schemas/upload`）
  */
 export const uploadLibraryAssetSchema = z.object({
-  stagedId: z.string().uuid(),
+  stagedId: uuid,
   width: z.number().int().positive().max(10_000).optional(),
   height: z.number().int().positive().max(10_000).optional(),
 });
 export type UploadLibraryAssetInput = z.infer<typeof uploadLibraryAssetSchema>;
 
-/** 公式の画像の取り込み（Platform Admin）。置くスペースを指定する */
-export const uploadLibraryOfficialAssetSchema = uploadLibraryAssetSchema.extend({ spaceId: z.string().uuid() });
+/** 公式の画像の取り込み（Platform Admin）。置き先の公式のページを指定する */
+export const uploadLibraryOfficialAssetSchema = uploadLibraryAssetSchema.extend({ officialNodeId: uuid });
 export type UploadLibraryOfficialAssetInput = z.infer<typeof uploadLibraryOfficialAssetSchema>;
 
-/** 公式のスペースの入力（platform-admin の口。ゲートは通さない） */
-export const createLibraryOfficialSpaceSchema = z.object({
-  name,
-  description: description.nullable().optional(),
-  iconName: iconName.nullable().optional(),
-  sortOrder: z.number().int().min(0).max(100_000).optional(),
-});
-export type CreateLibraryOfficialSpaceInput = z.infer<typeof createLibraryOfficialSpaceSchema>;
+/** 公式の本文（形式は組織のページと同じ 2 つ。長さの上限も同じ `bodyFitsFormat`） */
+const officialBody = z.string().max(LIBRARY_BLOCKS_BODY_MAX);
 
-export const updateLibraryOfficialSpaceSchema = z
+export const createLibraryOfficialNodeSchema = z
   .object({
-    name: name.optional(),
-    description: description.nullable().optional(),
-    iconName: iconName.nullable().optional(),
-    sortOrder: z.number().int().min(0).max(100_000).optional(),
+    parentId: uuid.nullable().optional(),
+    kind: z.enum(libraryNodeKindValues),
+    title,
+    icon: nodeIcon.nullable().optional(),
+    format: z.enum(libraryOfficialPageFormatValues).optional(),
+    body: officialBody.optional(),
+    helpKey: helpKey.nullable().optional(),
+    position: position.optional(),
+  })
+  .refine((v) => v.kind === "page" || (v.format === undefined && v.body === undefined && v.helpKey == null), {
+    message: "フォルダは本文・形式・help_key を持たない",
+    path: ["kind"],
+  });
+export type CreateLibraryOfficialNodeInput = z.infer<typeof createLibraryOfficialNodeSchema>;
+
+/** 公式のノードを直す（保存したらすぐ反映） */
+export const updateLibraryOfficialNodeSchema = z
+  .object({
+    title: title.optional(),
+    icon: nodeIcon.nullable().optional(),
+    format: z.enum(libraryOfficialPageFormatValues).optional(),
+    body: officialBody.optional(),
+    helpKey: helpKey.nullable().optional(),
   })
   .refine((v) => Object.values(v).some((x) => x !== undefined), { message: "変える項目がありません" });
-export type UpdateLibraryOfficialSpaceInput = z.infer<typeof updateLibraryOfficialSpaceSchema>;
+export type UpdateLibraryOfficialNodeInput = z.infer<typeof updateLibraryOfficialNodeSchema>;
 
-/** 公式の本文（blocks を持たないので 65k 字のまま） */
-const officialBody = z.string().max(LIBRARY_PAGE_BODY_MAX);
-
-export const createLibraryOfficialPageSchema = z.object({
-  spaceId: z.string().uuid(),
-  parentId: z.string().uuid().nullable().optional(),
-  title,
-  summary: summary.nullable().optional(),
-  format: z.enum(libraryOfficialPageFormatValues),
-  body: officialBody.default(""),
-  slug: slug.optional(),
-  helpKey: helpKey.nullable().optional(),
-  position: z.number().int().min(0).max(100_000).optional(),
-});
-export type CreateLibraryOfficialPageInput = z.infer<typeof createLibraryOfficialPageSchema>;
-
-export const saveLibraryOfficialPageDraftSchema = z.object({
-  title: title.optional(),
-  summary: summary.nullable().optional(),
-  format: z.enum(libraryOfficialPageFormatValues).optional(),
-  body: officialBody.optional(),
-  helpKey: helpKey.nullable().optional(),
-  note: z.string().trim().max(LIBRARY_VERSION_NOTE_MAX).nullable().optional(),
-  baseVersionNo: z.number().int().min(0).nullable(),
-});
-export type SaveLibraryOfficialPageDraftInput = z.infer<typeof saveLibraryOfficialPageDraftSchema>;
-
-export const moveLibraryOfficialPageSchema = moveLibraryPageSchema;
-export type MoveLibraryOfficialPageInput = z.infer<typeof moveLibraryOfficialPageSchema>;
-
-/** 公式のページを組織の下に複製する（§3.2 の末尾） */
-export const copyOfficialLibraryPageSchema = z.object({
-  toSpaceId: z.string().uuid(),
-  toParentId: z.string().uuid().nullable().optional(),
-  slug: slug.optional(),
-});
-export type CopyOfficialLibraryPageInput = z.infer<typeof copyOfficialLibraryPageSchema>;
-
-export const restoreLibraryPageVersionSchema = z.object({
-  versionNo: z.number().int().min(1),
-  note: z.string().trim().max(LIBRARY_VERSION_NOTE_MAX).nullable().optional(),
-});
-export type RestoreLibraryPageVersionInput = z.infer<typeof restoreLibraryPageVersionSchema>;
+export const moveLibraryOfficialNodeSchema = moveLibraryNodeSchema;
+export type MoveLibraryOfficialNodeInput = MoveLibraryNodeInput;

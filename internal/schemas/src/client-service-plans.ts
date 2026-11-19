@@ -17,11 +17,6 @@ export const weekdayOptions = [
   { value: 7, label: "日" },
 ] as const;
 
-/**
- * 居宅サービス計画作成区分（国保連 基本情報レコード 項番19。数字1桁のコード値）。
- * value = 国保連 CSV に出す確定コード（DB に直接保持）。'1'/'3' は 項番20（居宅介護支援事業所番号）が必須になる。
- * ⚠️ コード値は制度（居宅サービス計画作成区分）に準拠。共通編1.4 コード一覧の逐語最終確認は §9 f の残件。
- */
 export const planCreationKindValues = ["1", "2", "3"] as const;
 export const planCreationKindOptions = [
   { value: "1", label: "居宅介護支援事業所作成" },
@@ -44,14 +39,6 @@ export type SameBuildingClass = (typeof sameBuildingClassValues)[number];
 /** 減算率（千分率）。none は 0。マスタの率の行（4111 = 100 / 4112 = 150）と同じ値 */
 export const SAME_BUILDING_CLASS_PERMILLE: Readonly<Record<SameBuildingClass, number>> = { none: 0, rate10: 100, rate15: 150 };
 
-/**
- * 利用契約の同一建物の居住（same_building_residence）を請求のエンジン・collector が読むサービス種類（2026-11-11 に実装を grep して列挙）。
- *   15/78/A5/A6 = 日の減算（subtraction-c）、16 = 通所リハの日の減算、66 = 予防通所リハの月額の減算（yobo-tsusho-monthly）、
- *   43/46 = 居宅介護支援の合成の軸 doitsu（kyotaku adapter）、13/63 = 訪問看護の同一建物減算（kango の same-building）。
- *   読まないのは 11/A2・14/64・17/67。読むエンジンが増えたらここへ足す。**知らない種類コードは読む側に倒す**（画面で欄を消さない）。
- * 中山間地域等に居住する者への加算（chusankan_outside_area）は、地域系の加算の率の行を付ける S4b（全種類。居宅介護支援は合成の軸）が読むので、
- * どの種類でも読む（17/67 は計算しないが警告を出す）。
- */
 const SAME_BUILDING_READING_SERVICE_TYPES: ReadonlySet<string> = new Set(["15", "78", "A5", "A6", "16", "66", "43", "46", "13", "63"]);
 const SAME_BUILDING_NOT_READING_SERVICE_TYPES: ReadonlySet<string> = new Set(["11", "A2", "14", "64", "17", "67"]);
 
@@ -103,10 +90,6 @@ export const clientServicePlanIdParam = z.object({
 /** 提供時間の形（`"HH:MM"` / `"HH:MM:SS"`）。 */
 const SERVICE_TIME_RE = /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/;
 
-/**
- * 利用曜日を入れたときに要る項目（2026-10-06 ユーザー決定「契約の利用曜日を入れたら、提供時間も必須」）。
- * 画面が未入力の項目名を出すのに使う（`MESSAGES.validation.requiredMissing`）。
- */
 export const SERVICE_SCHEDULE_REQUIRED_FIELDS = [
   { key: "start_time", label: "提供時間（開始）" },
   { key: "end_time", label: "提供時間（終了）" },

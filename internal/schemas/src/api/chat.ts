@@ -5,10 +5,6 @@ export const createSessionApiSchema = z.object({
   model: z.string().max(100).optional(),
 });
 
-/**
- * 履歴の状態（qaito-chat-harness.md §6.4・B-2c）。BFF / Runner がターンのあとに書く（モデルへ渡す履歴を毎ターン同じ形に組むための目印）。
- * 境目は `{先頭からの位置}:{指紋}`（`@qaito/platform/chat/turn` の history-state）。本人のセッションだけ（他人のは書けない）。
- */
 export const sessionHistoryStateSchema = z.object({
   summary: z.string().max(60_000).nullable().optional(),
   summarized_through: z.string().max(200).nullable().optional(),
@@ -33,13 +29,6 @@ export const createMessageApiSchema = z.object({
   role: z.enum(["user", "assistant", "system"]),
   content: z.string(),
   parts: z.unknown().optional(),
-  /**
-   * 保存の冪等キー（設計 §6.1.6）。省略可（従来経路は送らない = NULL 保存で従来どおり）。
-   * 送ると部分 UNIQUE `(session_id, client_message_id)` により二重保存が吸収される
-   * （`ON CONFLICT DO NOTHING` → 既存行をそのまま返す）。
-   * **決定的 ID**（`{turnId}:{step}:{part}`）であることが前提で、ランダム ID を入れても
-   * 試行ごとに別 ID になり UNIQUE は一度も発火しない。
-   */
   client_message_id: z.string().min(1).max(200).optional(),
 });
 

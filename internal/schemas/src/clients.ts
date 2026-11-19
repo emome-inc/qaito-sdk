@@ -9,10 +9,6 @@ export const genderOptions = [
   { value: "other", label: "その他" },
 ] as const;
 
-/**
- * 利用状態（client.clients.status）
- * master-design §3.1 の CHECK 制約と一致させる
- */
 export const clientStatusOptions = [
   { value: "pending", label: "利用開始前" },
   { value: "active", label: "利用中" },

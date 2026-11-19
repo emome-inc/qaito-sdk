@@ -5,8 +5,8 @@ export const DIRECTIVE_AUDIENCE_KINDS = ["all", "facility", "group", "users"] as
 export type DirectiveAudienceKind = (typeof DIRECTIVE_AUDIENCE_KINDS)[number];
 
 export const DIRECTIVE_AUDIENCE_LABELS: Record<DirectiveAudienceKind, string> = {
-  all: "全員",
-  facility: "事業所",
+  all: "組織の全員",
+  facility: "事業所の全員",
   group: "グループ",
   users: "個人",
 };
@@ -105,8 +105,10 @@ export type DirectiveRecipientStatus = {
  * 事業所で制限された送り手には、自分の所属の事業所と、そこに所属する人だけを返す。
  */
 export type DirectiveAudienceOptions = {
-  /** 全員宛を選べるか（事業所で制限されない送り手だけ） */
+  /** 組織の全員宛を選べるか（業務連絡を書ける人なら true。所属 0 件の送り手だけ false） */
   canSendAll: boolean;
+  /** 組織の全員宛で届く人数（自分・ルート・アーカイブ済みを除く。確認のダイアログに出す） */
+  orgMemberCount: number;
   facilities: { id: string; name: string }[];
   groups: { id: string; name: string }[];
   users: { id: string; name: string }[];

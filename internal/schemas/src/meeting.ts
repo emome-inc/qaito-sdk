@@ -10,11 +10,9 @@ import {
   type RecordingTranscribeFormat,
 } from "./recording";
 
-/** 取り込み元の種類（§5.4）。段 1 で作るのは `upload` だけ */
 export const MEETING_SOURCE_KINDS = ["upload", "recall", "meet_api", "browser"] as const;
 export type MeetingSourceKind = (typeof MEETING_SOURCE_KINDS)[number];
 
-/** 会議の状態（§5.3）。`joining` / `recording` / `not_admitted` は bot（段 2）で使う */
 export const MEETING_STATUSES = ["scheduled", "joining", "recording", "processing", "done", "failed", "not_admitted"] as const;
 export type MeetingStatus = (typeof MEETING_STATUSES)[number];
 
@@ -41,7 +39,6 @@ export const MEETING_MINUTES_SUMMARY_MAX = 4000;
 export const MEETING_MINUTES_ITEM_MAX = 500;
 export const MEETING_MINUTES_ITEMS_MAX = 50;
 
-/** 保持期間（組織ごと・日）。電話の受付ごとの保持と同じ幅と既定（eecall.md §7.1） */
 export const MEETING_RETENTION_DAYS_MIN = 7;
 export const MEETING_RETENTION_DAYS_MAX = 730;
 export const MEETING_RETENTION_DAYS_DEFAULT = 90;
@@ -53,10 +50,6 @@ export const MEETING_CAPTURE_ATTEMPTS_MAX = 30;
 /** 録音が置けてから（＝録音が終わってから）この時間を過ぎても終わらなければ failed */
 export const MEETING_CAPTURE_DEADLINE_HOURS = 24;
 
-/**
- * 1 ファイルの上限。Transcribe のバッチは 1 ファイル 2GB・4 時間まで。動画の会議 2 時間程度を見込んで 1GB
- * （それを超える録音は取り込み元〔段 2〕の側で分ける）。
- */
 export const MEETING_RECORDING_MAX_BYTES = 1024 * 1024 * 1024;
 /**
  * 画面でその場で録るときの上限（秒）。Transcribe のバッチの 1 ファイル 4 時間に合わせる（それより長い録音は文字起こしできない）。
@@ -86,11 +79,6 @@ export const meetingRecordingProbeLength = recordingProbeLength;
 /** 実体の先頭が申告の MIME のマジックバイトと一致するか（バイトが足りなければ不一致） */
 export const matchesMeetingRecordingMagic = matchesRecordingMagic;
 
-/**
- * 録音の S3 キー（会議のバケットの中）。**サーバが作る**。会議 1 件に録音 1 つで、拡張子を付けない
- * （置き直しても同じキーを上書きし、形式の違う古い実体が孤児にならない。形式は行の `content_type`）。
- * `{orgId}/` で始める（アップロード規約 §1-2。組織の削除は接頭辞で消す）。
- */
 export function meetingRecordingKey(organizationId: string, meetingId: string): string {
   return `${organizationId}/${meetingId}/recording`;
 }
@@ -133,7 +121,6 @@ const meetingFields = {
   participants: z.array(meetingParticipantInputSchema).max(MEETING_PARTICIPANTS_MAX).optional(),
 };
 
-/** 会議を作る。取り込み元は段 1 では `upload` だけ */
 export const createMeetingSchema = z.object({
   ...meetingFields,
   sourceKind: z.literal("upload").optional(),

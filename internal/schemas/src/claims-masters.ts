@@ -2,7 +2,6 @@ import { z } from "zod";
 import { nationalMedicationRowSchema } from "./medications";
 import { nationalDiseaseModifierRowSchema, nationalDiseaseRowSchema } from "./national-diseases";
 
-/** CHECK: master_kind IN (...) — §3.2.1 / §3.2.2 の 10 種 */
 export const masterKinds = [
   "service_code",
   "regional_grade",
@@ -24,10 +23,6 @@ export type MasterKind = (typeof masterKinds)[number];
 export const masterVersionStatuses = ["staged", "active", "superseded"] as const;
 export type MasterVersionStatus = (typeof masterVersionStatuses)[number];
 
-/**
- * 版メタデータ（§5.5.2 admin 取込 Dialog / §5.4.1 codegen CLI 双方の入力骨子）。
- * municipality_code は master_kind='municipal' のときのみ必須（§5.5.1）。
- */
 export const masterVersionMetaSchema = z
   .object({
     master_kind: z.enum(masterKinds),
@@ -56,7 +51,6 @@ export type UnitBasis = (typeof unitBasisValues)[number];
 export const serviceCodeCategoryValues = ["base", "addition", "subtraction", "rate_fixed"] as const;
 export type ServiceCodeCategory = (typeof serviceCodeCategoryValues)[number];
 
-/** service_codes.alt_table — 定超/人欠の別建てフルコード表区分（§5.4.1 ✅確定(W-0)） */
 export const altTableValues = ["none", "teicho", "jinketsu", "teicho_jinketsu"] as const;
 export type AltTableValue = (typeof altTableValues)[number];
 
@@ -72,7 +66,6 @@ export type RegionGrade = (typeof regionGradeValues)[number];
 export const laborRatioClassValues = ["70", "55", "45"] as const;
 export type LaborRatioClass = (typeof laborRatioClassValues)[number];
 
-/** benefit_limits.care_level（§4.3 CareLevel と同型） */
 export const careLevelValues = [
   "support1",
   "support2",
@@ -116,13 +109,6 @@ export const prorateBoundaryValues = ["start", "end"] as const;
 /** error_codes.category */
 export const errorCodeCategoryValues = ["returned", "held", "assessed"] as const;
 
-/**
- * codegen 正規化後の行スキーマ（§5.4.2 ①行スキーマ検証で確定した形）。
- *
- * ⚠️ 無償 xlsx（WAM NET）には limit_target / medical_deduction_class / rate_permille の
- * 3 列が存在しない（§0.3 #8・§5.4.1 ⚠️#1 残件）。Phase A は別途投入までこれらを
- * nullable/optional として受け付ける（DB 側 NOT NULL 充足は投入パイプライン側の責務・本スキーマの範囲外）。
- */
 export const serviceCodeCsvRowSchema = z.object({
   service_type_code: z.string().length(2, "service_type_code は 2 文字です"),
   item_code: z.string().length(4, "item_code は 4 文字です"),
@@ -217,10 +203,6 @@ export const typeLimitCsvRowSchema = z.object({
 });
 export type TypeLimitCsvRow = z.infer<typeof typeLimitCsvRowSchema>;
 
-/**
- * NOTE: municipal_service_codes は master_kind='municipal' と同一分類（§5.5.1）。
- * insurers / type_limits は Phase B/C 実データ投入のため、行スキーマは先行予約のみ。
- */
 export const masterRowSchemaByKind = {
   service_code: serviceCodeCsvRowSchema,
   regional_grade: regionalGradeCsvRowSchema,

@@ -73,7 +73,6 @@ export const QaitoEecall = qaitoGlyph("QaitoEecall", (sw) => [
 
 /**
  * 映像分析（Qaito Vision）: ファインダーの四隅の中に目（カメラの映像を見て文にする）。
- * 仮の絵（2026-11-17・統括の指示で E が用意）。正式な絵はユーザーに見てもらってから差し替える
  */
 export const QaitoVision = qaitoGlyph("QaitoVision", () => [
   createElement("path", { key: "tl", d: "M3 8V5a2 2 0 0 1 2-2h3" }),

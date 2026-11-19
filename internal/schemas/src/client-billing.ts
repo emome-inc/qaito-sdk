@@ -1,10 +1,6 @@
 import { z } from "zod";
 import { partialForUpdate } from "./partial-for-update";
 
-/**
- * 請求方法
- * master-design §3.2 の CHECK 制約と一致させる
- */
 export const billingMethodOptions = [
   { value: "bank_transfer", label: "口座振替" },
   { value: "cash", label: "現金" },
@@ -19,10 +15,6 @@ export const billingMethodValues = [
   "family_payment",
 ] as const;
 
-/**
- * 口座種別
- * master-design §3.2 の CHECK 制約と一致させる
- */
 export const accountTypeOptions = [
   { value: "ordinary", label: "普通" },
   { value: "checking", label: "当座" },

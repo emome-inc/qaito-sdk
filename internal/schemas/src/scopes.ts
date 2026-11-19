@@ -100,12 +100,6 @@ export function operationsOfModule(slug: string): readonly ScopeOperation[] {
   return MODULE_OPERATIONS[slug] ?? SCOPE_OPERATIONS;
 }
 
-/**
- * すべての有効スコープ。**モジュール一覧 × 操作から導出する**（手書きしない）。
- *
- * 手書きだった頃は「モジュールを足したのに scope を足し忘れる」「旧モジュールの scope が
- * 残り続ける」が常態化していた（2026-09-09 の再編時、44 接頭辞のうち 31 が実体を失っていた）。
- */
 export const ACTIVE_SCOPES = SCOPED_MODULES.flatMap((m) =>
   operationsOfModule(m).map((op) => `${m}:${op}`),
 );
@@ -154,11 +148,6 @@ export const READ_ONLY_SCOPES = ACTIVE_SCOPES.filter(
   (s) => s.endsWith(":read") && !READ_ONLY_EXCLUDED_MODULES.some((m) => s.startsWith(`${m}:`)),
 ) as readonly string[];
 
-/**
- * 書込みスコープ + delete（フルアクセス permission set 用）。
- * ⚠️ `:delete` は「フルアクセス」の定義に含める。削除だけ与えたくない権限セットは
- *    WRITE_SCOPES を使わず、コンソールの権限セット画面で個別に外す（2026-08-07 CRUD 分離）。
- */
 export const WRITE_SCOPES = ACTIVE_SCOPES.filter(
   (s) => s.endsWith(":write") || s.endsWith(":delete"),
 ) as readonly string[];
@@ -231,18 +220,6 @@ export function expandScopes(scopes: readonly string[] | null | undefined): stri
   return [...scopes];
 }
 
-/**
- * もう認可に使われないスコープ文字列。**付与されていても意味を持たない。**
- *
- * chat / llm / talk は柱・システムのアプリ・外部アプリ付与（権限セットのアプリ）で守るので
- * scope を持たない。旧モジュール（vitals / carerecord / monitoring / …）の scope は
- * 2026-09-09 の再編で統合先へ写し替え済み（migration 0290 が権限セット・API キー・
- * トークンから**除去**する）ため、ここには列挙しない
- * ── 列挙すると seed が dev の API キーに死んだ文字列を焼き戻してしまう。
- *
- * ⚠️ `transport:read` をここに置いてはいけない。旧「送迎表統合アプリ」の scope だったが、
- *    `transport` は再編で**現役モジュール**（送迎 = 計画 + 実績）になった。
- */
 export const DEPRECATED_SCOPES = [
   "chat:read",
   "chat:write",

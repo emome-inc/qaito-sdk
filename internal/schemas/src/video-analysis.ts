@@ -16,7 +16,6 @@ export type VideoSessionKind = (typeof VIDEO_SESSION_KINDS)[number];
 export const VIDEO_SESSION_STATUSES = ["preview", "recording", "ended", "reported"] as const;
 export type VideoSessionStatus = (typeof VIDEO_SESSION_STATUSES)[number];
 
-/** 区切りを作った端末（§6A.5）: 経路 1 = pc・経路 2 = camera・経路 3 = single。 */
 export const VIDEO_LINE_SOURCES = ["pc", "camera", "single"] as const;
 export type VideoLineSource = (typeof VIDEO_LINE_SOURCES)[number];
 
@@ -28,22 +27,14 @@ export type VideoSceneTag = (typeof VIDEO_SCENE_TAGS)[number];
 export const VIDEO_REPORT_ASPECTS = ["参加の様子", "表情・盛り上がり", "安全面", "職員の関わり", "進行・時間配分"] as const;
 export type VideoReportAspect = (typeof VIDEO_REPORT_ASPECTS)[number];
 
-/**
- * エンドポイント（GPU）の状態（§7.5）。SageMaker の EndpointStatus を畳んだもの（モジュールの port と同じ語）。
- * stopped = エンドポイントが無い / creating = Creating・Updating / in_service = InService /
- * deleting = Deleting / failed = Failed・OutOfService など /
- * unconfigured = この環境に Vision Engine の設定（Stack の印）が無い。画面は「準備中」を出し、起動の口も断る。
- */
 export const VIDEO_ENDPOINT_STATUSES = ["stopped", "creating", "in_service", "deleting", "failed", "unconfigured"] as const;
 export type VideoEndpointStatus = (typeof VIDEO_ENDPOINT_STATUSES)[number];
 
-/** 区切り 1 本の実バイトの上限（SageMaker の 6MB の手前・§6.5）。宣言値ではなく実際に読んだバイト数で比べる。 */
 export const VIDEO_SEGMENT_MAX_BYTES = 2 * 1024 * 1024;
 /** 区切り 1 本の長さの上限（秒）。 */
 export const VIDEO_SEGMENT_MAX_SECONDS = 12;
 /** 区切りの MIME（mp4 だけ。webm は受けない）。 */
 export const VIDEO_SEGMENT_MIME = "video/mp4" as const;
-/** 区切りの秒（既定 6・段 1 は固定値で画面に出さない）。 */
 export const VIDEO_SEGMENT_SECONDS_DEFAULT = 6;
 export const VIDEO_SEGMENT_SECONDS_MIN = 2;
 export const VIDEO_SEGMENT_SECONDS_MAX = 30;
@@ -59,9 +50,7 @@ export const VIDEO_TAG_REASON_MAX = 20;
 export const VIDEO_REPORT_INPUT_MAX_LINES = 600;
 export const VIDEO_REPORT_INPUT_LINE_MAX = 600;
 
-/** 文と評価シートの既定の保持日数（§5.3）。 */
 export const VIDEO_RETENTION_DAYS_DEFAULT = 90;
-/** 使われないエンドポイントを止めるまでの分（既定・§7.4）。 */
 export const VIDEO_ENDPOINT_IDLE_MINUTES_DEFAULT = 30;
 /** 連続起動の上限（時間・既定）。使われていても、これを超えたら止める。 */
 export const VIDEO_ENDPOINT_MAX_UPTIME_HOURS_DEFAULT = 4;
@@ -82,9 +71,7 @@ export const VIDEO_STILL_MIME = "image/jpeg" as const;
 export const VIDEO_STILL_RING_MAX = 60;
 /** 見えている期間（commit から・日）。過ぎた行は一覧が返さない。バケットのライフサイクル（100 日）より短くする。 */
 export const VIDEO_STILL_RETENTION_DAYS = 90;
-/** 残さない場面（端末も持たない・サーバーも選ばない）。⚠️ 切り替えはここ 1 か所（ユーザーに最後に確かめる・§6B.1 S2）。 */
 export const VIDEO_STILL_EXCLUDED_TAGS: readonly VideoSceneTag[] = ["caution"];
-/** 選ぶ順（評価シートの highlights の good の次に、この順で時間に散らして取る・§6B.3）。 */
 export const VIDEO_STILL_TAG_PRIORITY: readonly VideoSceneTag[] = ["good", "staff", "normal"];
 /** presigned の期限（秒）。PUT は上げる間だけ・GET は画面に出す間だけ。 */
 export const VIDEO_STILL_PUT_EXPIRES_SEC = 300;
@@ -97,7 +84,6 @@ const base64Max = (bytes: number) => Math.ceil(bytes / 3) * 4;
 /** base64 の文字だけ（改行・data: の頭は付けない）。 */
 const BASE64_PATTERN = /^[A-Za-z0-9+/]*={0,2}$/;
 
-/** VLM に渡すパラメータ（段 1 は固定・利用者に編集させない）。プロンプトの文はモジュールの `functions/prompts.ts`。 */
 export const VIDEO_VLM_PARAMS = {
   fps: 2,
   maxNewTokens: 200,
@@ -105,13 +91,11 @@ export const VIDEO_VLM_PARAMS = {
   doSample: false,
 } as const;
 
-/** Gateway に渡すモデル名（頭は「どこで動いているか」・§6.3）。 */
 export const VIDEO_VLM_MODEL = "sagemaker.woven-vision-engine" as const;
 
 const uuid = z.string().uuid();
 const ymd = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "日付は YYYY-MM-DD で入力してください");
 
-/** セッションを作る（記録を始める）。同意の確認（§11）にチェックが無いと作れない。 */
 export const createVideoSessionSchema = z.object({
   facilityId: uuid,
   kind: z.enum(VIDEO_SESSION_KINDS).default("recreation"),
@@ -128,7 +112,6 @@ export const createVideoSessionSchema = z.object({
     .min(VIDEO_SEGMENT_SECONDS_MIN)
     .max(VIDEO_SEGMENT_SECONDS_MAX)
     .default(VIDEO_SEGMENT_SECONDS_DEFAULT),
-  /** ハイライトの静止画を残す枚数（0 = 残さない・§6B） */
   stillCount: z.number().int().min(VIDEO_STILL_COUNT_MIN).max(VIDEO_STILL_COUNT_MAX).default(VIDEO_STILL_COUNT_DEFAULT),
   /** 「利用者・ご家族への説明と同意」「個室・入浴・排泄を映さない」を確かめた（監査に ID と時刻だけ残す）。 */
   consentConfirmed: z.literal(true, { message: "撮影の前の確認にチェックを入れてください" }),
@@ -173,18 +156,6 @@ export const VIDEO_SEGMENT_SEQ_AHEAD_MAX = 20;
 /** `capturedAgoMs` の上限（5 分）。それより前に撮り始めた区切りは送らないので、範囲の外として弾く */
 export const VIDEO_SEGMENT_CAPTURED_AGO_MAX_MS = 300_000;
 
-/**
- * 区切り 1 本を送る（§6.1）。
- *
- * `seq` は**端末が送る連番**。端末は `GET /sessions/:id` の `nextSeq`（保存済みの最大の seq + 1）から数え始め、
- * 区切りごとに +1 する。再読み込み・一時停止のあとも `nextSeq` から続ける。経路が切り替わるとき（PC → iPad・iPad → PC）は、
- * 新しい担当は **`nextSeq + 2`** から始める（飛んでいる 1 本と重ならないため・欠番は許容）。サーバーは `nextSeq` から
- * `VIDEO_SEGMENT_SEQ_AHEAD_MAX` より先を断る。同じ seq の再送は `UNIQUE (session_id, seq)` で既存の行を返す（at-least-once）。
- * `offsetSec` は入力に持たず、サーバーが出す（表示用）。端末は `capturedAgoMs`（その区切りの録画を始めてから送る瞬間までの
- * ミリ秒・端末の時計だけで測る・再送のたびに測り直す）を付けられる。付いていれば「受けた時刻 − capturedAgoMs」を先頭にする
- * （送信の遅れ・再送の待ちで後ろへずれない。端末とサーバーの時計のずれも乗らない）。無い・範囲の外なら受けた時刻 − `durationSec`。
- * サイズ・`ftyp` の検証は api が**デコードした実バイト**で行う（ここは長さの粗い上限だけ）。
- */
 export const createVideoSegmentSchema = z.object({
   seq: z.number().int().min(0).max(VIDEO_SEGMENT_SEQ_MAX),
   source: z.enum(VIDEO_LINE_SOURCES),
@@ -195,11 +166,6 @@ export const createVideoSegmentSchema = z.object({
 });
 export type CreateVideoSegmentInput = z.input<typeof createVideoSegmentSchema>;
 
-/**
- * ハイライトの静止画の上げる先をもらう（`POST …/sessions/:id/stills/issue`・§6B.2）。
- * 送るのは**操作端末が持っているこまの番号と大きさだけ**（画像は送らない）。サーバーが `still_count` 枚を選び、
- * 選んだ番号にだけ presigned PUT を返す（署名に Content-Length を入れるので `byteSize` が要る）。
- */
 export const issueVideoStillsSchema = z.object({
   candidates: z
     .array(
@@ -266,7 +232,6 @@ export const videoReportBodySchema = z.object({
 });
 export type VideoReportBody = z.output<typeof videoReportBodySchema>;
 
-/** 観点ごとのひとこと（`aspects[].comment`）の上限。評価の 1 枚で切らずに 1 行で読める長さ（2026-11-17 ユーザーの指示）。 */
 export const VIDEO_REPORT_ASPECT_COMMENT_MAX = 16;
 
 /**
@@ -338,14 +303,10 @@ export function rankScore(body: Pick<VideoReportBody, "overall" | "aspects">): n
   return Math.round((all.reduce((s, n) => s + n, 0) / all.length) * 10) / 10;
 }
 
-/** カメラの目印（端末ごとの乱数・iPad の localStorage）。機器の認証ではない（§6A.2） */
 export const cameraIdSchema = z.string().regex(/^[A-Za-z0-9_-]{16,64}$/);
 
-/** 合図 1 回の上限（SDP と ICE の候補だけ・§6A.6） */
 export const CAMERA_SIGNAL_MAX_BYTES = 16 * 1024;
-/** 静止画 1 枚の上限（実バイト・JPEG・§6A.6） */
 export const CAMERA_FRAME_MAX_BYTES = 150 * 1024;
-/** 待機の名簿の寿命（秒）。カメラは 10 秒ごとに延ばす（§6A.2） */
 export const CAMERA_STANDBY_TTL_SEC = 30;
 export const CAMERA_STANDBY_HEARTBEAT_SEC = 10;
 /** iPad で人が「待機を始める」を押してから、遠隔の起動を受ける時間（秒）。過ぎたら押し直すまで起こせない */
@@ -406,7 +367,6 @@ export const cameraControlSchema = z.object({
   cameraId: cameraIdSchema,
   action: z.enum(["start", "stop", "lens", "route", "record", "preview"]),
   lens: z.enum(CAMERA_LENSES).optional(),
-  /** route のときだけ: 区切りを作る端末（経路 1 = operator / 経路 2 = camera・§6A.5） */
   route: z.enum(["direct", "relay"]).optional(),
 });
 export type CameraControlInput = z.infer<typeof cameraControlSchema>;
@@ -420,7 +380,6 @@ export const cameraFrameSchema = z.object({
 });
 export type CameraFrameInput = z.infer<typeof cameraFrameSchema>;
 
-/** カメラの状態（§6A.3） */
 export const CAMERA_STATES = ["standby", "connecting", "streaming", "disconnected"] as const;
 export type CameraState = (typeof CAMERA_STATES)[number];
 
@@ -449,7 +408,6 @@ export type CameraEvent =
 
 /** 経路 2 の静止画を送る間隔（秒）。 */
 export const CAMERA_FRAME_INTERVAL_SEC = 3;
-/** 経路 1 を諦めて経路 2 へ移る時間（ミリ秒・§6A.5）。 */
 export const CAMERA_DIRECT_CONNECT_TIMEOUT_MS = 8000;
 export const CAMERA_DIRECT_DROP_TIMEOUT_MS = 5000;
 export const CAMERA_DIRECT_NO_DATA_TIMEOUT_MS = 15000;
@@ -471,7 +429,6 @@ export type VideoSession = {
   recordedByName: string | null;
   /** セッションの事業所の名前（読めなければ null） */
   facilityName: string | null;
-  /** ハイライトの静止画を残す枚数（記録の前に決めた値・0 = 残さない・§6B） */
   stillCount: number;
   /** いま見られる静止画の枚数（ready かつ期限内。URL は載せない・`GET …/stills` で取る） */
   stillsReady: number;
@@ -613,7 +570,6 @@ export type VideoAnalysisPermissionContext = {
   canWrite: boolean;
   canDelete: boolean;
   isOrgAdmin: boolean;
-  /** 手動停止（`permissions/` の endpoint.stop の結果。§7.2） */
   canStopEndpoint: boolean;
 };
 

@@ -172,6 +172,7 @@ export const ACCOUNT_MENU_ENTRIES: readonly AccountMenuEntry[] = [
   { key: "library", label: LIBRARY_LAUNCH.label, path: LIBRARY_LAUNCH.href, iconName: LIBRARY_LAUNCH.iconName, needs: "library" },
   { key: "mfa", label: "MFA設定", path: "/settings/mfa", iconName: "ShieldCheck" },
   { key: "tokens", label: "アクセストークン", path: "/settings/tokens", iconName: "KeyRound" },
+  { key: "mcp", label: "MCP で接続", path: "/settings/mcp", iconName: "Link2" },
 ];
 
 export const ACCOUNT_MENU_LABELS = {

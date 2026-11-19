@@ -52,6 +52,7 @@ import { createLlmNamespace, createChatNamespace } from "./platform/chat.js";
 import { createTalkNamespace, createDevicesNamespace } from "./platform/device.js";
 import { createStorageNamespace } from "./platform/storage.js";
 import { createAccessControlNamespace } from "./platform/access-control.js";
+import { createPublicationNamespace } from "./platform/publication.js";
 import { createOrganizationNamespace } from "./platform/organization.js";
 import { createMapNamespace } from "./platform/map.js";
 import { createUsageNamespace } from "./platform/usage-billing.js";
@@ -568,6 +569,8 @@ export class QaitoClient {
   storage = createStorageNamespace(this.tx);
 
   accessControl = createAccessControlNamespace(this.tx);
+
+  publication = createPublicationNamespace(this.tx);
 
   organization = createOrganizationNamespace(this.tx);
 

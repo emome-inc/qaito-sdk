@@ -250,7 +250,7 @@ export function createClientNamespace(tx: SdkTransport) {
   };
 }
 
-/** 証・資格情報（insurance モジュール — マスタ拡張・client-module-split.md §1）*/
+/** 証・資格情報（insurance モジュール）*/
 export function createInsuranceNamespace(tx: SdkTransport) {
   return {
     /** 介護認定（旧 client.clientCertifications から移管）*/

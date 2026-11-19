@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { isLocalAppDomain } from "./app-domain";
 
-/** UI 上の機能名（暫定「外部アプリ」→ 2026-08-25 改称。最終名はレビューで確定） */
 export const EXTERNAL_APP_FEATURE_LABEL = "連携アプリ";
 
 /** タイルのアクセント色プリセット（bf テーマの oklch 系。棚の Qaito アプリと同じ質感） */
@@ -55,16 +54,68 @@ export const updateExternalAppSchema = z.object({
   enabled: z.boolean().optional(),
 });
 
-/** 検証結果（verification_detail jsonb の形。SoT はサーバの runVerification） */
 export const verificationDetailSchema = z.object({
-  subdomain: z.boolean(),
-  sdkManifest: z.boolean(),
-  /** マニフェストが名乗った OAuth クライアント ID が本組織に登録済みか（V4） */
-  oauthClient: z.boolean(),
-  authBlock: z.boolean(),
+  /** ログイン用の ID を発行しているか */
+  clientIssued: z.boolean(),
+  /** その ID で最後にログインした日時（ISO）。まだなら null */
+  lastLoginAt: z.string().nullable(),
+  /** その ID でログインしたことのある人の数 */
+  loginUsers: z.number().int().nonnegative(),
   checkedAt: z.string(),
   notes: z.array(z.string()).optional(),
 });
+
+/** 連携アプリのログイン用の鍵の用途（`shared.api_keys.key_purpose`） */
+export const LINKED_APP_OAUTH_KEY_PURPOSE = "linked_app_oauth";
+
+/** ログインのあと戻ってよい URL の上限 */
+export const LINKED_APP_REDIRECT_URI_MAX = 10;
+
+const LOCAL_HOSTS = /^(localhost|127\.0\.0\.1|\[::1\]|([a-z0-9-]+\.)+localhost)$/i;
+
+/**
+ * 戻り先の URL 1 つ。https は任意のホスト。http は手元の開発（localhost・127.0.0.1・*.localhost）だけ。
+ * `#` を含むものは受けない（OAuth の戻り先に fragment は使えない）。
+ */
+export const linkedAppRedirectUriSchema = z
+  .string()
+  .trim()
+  .max(2048)
+  .refine((v) => {
+    let u: URL;
+    try {
+      u = new URL(v);
+    } catch {
+      return false;
+    }
+    if (u.hash || u.username || u.password) return false;
+    if (u.protocol === "https:") return true;
+    return u.protocol === "http:" && LOCAL_HOSTS.test(u.hostname);
+  }, "コールバック URL は https、または開発用の http://localhost にしてください");
+
+export const linkedAppRedirectUrisSchema = z
+  .array(linkedAppRedirectUriSchema)
+  .min(1, "コールバック URL を 1 つ以上入れてください")
+  .max(LINKED_APP_REDIRECT_URI_MAX, `コールバック URL は ${LINKED_APP_REDIRECT_URI_MAX} 件までです`)
+  .refine((list) => new Set(list).size === list.length, "同じ URL が 2 回入っています");
+
+/** 手元の開発の戻り先（http の localhost・127.0.0.1・*.localhost）か */
+export function isLocalRedirectUri(v: string): boolean {
+  try {
+    const u = new URL(v);
+    return u.protocol === "http:" && LOCAL_HOSTS.test(u.hostname);
+  } catch {
+    return false;
+  }
+}
+
+/** 手元の開発の戻り先を許す環境（完全一致の許可リスト。これ以外・未設定・一字違いは許さない） */
+const LOCAL_REDIRECT_ENVS = new Set(["nonprod", "sandbox", "local"]);
+
+export function allowsLocalRedirectUris(env: { NODE_ENV?: string; QAITO_ENV?: string }): boolean {
+  if (env.NODE_ENV !== "production") return true;
+  return env.QAITO_ENV !== undefined && LOCAL_REDIRECT_ENVS.has(env.QAITO_ENV);
+}
 
 export type CreateExternalAppInput = z.infer<typeof createExternalAppSchema>;
 export type UpdateExternalAppInput = z.infer<typeof updateExternalAppSchema>;

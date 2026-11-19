@@ -34,11 +34,6 @@ export const MEDIA_LOG_MAX_SECONDS: Record<MediaLogType, number | null> = {
   audio: MEDIA_LOG_MAX_AUDIO_SECONDS,
 };
 
-/**
- * 写真の allowlist は `image-mime.ts` が唯一の SoT（Qaito ドライブと共用）。
- * ここで別に並べると、Qaito ドライブの写真を共有する導線で
- * 「一覧に出るのに共有だけ失敗する」差が生まれる（2026-09-14 に実際に見つかった）。
- */
 export const MEDIA_LOG_PHOTO_CONTENT_TYPES = IMAGE_CONTENT_TYPES;
 export const MEDIA_LOG_VIDEO_CONTENT_TYPES = ["video/webm", "video/mp4"] as const;
 export const MEDIA_LOG_AUDIO_CONTENT_TYPES = ["audio/webm", "audio/mp4", "audio/mpeg", "audio/wav"] as const;

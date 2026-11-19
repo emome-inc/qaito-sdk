@@ -99,8 +99,6 @@ export const nursingProblemRowSchema = z.object({
 });
 export type NursingProblemRow = z.infer<typeof nursingProblemRowSchema>;
 
-/** dayMarks = { "YYYY-MM-DD": "maru"|"hishi"|"sankaku"|"batsu" } — draft は §1.8 導出で表示、
- *  issued 遷移でスナップショット凍結（提出済み法定文書の再現性）。 */
 export const nursingDayMarkSymbols = ["maru", "hishi", "sankaku", "batsu", "nijumaru", "shikaku"] as const;
 export type NursingDayMarkSymbol = (typeof nursingDayMarkSymbols)[number];
 

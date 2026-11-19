@@ -22,14 +22,6 @@ export type NursingReportStage = "missing" | "draft" | "reviewed" | "issued" | "
 /** 次の 1 手。下書きを作る / 確認する / 発行する / 送る。 */
 export type NursingReportStep = "draft" | "review" | "issue" | "send";
 
-/**
- * 止める確認事項の種類（設計 §2）。
- *   - `visit_records_unfinished` … 実績のある訪問に提出済みの記録書Ⅱが無い（`dates` = 該当の訪問日）。下書きを作る手を止める
- *   - `doctor_missing` … 主治医が未設定。発行を止める
- *   - `care_manager_missing` … ケアマネが未設定。発行を止める
- *   - `instruction_out_of_period` … 指示書の期間外の訪問がある（`dates` = 該当の訪問日）。発行を止める
- *   - `clinical_unreadable` … clinical-record の read が無く、記録・主治医・指示書を確かめられない。発行を止める
- */
 export type NursingReportBlockerKind =
   | "visit_records_unfinished"
   | "doctor_missing"

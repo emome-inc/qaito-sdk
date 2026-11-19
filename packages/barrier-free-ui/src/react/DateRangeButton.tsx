@@ -48,8 +48,7 @@ export function dateRangePresets(today: string): { label: string; start: string;
 }
 
 /**
- * 期間を選ぶボタン。押すと左に既定の期間・右にミニカレンダーが出て、開始日 → 終了日の順に押して範囲を選ぶ
- * （2026-10-31 ユーザー指示「ミニカレンダー式で範囲を選べるといい」）。
+ * 期間を選ぶボタン。押すと左に既定の期間・右にミニカレンダーが出て、開始日 → 終了日の順に押して範囲を選ぶ。
  * 閉じている間も名前つきの hidden を持つので、囲んだ GET フォームの期間が消えない。
  */
 export function DateRangeButton({

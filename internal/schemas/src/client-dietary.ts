@@ -1,10 +1,6 @@
 import { z } from "zod";
 import { partialForUpdate } from "./partial-for-update";
 
-/**
- * 主食の形態
- * master-design §3.2 の CHECK 制約と一致させる
- */
 export const mealTagStapleTypeOptions = [
   { value: "regular", label: "普通食" },
   { value: "soft", label: "軟食" },

@@ -2,8 +2,10 @@
 import type {
   AccessControlMember,
   AccessControlMemberDetail,
+  ListAccessControlMembersQuery,
 } from "../types.js";
 import { pathParam } from "../path-param.js";
+import { buildQueryString } from "../serialize.js";
 import type { SdkTransport } from "../transport.js";
 
 /**
@@ -15,8 +17,9 @@ export function createAccessControlNamespace(tx: SdkTransport) {
   return {
     /** メンバー（ルートアカウントは出ない） */
     members: {
-      /** 一覧 GET /access-control/members */
-      list: () => tx.request<AccessControlMember[]>("GET", "/access-control/members"),
+      /** 一覧（`without_facility: true` で所属事業所の無い人だけ）GET /access-control/members */
+      list: (params?: ListAccessControlMembersQuery) =>
+        tx.request<AccessControlMember[]>("GET", `/access-control/members${buildQueryString(params)}`),
       /** 1 人 GET /access-control/members/:id */
       get: (id: string) =>
         tx.request<AccessControlMemberDetail>("GET", `/access-control/members/${pathParam(id, "id")}`),

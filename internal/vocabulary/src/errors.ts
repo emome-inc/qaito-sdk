@@ -24,11 +24,6 @@ export const ERROR_MESSAGES = {
   /** scope ベースの権限不足メッセージ（require-scope ミドルウェア用） */
   scopeRequired: (scope: string): string => `スコープ ${scope} が必要です`,
   rateLimitExceeded: "リクエストが多すぎます。しばらく時間を置いて再度お試しください",
-  /**
-   * LLM Gateway の同時実行ガバナー（design §6.3）が枠不足で 429 を返すときの文言。
-   * レート（単位時間あたりの本数）ではなく「同時に走っている本数」の上限なので、
-   * rateLimitExceeded とは分けて「少し待てば通る」と伝える。
-   */
   aiConcurrencyLimited: "AI が混み合っています。少し待ってから再送してください",
   networkError: "通信エラーが発生しました",
   sessionExpired: "セッションの有効期限が切れました。再度ログインしてください",
@@ -42,7 +37,6 @@ export const ERROR_MESSAGES = {
     `確定した記録書Ⅱ（${visitDates.join("・")} の訪問）に添付されているため削除できません。記録書Ⅱを下書きに戻してから削除してください。`,
   /** 記録書Ⅱに添付されていて、外せなかった（記録書Ⅱの権限が無い・削除済みの記録書Ⅱ） */
   documentInNursingRecord: "記録書Ⅱに添付されているため削除できません。記録書Ⅱから外してから削除してください。",
-  /** 医療の実績を確定した月の訪問（医療の訪問・医療になる訪問）は直せない。確定の取り消しが先（schedule・§2.3） */
   provisionMonthConfirmed: "提供票の実績を確定した月です。提供票の確定を取り消してから直してください",
   /** 訪問看護の担当の職種が、職員台帳の資格と合わない（schedule の `visit_provider_qualification`） */
   visitProviderQualificationMismatch: "職員台帳の資格と違う職種は入れられません。職員台帳を確認してください",

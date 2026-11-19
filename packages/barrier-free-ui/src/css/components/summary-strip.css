@@ -1,34 +1,71 @@
 .bf-summary-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--bf-space-2);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(calc(10rem * var(--bf-scale)), 1fr));
   margin: 0;
   padding: 0;
   list-style: none;
+  background: var(--bf-bg);
+  border: var(--bf-border-w) solid color-mix(in oklch, var(--bf-primary) 30%, var(--bf-border));
 }
 .bf-summary-strip__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bf-space-1);
+  min-width: 0;
+  padding: var(--bf-space-4) var(--bf-space-5);
+  border-left: var(--bf-border-w) solid var(--bf-border);
+  margin-left: calc(var(--bf-border-w) * -1);
+}
+.bf-summary-strip__label {
   display: inline-flex;
   align-items: center;
   gap: var(--bf-space-1);
-  padding: var(--bf-space-1) var(--bf-space-3);
-  background: var(--bf-surface-2);
-  border: var(--bf-border-w) solid var(--bf-border);
   font-size: var(--bf-font-sm);
+  font-weight: var(--bf-weight-medium, 500);
+  color: color-mix(in oklch, var(--bf-fg) 72%, var(--bf-bg));
 }
 .bf-summary-strip__icon {
   display: inline-flex;
-  color: var(--bf-muted-fg);
+  color: color-mix(in oklch, var(--bf-primary) 70%, var(--bf-fg));
 }
 .bf-summary-strip__icon svg {
   width: 1.1em;
   height: 1.1em;
 }
 .bf-summary-strip__value {
-  font-weight: var(--bf-weight-bold);
-}
-.bf-summary-strip__label {
-  color: var(--bf-muted-fg);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--bf-space-2);
+  min-width: 0;
+  font-size: var(--bf-font-title);
+  font-weight: var(--bf-weight-semibold, 600);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+  color: var(--bf-fg);
+  overflow-wrap: anywhere;
 }
 .bf-summary-strip__item[data-tone="attention"] .bf-summary-strip__value {
   color: var(--bf-danger);
+}
+.bf-summary-strip__item[data-tone="success"] .bf-summary-strip__value {
+  color: var(--bf-success);
+}
+
+.bf-summary-strip__meter {
+  display: block;
+  height: calc(0.375rem * var(--bf-scale));
+  margin-top: var(--bf-space-1);
+  background: var(--bf-surface-2);
+  overflow: hidden;
+}
+.bf-summary-strip__meter-fill {
+  display: block;
+  height: 100%;
+  background: var(--bf-primary);
+}
+.bf-summary-strip__item[data-tone="attention"] .bf-summary-strip__meter-fill {
+  background: var(--bf-danger);
+}
+.bf-summary-strip__item[data-tone="success"] .bf-summary-strip__meter-fill {
+  background: var(--bf-success);
 }

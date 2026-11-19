@@ -54,7 +54,6 @@ export const PHONE_RECORDING_SID_PATTERN = /^RE[0-9a-f]{32}$/;
 /** LINE の受信口のトークン（サーバが生成する 256 bit の乱数・小文字 hex 64 文字） */
 export const PHONE_LINE_ENDPOINT_TOKEN_PATTERN = /^[0-9a-f]{64}$/;
 export const phoneTranscriptOutputKey = (orgId: string, callId: string) => transcriptionOutputKey("phoneCall", orgId, callId);
-/** Slack Incoming Webhook の URL の先頭（宛先ドメイン固定・SSRF 対策。§9.2） */
 export const PHONE_SLACK_WEBHOOK_URL_PREFIX = "https://hooks.slack.com/";
 
 export const PHONE_ENDPOINT_KINDS = ["twilio_number", "line_webhook"] as const;
@@ -112,7 +111,6 @@ export const PHONE_MINUTES_AUTOMATED = 1;
 export const PHONE_HANDLING_STATUSES = ["open", "in_progress", "done"] as const;
 export type PhoneHandlingStatus = (typeof PHONE_HANDLING_STATUSES)[number];
 
-/** 録音処理の状態（§5.1）。none = 録音なし（作った時点で終端） */
 export const PHONE_PROCESSING_STATUSES = ["none", "queued", "stored", "transcribing", "summarizing", "done", "failed"] as const;
 export type PhoneProcessingStatus = (typeof PHONE_PROCESSING_STATUSES)[number];
 /** 終端の状態（`finished_at` が入る） */
@@ -121,10 +119,6 @@ export const PHONE_PROCESSING_FINAL_STATUSES = ["done", "failed", "none"] as con
 export const PHONE_CALL_ACTION_KINDS = ["status", "assign", "memo"] as const;
 export type PhoneCallActionKind = (typeof PHONE_CALL_ACTION_KINDS)[number];
 
-/**
- * 通知の 1 試行の状態。`queued` = 人の再送の Piazza（Piazza への投稿は機械の主体でしか書けないので、
- * 録音処理のジョブ `phone.advance-calls` が送って `sent` / `failed` にする・migration 0466）
- */
 export const PHONE_NOTIFICATION_STATUSES = ["sent", "failed", "queued"] as const;
 export type PhoneNotificationStatus = (typeof PHONE_NOTIFICATION_STATUSES)[number];
 
@@ -146,7 +140,6 @@ export const PHONE_NOTIFICATION_ERROR_CODES = [
 ] as const;
 export type PhoneNotificationErrorCode = (typeof PHONE_NOTIFICATION_ERROR_CODES)[number];
 
-/** 受付時間の評価の理由（`pure/business-hours.ts` の `evaluateReception` の `reason`・§4.2） */
 export const PHONE_RECEPTION_OPEN_REASONS = [
   "always_after_hours",
   "in_slot",
@@ -175,16 +168,7 @@ export const PHONE_RETENTION_DAYS_DEFAULT = 90;
 export const PHONE_RECEPTION_HOURS_MAX = 7 * 6;
 /** 分岐の深さの上限（第 1 階層 + 子） */
 export const PHONE_MENU_MAX_DEPTH = 2;
-/**
- * 受電の処理の段が失敗したときの、次に試すまでの間隔（分。§5.2）。n 回目の失敗のあとは n 番目の値、
- * 使い切ったら最後の値（60 分）ごと。`failed` にするのは受電から 24 時間を過ぎたときだけ（回数では止めない）。
- * Twilio・S3・Transcribe の障害が数分続いただけで留守録を失わないため。
- */
 export const PHONE_PROCESSING_RETRY_MINUTES = [1, 2, 5, 15, 30, 60] as const;
-/**
- * この回数だけ失敗が続いたら、処理の途中でも要約なしの通知を先に出す（§5.2）。待ちの合計は 1+2+5+15 = 23 分。
- * 24 時間の再試行のあいだ受電を誰にも伝えないことを避ける（あとで処理が終わっても重ねて送らない）。
- */
 export const PHONE_PROCESSING_NOTIFY_AFTER_FAILURES = 5;
 /**
  * 処理の失敗の数（`phone_call_processing.attempts`）の頭打ち。上の間隔で 24 時間のあいだに失敗できるのは
@@ -266,7 +250,6 @@ export const createPhoneReceptionSchema = z.object({
 /** PATCH /phone/receptions/:id */
 export const updatePhoneReceptionSchema = partialForUpdate(createPhoneReceptionSchema);
 
-/** 番号の割当（在庫から選ぶ・電話受付の管理者と platform-admin・§4.3・0565） */
 export const assignPhoneNumberSchema = z.object({
   number: phoneNumberInputSchema,
   label: optionalText(PHONE_ENDPOINT_LABEL_MAX),

@@ -90,17 +90,6 @@ export const clientWeightTrendQuery = z.object({
 });
 export type ClientWeightTrendQuery = z.infer<typeof clientWeightTrendQuery>;
 
-/**
- * 全利用者を横断してバイタルを絞り込む。
- *
- * 【なぜ要るか】
- * `listVitalsQuery` は `/care-record/vitals/clients/:client_id/vitals` 用で、**1 名分**しか取れない。
- * 「今日 熱がある人はいる？」は通所介護の朝いちばんの業務なのに、
- * これに答える手段が無く、AI は失敗を 1 回見せてからコード実行に落ちていた
- * （2026-09-01 実測。利用者ごとに 1 件ずつ引くので遅く、件数が増えると N+1）。
- *
- * 介護記録（`listCareRecordsQuerySchema`）は既に横断できる。同じ形に揃える。
- */
 export const listVitalsAcrossClientsQuery = z.object({
   clientId: z.string().uuid().optional(),
   facilityId: z.string().uuid().optional(),

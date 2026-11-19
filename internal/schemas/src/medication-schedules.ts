@@ -24,10 +24,6 @@ export function formatMedicationWindow(start: string, end: string): string {
   return `${toWindowTime(start)}〜${toWindowTime(end)}`;
 }
 
-/**
- * 取込（xlsx・OCR）が書く旧来の服薬の区分。服薬入力・ボードは見ない（時間範囲を見る）。
- * master-design §3.2 の CHECK 制約と一致させる
- */
 export const medicationTimingOptions = [
   { value: "morning", label: "朝" },
   { value: "noon", label: "昼" },
@@ -50,10 +46,6 @@ export const medicationTimingValues = [
   "other",
 ] as const;
 
-/**
- * 用法
- * master-design §3.2 の CHECK 制約と一致させる
- */
 export const medicationMethodOptions = [
   { value: "oral", label: "経口" },
   { value: "with_water", label: "水なし" },

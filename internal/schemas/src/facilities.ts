@@ -175,14 +175,6 @@ export function mapEefulMasterToFacilityFields(
   };
 }
 
-/**
- * 補正（上書き）できる列。DB 列名（snake_case）= ミラー / overlay 双方の列名。
- *
- * 意図的に含めないもの:
- *   - `id` / `facility_code` … 突合キー（上書きすると同期・照合が壊れる）
- *   - `operator_number` / `kourou_url` … 出典側の識別子
- *   - `row_hash` / `synced_at` / `deactivated_at` … 同期メタ（Lambda の専権）
- */
 export const EEFUL_OVERLAY_FIELDS = [
   "facility_name",
   "facility_kana",
@@ -280,8 +272,4 @@ export function composeEefulOverlayFields<T extends EefulOverlayValues>(
   return { values, overriddenFields };
 }
 
-/**
- * 作業中の事業所を api へ渡すヘッダ。業務の記録を事業所を省いて作るとき、その事業所で作る
- * （見てよい範囲の外なら無視される。判定は ScopedDB の `resolveWriteFacilityId`）
- */
 export const WORKING_FACILITY_HEADER = "x-qaito-facility-id";
