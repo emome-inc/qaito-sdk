@@ -106,6 +106,17 @@ export const recordTransportLegForDaySchema = z.object({
 });
 export type RecordTransportLegForDayInput = z.infer<typeof recordTransportLegForDaySchema>;
 
+export const recordTransportLegsFromSheetSchema = z.object({
+  facilityId: z.string().uuid("facilityId は UUID 形式です"),
+  serviceDate: z.string().date("serviceDate は YYYY-MM-DD 形式です"),
+  /** 合わせる向き（往 pickup・復 dropoff。両方なら 1 つの transaction） */
+  transportTypes: z.array(z.enum(transportDirectionValues)).min(1).max(2),
+  /** true = 人が手で付け外した行も送迎表に合わせる（「送迎表から入れ直す」） */
+  includeManual: z.boolean().optional(),
+  dryRun: z.boolean().optional(),
+});
+export type RecordTransportLegsFromSheetInput = z.infer<typeof recordTransportLegsFromSheetSchema>;
+
 export const checkInTransportLogSchema = z.object({
   /** 乗降ステータス（boarded=乗車 | absent=不乗 | cancelled=中止）*/
   boardingStatus: z.enum(boardingStatusValues),

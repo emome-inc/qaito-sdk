@@ -1,11 +1,17 @@
 
 import type {
+  BulkSetDayserviceExerciseChecksInput,
+  BulkSetStatusFlagsInput,
+  BulkSetStatusFlagsResult,
   ClearDayserviceDrinkOrderQuery,
   ConfirmDailyRecordsInput,
   CreateDayserviceDailyJobInput,
   CreateDayserviceSeatingChartInput,
+  CreateDayserviceSelfPayPurchaseInput,
+  CreateDayserviceSelfPayPurchaseWithNewItemInput,
   DayserviceBathBoard,
   DayserviceBoardDeleted,
+  DayserviceBoardSetting,
   DayserviceBoardVersion,
   DayserviceContactSheet,
   DayserviceDailyChecks,
@@ -22,6 +28,11 @@ import type {
   DayserviceDrinkMenu,
   DayserviceDrinkMenusQuery,
   DayserviceDrinkOrder,
+  DayserviceExerciseBoard,
+  DayserviceExerciseChecksBulkResult,
+  DayserviceExerciseMenu,
+  DayserviceExerciseMenusQuery,
+  DayserviceExerciseProgress,
   DayserviceFacilityDayQuery,
   DayserviceFacilityQuery,
   DayserviceMealBoard,
@@ -33,6 +44,10 @@ import type {
   DayserviceSeatingPlacement,
   DayserviceSeatingRule,
   DayserviceSeatingRuleSaved,
+  DayserviceSelfPayItemOption,
+  DayserviceSelfPayPurchase,
+  DayserviceSelfPayPurchaseList,
+  DayserviceSelfPayPurchasesQuery,
   DayserviceStatusRecord,
   DayserviceVitalsBoard,
   GenerateAllContactSheetNotesInput,
@@ -49,13 +64,18 @@ import type {
   ReflectNursingToContactSheetInput,
   ReflectNursingToContactSheetResult,
   SaveDayserviceDrinkMenuInput,
+  SaveDayserviceExerciseMenuInput,
   SaveDayserviceSeatingDesksInput,
   SaveDayserviceSeatingRuleInput,
   SetAllContactSheetNotesInput,
   SetAllContactSheetNotesSummary,
+  SetDayserviceBoardSettingInput,
+  SetDayserviceClientExerciseMenusInput,
   SetDayserviceDailyJobCheckInput,
   SetDayserviceDrinkOrderInput,
+  SetDayserviceExerciseChecksInput,
   UpdateDayserviceDailyJobInput,
+  UpdateDayserviceSelfPayPurchaseInput,
   UpdateDayserviceStatusRecordInput,
   UpsertDayserviceStatusRecordInput,
 } from "../types.js";
@@ -224,6 +244,12 @@ export function createDayserviceDailyNamespace(tx: SdkTransport) {
        */
       upsert: (input: UpsertDayserviceStatusRecordInput) =>
         tx.request<DayserviceStatusRecord>("PUT", "/dayservice/status-records", input),
+      /**
+       * POST /dayservice/status-records/bulk-flags — 弁当・おやつを、来ていてまだ付いていない人にまとめて付ける。
+       * mode=revert で付けた分を外す。
+       */
+      bulkSetFlags: (input: BulkSetStatusFlagsInput) =>
+        tx.request<BulkSetStatusFlagsResult>("POST", "/dayservice/status-records/bulk-flags", input),
       /** PATCH /dayservice/status-records/:record_id — 既存行の部分更新 */
       update: (recordId: string, input: UpdateDayserviceStatusRecordInput) =>
         tx.request<DayserviceStatusRecord>("PATCH", `/dayservice/status-records/${pathParam(recordId, "recordId")}`, input),
@@ -316,6 +342,88 @@ export function createDayserviceDailyNamespace(tx: SdkTransport) {
         }).toString();
         return tx.request<{ clientId: string; date: string }>("DELETE", `/dayservice/drink-board/orders?${qs}`);
       },
+    },
+    selfPay: {
+      /** GET /dayservice/self-pay-items — 自費購入で選べる品目（事業所の使っている物・並び順。単価 null = 都度入れる品目） */
+      items: (params: DayserviceFacilityQuery) => {
+        const qs = new URLSearchParams({ facility_id: params.facility_id }).toString();
+        return tx.request<DayserviceSelfPayItemOption[]>("GET", `/dayservice/self-pay-items?${qs}`);
+      },
+      /** GET /dayservice/self-pay-purchases — その日（date）かその月（ym）の自費購入と合計（client_id で利用者に絞れる） */
+      list: (params: DayserviceSelfPayPurchasesQuery) => {
+        const qs = new URLSearchParams({
+          facility_id: params.facility_id,
+          ...(params.date ? { date: params.date } : {}),
+          ...(params.ym ? { ym: params.ym } : {}),
+          ...(params.client_id ? { client_id: params.client_id } : {}),
+        }).toString();
+        return tx.request<DayserviceSelfPayPurchaseList>("GET", `/dayservice/self-pay-purchases?${qs}`);
+      },
+      /** POST /dayservice/self-pay-purchases — 自費購入を足す（マスタの品目か、その 1 回限りの名前。発行済みの月は 409） */
+      create: (input: CreateDayserviceSelfPayPurchaseInput) =>
+        tx.request<DayserviceSelfPayPurchase>("POST", "/dayservice/self-pay-purchases", input),
+      /** POST /dayservice/self-pay-purchases/with-new-item — 品目をその場でマスタに登録して買う（登録は user-billing:write の人だけ） */
+      createWithNewItem: (input: CreateDayserviceSelfPayPurchaseWithNewItemInput) =>
+        tx.request<DayserviceSelfPayPurchase>("POST", "/dayservice/self-pay-purchases/with-new-item", input),
+      /** PATCH /dayservice/self-pay-purchases/:id — 数量・単価・一言を直す（発行済みの月は 409） */
+      update: (id: string, input: UpdateDayserviceSelfPayPurchaseInput) =>
+        tx.request<DayserviceSelfPayPurchase>("PATCH", `/dayservice/self-pay-purchases/${pathParam(id, "id")}`, input),
+      /** DELETE /dayservice/self-pay-purchases/:id — 取り消す（論理削除・dayservice:delete。発行済みの月は 409） */
+      delete: (id: string) =>
+        tx.request<null>("DELETE", `/dayservice/self-pay-purchases/${pathParam(id, "id")}`),
+    },
+    boardSettings: {
+      /** GET /dayservice/board-settings — 利用者ごとのボードの設定の一覧（入浴しない・食事をとらないのどちらかが立っている人） */
+      list: (params: DayserviceFacilityQuery) => {
+        const qs = new URLSearchParams({ facility_id: params.facility_id }).toString();
+        return tx.request<DayserviceBoardSetting[]>("GET", `/dayservice/board-settings?${qs}`);
+      },
+      /** PUT /dayservice/board-settings — その人の設定を直す（無ければ作る・省いた項目は触らない） */
+      set: (input: SetDayserviceBoardSettingInput) =>
+        tx.request<DayserviceBoardSetting>("PUT", "/dayservice/board-settings", input),
+    },
+    exerciseBoard: {
+      /**
+       * GET /dayservice/exercise-board — 機能訓練ボード（名簿 + 割り当て + その日のチェック + 進み具合 + メニュー）。
+       * `client:read` が無ければ氏名は null。
+       */
+      get: (params: DayserviceFacilityDayQuery) => {
+        const qs = new URLSearchParams({
+          facility_id: params.facility_id,
+          date: params.date,
+        }).toString();
+        return tx.request<DayserviceExerciseBoard>("GET", `/dayservice/exercise-board?${qs}`);
+      },
+      /** GET /dayservice/exercise-board/menus — 運動メニューの一覧（並び順）。include_archived で非表示のメニューも */
+      menus: (params: DayserviceExerciseMenusQuery) => {
+        const qs = new URLSearchParams({
+          facility_id: params.facility_id,
+          ...(params.include_archived ? { include_archived: "true" } : {}),
+        }).toString();
+        return tx.request<DayserviceExerciseMenu[]>("GET", `/dayservice/exercise-board/menus?${qs}`);
+      },
+      /** GET /dayservice/exercise-board/assignments — 利用者 1 人に割り当てた運動メニュー（非表示を除く・並び順） */
+      assignments: (params: { facility_id: string; client_id: string }) => {
+        const qs = new URLSearchParams({ facility_id: params.facility_id, client_id: params.client_id }).toString();
+        return tx.request<{ clientId: string; menuIds: string[] }>("GET", `/dayservice/exercise-board/assignments?${qs}`);
+      },
+      /** PUT /dayservice/exercise-board/menus — 運動メニューを作る（id なし・name 必須）/ 直す（id あり） */
+      saveMenu: (input: SaveDayserviceExerciseMenuInput) =>
+        tx.request<DayserviceExerciseMenu>("PUT", "/dayservice/exercise-board/menus", input),
+      /** DELETE /dayservice/exercise-board/menus/:id — 運動メニューを非表示にする（`dayservice:delete`。過去のチェックは名前が残る） */
+      archiveMenu: (id: string, params: DayserviceFacilityQuery) => {
+        const qs = new URLSearchParams({ facility_id: params.facility_id }).toString();
+        return tx.request<DayserviceBoardDeleted>("DELETE", `/dayservice/exercise-board/menus/${pathParam(id, "id")}?${qs}`);
+      },
+      /** PUT /dayservice/exercise-board/assignments — その人に割り当てるメニューを置き換える（並びは配列の順） */
+      setAssignments: (input: SetDayserviceClientExerciseMenusInput) =>
+        tx.request<{ clientId: string; menuIds: string[] }>("PUT", "/dayservice/exercise-board/assignments", input),
+      /** PUT /dayservice/exercise-board/checks — その人のその日のチェックを置き換える（割り当てたメニューだけ・進み具合を返す） */
+      setChecks: (input: SetDayserviceExerciseChecksInput) =>
+        tx.request<{ clientId: string; date: string; menuIds: string[]; progress: DayserviceExerciseProgress }>("PUT", "/dayservice/exercise-board/checks", input),
+      /** PUT /dayservice/exercise-board/checks/bulk — 何人分かのチェックを足す・外す（割り当てていないメニューは付けない・動かさなかった人は理由つき） */
+      bulkSetChecks: (input: BulkSetDayserviceExerciseChecksInput) =>
+        tx.request<DayserviceExerciseChecksBulkResult>("PUT", "/dayservice/exercise-board/checks/bulk", input),
     },
     seating: {
       /**

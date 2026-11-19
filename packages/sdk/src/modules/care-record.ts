@@ -1,6 +1,8 @@
 
 import type {
+  BulkDailyChecksResult,
   BulkRowsInput,
+  BulkSetDailyChecksInput,
   BulkWriteSummary,
   CareRecord,
   ContactNote,
@@ -177,6 +179,14 @@ export function createCarerecordNamespace(tx: SdkTransport) {
        */
       softDelete: (id: string, input?: SoftDeleteCareRecordInput) =>
         tx.request<null>("PATCH", `/care-record/records/${pathParam(id, "id")}/delete`, input ?? {}),
+    },
+    dailyChecks: {
+      /**
+       * 実績入力の入浴・ハブラシ・個別を、来ていてまだ未入力の人にまとめて付ける（POST /care-record/daily-checks/bulk）
+       * mode=revert で付けた分を戻す（ハブラシ・個別の行の論理削除は削除の権限が要る）。mode=preview（個別だけ）は書かずに計画の有無を返す。1 つの transaction。
+       */
+      bulkSet: (input: BulkSetDailyChecksInput) =>
+        tx.request<BulkDailyChecksResult>("POST", "/care-record/daily-checks/bulk", input),
     },
     dayRecreations: {
       /**

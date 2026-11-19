@@ -26,15 +26,18 @@ import type {
   ListTransportLogsQuery,
   ListTransportRoutesQuery,
   RecordTransportLegForDayInput,
+  RecordTransportLegsFromSheetInput,
   RecordTransportSheetActualInput,
   RemoveTransportSheetEntryQuery,
   ReorderTransportRouteStopsInput,
   ReplaceTransportTemplateEntriesInput,
   SaveTransportSheetEntriesInput,
   SaveTransportSheetEntriesResult,
+  SetClientTransportDirectionsInput,
   SetTransportSheetCancelInput,
   SuggestTransportTripTimesForRowsInput,
   TransportDraftStop,
+  TransportLegsFromSheetResult,
   TransportLog,
   TransportRoute,
   TransportRouteDetail,
@@ -119,6 +122,9 @@ export function createTransportPlanNamespace(tx: SdkTransport) {
       /** PUT /transport/clients/:client_id/transport — 送迎設定を保存（車いす・普段の取り決め・停車位置は送らなければ今の値を残す） */
       upsert: (clientId: string, input: UpsertClientTransportSettingsInput) =>
         tx.request<ClientTransportSettings>("PUT", `/transport/clients/${pathParam(clientId, "clientId")}/transport`, toApiCamel(input as Record<string, unknown>)),
+      /** PATCH /transport/clients/:client_id/transport/directions — 送迎の向き（往復 / 迎えのみ / 送りのみ）だけを直す */
+      setDirections: (clientId: string, input: SetClientTransportDirectionsInput) =>
+        tx.request<{ clientId: string; transportDirections: string }>("PATCH", `/transport/clients/${pathParam(clientId, "clientId")}/transport/directions`, input),
       restrictions: {
         list: (clientId: string) =>
           tx.request<ClientTransportRestriction[]>("GET", `/transport/clients/${pathParam(clientId, "clientId")}/transport/restrictions`),
@@ -284,11 +290,17 @@ export function createTransportLogNamespace(tx: SdkTransport) {
       checkIn: (id: string, input: CheckInTransportLogInput) =>
         tx.request<TransportLog>("PATCH", `/transport/logs/${pathParam(id, "id")}/checkin`, toApiCamel(input as Record<string, unknown>)),
       /**
-       * その日の送迎の片道 1 本を〇×で記録（あれば直し・無ければ作る）
+       * その日の送迎の片道 1 本のチェックを付け外す（あれば直し・無ければ作る。外すと行は残す）
        * POST /transport/logs/day-leg
        */
       recordDayLeg: (input: RecordTransportLegForDayInput) =>
         tx.request<TransportLog>("POST", `/transport/logs/day-leg`, input),
+      /**
+       * 送迎のチェックを、確定した送迎表に合わせる（載っていて来る人に付け・載らなくなった人は外す。dryRun は内訳だけ）
+       * POST /transport/logs/day-legs-from-sheet
+       */
+      recordDayLegsFromSheet: (input: RecordTransportLegsFromSheetInput) =>
+        tx.request<TransportLegsFromSheetResult>("POST", `/transport/logs/day-legs-from-sheet`, input),
       /**
        * 乗降実績論理削除
        * DELETE /transport/logs/:id（法定保存: deleted_at のみ設定、物理削除しない）

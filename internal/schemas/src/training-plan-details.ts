@@ -6,22 +6,114 @@
  */
 import { z } from "zod";
 
-export const trainingPlanProgramSchema = z.object({
-  /** 訓練項目名 */
-  name: z.string().max(200),
-  /** 具体的な方法・手技 */
-  method: z.string().max(1000).optional(),
-  /** 頻度（例: "週3回"） */
-  frequency: z.string().max(200).optional(),
-  /** 実施時間（分） */
-  durationMin: z.number().int().min(1).max(999).optional(),
-  /** 担当者・職種 */
-  staff: z.string().max(200).optional(),
-  /** 備考 */
-  note: z.string().max(1000).optional(),
-});
+/** 訓練項目の文字数の上限（前の name + method・note からの写しが入る大きさ） */
+export const TRAINING_PROGRAM_CONTENT_MAX = 1500;
+export const TRAINING_PROGRAM_CAUTION_MAX = 1500;
+
+/**
+ * 合併症（別紙様式3-3 の Ⅰ 健康状態・経過の □ の並び・原本の文字のまま）。値は英字の短い名前（LIFE の項目のコードが決まったら合わせる）
+ */
+export const KUNREN_COMPLICATIONS = [
+  { value: "cerebrovascular", label: "脳血管疾患" },
+  { value: "fracture", label: "骨折" },
+  { value: "aspiration_pneumonia", label: "誤嚥性肺炎" },
+  { value: "congestive_heart_failure", label: "うっ血性心不全" },
+  { value: "urinary_tract_infection", label: "尿路感染症" },
+  { value: "diabetes", label: "糖尿病" },
+  { value: "hypertension", label: "高血圧症" },
+  { value: "osteoporosis", label: "骨粗しょう症" },
+  { value: "rheumatoid_arthritis", label: "関節リウマチ" },
+  { value: "cancer", label: "がん" },
+  { value: "depression", label: "うつ病" },
+  { value: "dementia", label: "認知症" },
+  { value: "pressure_ulcer", label: "褥瘡" },
+  { value: "neurological", label: "神経疾患" },
+  { value: "musculoskeletal", label: "運動器疾患" },
+  { value: "respiratory", label: "呼吸器疾患" },
+  { value: "circulatory", label: "循環器疾患" },
+  { value: "digestive", label: "消化器疾患" },
+  { value: "renal", label: "腎疾患" },
+  { value: "endocrine", label: "内分泌疾患" },
+  { value: "skin", label: "皮膚疾患" },
+  { value: "psychiatric", label: "精神疾患" },
+  { value: "other", label: "その他" },
+] as const;
+export type KunrenComplication = (typeof KUNREN_COMPLICATIONS)[number]["value"];
+export const kunrenComplicationSchema = z.enum(KUNREN_COMPLICATIONS.map((c) => c.value) as [KunrenComplication, ...KunrenComplication[]]);
+
+export const kunrenSheetFieldsShape = {
+  /** 作成日 */
+  createdOn: z.string().date().optional(),
+  /** 計画作成者（職員 ID） */
+  plannerStaffId: z.string().uuid().optional(),
+  /** 職種 */
+  plannerJobType: z.string().max(40).optional(),
+  clientWish: z.string().max(5000).optional(),
+  familyWish: z.string().max(5000).optional(),
+  socialParticipation: z.string().max(5000).optional(),
+  homeEnvironment: z.string().max(5000).optional(),
+  /** 病名 */
+  diseaseName: z.string().max(500).optional(),
+  /** 発症日・受傷日 */
+  onsetOn: z.string().date().optional(),
+  /** 直近の入院日 */
+  lastAdmittedOn: z.string().date().optional(),
+  /** 直近の退院日 */
+  lastDischargedOn: z.string().date().optional(),
+  /** 合併症（コード・重複は口が除く） */
+  complications: z.array(kunrenComplicationSchema).max(KUNREN_COMPLICATIONS.length).optional(),
+  /** 合併症の「その他」 */
+  complicationsOther: z.string().max(500).optional(),
+  longGoalBodyFunction: z.string().max(2000).optional(),
+  longGoalActivity: z.string().max(2000).optional(),
+  longGoalParticipation: z.string().max(2000).optional(),
+  /** 利用者本人・家族等がサービス利用時間以外に実施すること */
+  selfPractice: z.string().max(5000).optional(),
+  /** 特記事項 */
+  specialNote: z.string().max(5000).optional(),
+  /** Ⅲ 個別機能訓練の実施による変化（評価の欄） */
+  outcomeChange: z.string().max(5000).optional(),
+  /** Ⅲ 個別機能訓練実施における課題とその要因（評価の欄） */
+  issuesAndFactors: z.string().max(5000).optional(),
+  /** 説明日 */
+  explainedOn: z.string().date().optional(),
+  /** 説明者 */
+  explainerName: z.string().max(200).optional(),
+} as const;
+
+export const trainingPlanProgramSchema = z
+  .object({
+    /** プログラム内容（何を目的に（〜のために）〜する） */
+    content: z.string().max(TRAINING_PROGRAM_CONTENT_MAX).optional(),
+    /** 留意点 */
+    caution: z.string().max(TRAINING_PROGRAM_CAUTION_MAX).optional(),
+    /** 頻度（週 N 回） */
+    timesPerWeek: z.number().int().min(1).max(7).optional(),
+    /** 時間（分/回） */
+    minutesPerTime: z.number().int().min(1).max(600).optional(),
+    /** 主な実施者（職種・名前の文字） */
+    mainStaff: z.string().max(200).optional(),
+    /** 運動メニュー（facility.dayservice_exercise_menus の id・重複なし） */
+    menuIds: z.array(z.string().uuid()).max(10).optional(),
+    /** 訓練項目名（前の鍵） */
+    name: z.string().max(200).optional(),
+    /** 具体的な方法・手技（前の鍵） */
+    method: z.string().max(1000).optional(),
+    /** 頻度（前の鍵・例 "週3回"） */
+    frequency: z.string().max(200).optional(),
+    /** 実施時間（分・前の鍵） */
+    durationMin: z.number().int().min(1).max(999).optional(),
+    /** 担当者・職種（前の鍵） */
+    staff: z.string().max(200).optional(),
+    /** 備考（前の鍵） */
+    note: z.string().max(1000).optional(),
+  })
+  .refine((p) => (p.content ?? p.name ?? "").trim() !== "", { message: "プログラム内容を入れてください" })
+  .refine((p) => !p.menuIds || new Set(p.menuIds).size === p.menuIds.length, { message: "同じ運動メニューが 2 回あります" });
 
 export type TrainingPlanProgram = z.infer<typeof trainingPlanProgramSchema>;
+
+export const TRAINING_PROGRAMS_MAX = 4;
 
 export const trainingPlanParticipantSchema = z.object({
   /** 職種 */
@@ -54,7 +146,7 @@ export const createTrainingPlanDetailsSchema = z.object({
   /** 目標: 参加領域 */
   goalParticipation: z.string().max(2000).optional(),
   /** 訓練プログラム一覧（jsonb） */
-  programs: z.array(trainingPlanProgramSchema).max(30).optional(),
+  programs: z.array(trainingPlanProgramSchema).max(TRAINING_PROGRAMS_MAX).optional(),
   /** 多職種参加者一覧（jsonb） */
   multidisciplinaryParticipants: z.array(trainingPlanParticipantSchema).max(20).optional(),
   /** 本人同意日 */
@@ -77,6 +169,7 @@ export const createTrainingPlanDetailsSchema = z.object({
   longGoalAchievement: z.enum(["achieved", "partial", "not_achieved"]).optional(),
   /** 前回作成した短期目標に対する目標達成度 */
   shortGoalAchievement: z.enum(["achieved", "partial", "not_achieved"]).optional(),
+  ...kunrenSheetFieldsShape,
 });
 
 export type CreateTrainingPlanDetails = z.infer<typeof createTrainingPlanDetailsSchema>;

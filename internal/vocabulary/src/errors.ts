@@ -81,6 +81,7 @@ export const ERROR_MESSAGES = {
   moduleForbidden: (moduleName: string): string => `${moduleName}への権限がありません`,
   /** facility 認可境界で断られた書き込み（所属外の事業所への記録） */
   facilityWriteForbidden: "この事業所には記録できません",
+  dayClosed: "この日は実績が確定済みのため変更できません。直すときは実績入力で確定を解除してください",
   /** 薬マスタ: 有効な行で名前が重なった（org 内 UNIQUE） */
   medicationNameDuplicate: "同じ名前の薬がすでに登録されています",
   /** 医療機関コードが組織の中で重なった（外の相手のマスタ・medical-institution） */

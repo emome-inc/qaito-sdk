@@ -410,6 +410,7 @@ export type ClientTransportSettings = {
   preferred_pickup_time: string | null;
   /** 普段の送りの希望時刻（`HH:MM:SS`） */
   preferred_dropoff_time: string | null;
+  transport_directions: "both" | "pickup" | "dropoff";
   created_at: string;
   updated_at: string;
 };
@@ -433,7 +434,11 @@ export type UpsertClientTransportSettingsInput = {
   preferred_pickup_time?: string | null;
   /** `HH:MM`（`HH:MM:SS` も可） */
   preferred_dropoff_time?: string | null;
+  /** 送迎の向き（both = 往復 / pickup = 迎えのみ / dropoff = 送りのみ）。**送らなければ今の値を残す**（新しく作るときは both） */
+  transport_directions?: "both" | "pickup" | "dropoff";
 };
+
+export type SetClientTransportDirectionsInput = { directions: "both" | "pickup" | "dropoff" };
 
 export type ClientTransportRestriction = {
   id: string;
@@ -2654,6 +2659,8 @@ export type DayserviceReportTarget = {
   clientId: string;
   name: string | null;
   nameKana: string | null;
+  /** 利用者番号 */
+  clientNumber: string;
   /** 報告を保存するときに紐づける通所介護計画書 */
   carePlanId: string;
   /** その月の報告（無ければ null） */
@@ -3243,8 +3250,8 @@ export type ScheduleWeekPlan = {
     endTime: string | null;
     changeId: string | null;
   }[];
-  /** 実績（出席・欠席）の付いたマス（直せない） */
   recordedCells: { clientId: string; serviceDate: string; status: string }[];
+  closedDates: string[];
   omitted: { clientId: string; name: string | null; reason: "no_contract" | "other_facility" | "no_days" | "not_in_week" }[];
   /** マスを押して「来る」にしたときに入る時間（契約の提供時間）。時間のある日だけ */
   defaultTimes: { clientId: string; serviceDate: string; startTime: string; endTime: string }[];
@@ -3299,7 +3306,9 @@ export type ScheduleWeekApplyResult = {
   inserted: number;
   updated: number;
   deleted: number;
-  notes: { clientId: string; serviceDate: string; reason: "recorded" | "occupied" | "deleted" }[];
+  unrecorded: number;
+  keptRecorded: number;
+  notes: { clientId: string; serviceDate: string; reason: "recorded" | "occupied" | "deleted" | "closed" }[];
 };
 
 /** 契約を週に当てた結果（変わった週だけ）。 */
@@ -4024,6 +4033,7 @@ export type CreateTrainingRecordInput = {
   memo?: string;
   templateId?: string;
   extraData?: Record<string, unknown>;
+  exerciseMenuId?: string;
 };
 
 /** PATCH /care-record/training/records/:id リクエスト */
@@ -4734,6 +4744,8 @@ export type TransportSheetClient = {
   telHome: string | null;
   telMobile: string | null;
   otherContacts: string[];
+  /** その日欠席か（名簿の予定の行が absent。送迎のチェックの対象外）。テンプレートの盤面は常に false */
+  absent: boolean;
 };
 
 /** 送迎表の割当 1 行 */
@@ -4784,6 +4796,11 @@ export type TransportSheet = {
     defaultDriverStaffId: string | null;
   }[];
   drivers: { staffId: string; name: string }[];
+  /**
+   * 行に入っている運転者のうち、`drivers`（その日に運転できる人）にいない人の名前（職員 ID → 名前）。
+   * 休み・所属外の人が入った便を名前で出すのに使う。職員を読めなければ「非公開」（省略は旧サーバ）
+   */
+  driverNamesOfEntries?: Record<string, string>;
   /** 同じ便に乗せない利用者の組 */
   avoidPairs: { a: string; b: string }[];
   /**
@@ -4997,7 +5014,9 @@ export type CareRecordType =
   | "absence"
   | "care_conference"
   | "nutrition"
-  | "oral";
+  | "oral"
+  | "recreation"
+  | "snack";
 
 export type BathType = "full" | "partial" | "wiping" | "none";
 export type ExcretionType = "toilet" | "portable" | "diaper" | "catheter" | "none";
@@ -5274,6 +5293,8 @@ export type TransportLog = {
   dropoff_latitude: string | null;
   dropoff_longitude: string | null;
   boarding_status: "boarded" | "absent" | "cancelled";
+  /** 出どころ（sheet=送迎表の確定から / manual=人が付け外した / backfill=過去分の移し / null=従来） */
+  origin: "sheet" | "manual" | "backfill" | null;
   absence_reason: string | null;
   vital_note: string | null;
   driver_note: string | null;
@@ -5321,15 +5342,56 @@ export type CreateTransportLogInput = {
 export type UpdateTransportLogInput = Partial<CreateTransportLogInput>;
 
 /** PATCH /transport/logs/:id/checkin リクエスト */
-/** POST /transport/logs/day-leg（その日の送迎の片道 1 本を〇×で記録・camelCase のまま送る） */
+export type RecordTransportLegsFromSheetInput = {
+  facilityId: string;
+  serviceDate: string;
+  /** 合わせる向き（両方なら 1 つの transaction） */
+  transportTypes: ("pickup" | "dropoff")[];
+  /** true = 人が手で付け外した行も送迎表に合わせる（既定は送迎表から入った行だけ） */
+  includeManual?: boolean;
+  /** true = 書かずに内訳だけ返す */
+  dryRun?: boolean;
+};
+
+/** 送迎のチェックを送迎表に合わせる処理の、向きごとの内訳 */
+export type TransportLegsFromSheetBreakdown = {
+  /** その向きの送迎表が確定しているか（false なら何も動かさない） */
+  sheetConfirmed: boolean;
+  /** チェックを付ける（付けた）人数 */
+  toCheck: number;
+  /** チェックを外す（外した）人数 */
+  toUncheck: number;
+  /** 上のうち、人が手で付け外した（または従来の）行を動かす人数（includeManual のときだけ動く） */
+  manualChanged: number;
+  /** 送迎表には載っているが、その日は来ない人の人数（欠席・キャンセル・名簿に居ない） */
+  notAttending: number;
+  /** 送迎表には載っているが、利用者の状態が利用中・お試し以外（利用開始前・一時停止・入院中・利用中止）の人数。チェックを付けない */
+  notActive: number;
+  /** いまチェックが付いている人数（この向き・この事業所） */
+  checkedNow: number;
+  /** チェックを外す人（dryRun のときだけ。名前は氏名を読める人にだけ・読めなければ ''。origin は出どころ） */
+  uncheckClients: { clientId: string; name: string; origin: "sheet" | "manual" | "backfill" | null }[];
+};
+
+/** POST /transport/logs/day-legs-from-sheet レスポンス */
+export type TransportLegsFromSheetResult = {
+  pickup?: TransportLegsFromSheetBreakdown;
+  dropoff?: TransportLegsFromSheetBreakdown;
+  /** 日次の確定（締め）済みで何も動かさなかったとき true */
+  dayClosed: boolean;
+  /** 動かした行の数 */
+  written: number;
+};
+
+/** POST /transport/logs/day-leg（その日の送迎の片道 1 本のチェックを付け外す・camelCase のまま送る） */
 export type RecordTransportLegForDayInput = {
   clientId: string;
   facilityId: string;
   serviceDate: string;
   transportType: "pickup" | "dropoff";
-  /** 〇 = true（乗車）/ × = false（事業所の送迎なし） */
+  /** チェックを付ける = true（乗車）/ 外す = false（行は残る） */
   boarded: boolean;
-  /** HH:MM。× のときは到着・帰宅の時間 */
+  /** 【廃止予定】受けても使われない（時間は到着・早退の欄） */
   actualTime?: string | null;
 };
 
@@ -5468,28 +5530,10 @@ export type ListTrainingPlanDetailsQuery = {
   offset?: number;
 };
 
-/** POST /care-plan/training/plans リクエスト */
-export type CreateTrainingPlanDetailInput = {
-  client_id?: string | null;
-  care_plan_id?: string | null;
-  base_care_plan_id?: string | null;
-  assessment_date?: string | null;
-  review_date?: string | null;
-  client_goal?: string | null;
-  goal_body_function?: string | null;
-  goal_activity?: string | null;
-  goal_participation?: string | null;
-  programs?: TrainingPlanProgram[];
-  multidisciplinary_participants?: TrainingPlanParticipant[];
-  life_form_code?: string | null;
-  life_linked_at?: string | null;
-  client_consent_at?: string | null;
-  family_consent_at?: string | null;
-  memo?: string | null;
-};
+export type CreateTrainingPlanDetailInput = import("@qaito/schemas/api/training-plan").CreateTrainingPlanApiInput;
 
-/** PATCH /care-plan/training/plans/:id リクエスト */
-export type UpdateTrainingPlanDetailInput = Partial<CreateTrainingPlanDetailInput>;
+/** PATCH /care-plan/training/plans/:id リクエスト（camelCase。同上） */
+export type UpdateTrainingPlanDetailInput = import("@qaito/schemas/api/training-plan").UpdateTrainingPlanApiInput;
 
 /** GET /care-plan/plans */
 export type Careplan = {
@@ -6088,37 +6132,9 @@ export type DayservicePlanServiceRow = {
   effectNote: string | null;
 };
 
-/** POST /care-plan/dayservice/plans リクエスト */
-export type CreateDayservicePlanInput = {
-  client_id: string;
-  source?: "internal" | "external";
-  care_manager_name?: string;
-  care_manager_office?: string;
-  assessment_id?: string;
-  certification_id?: string;
-  client_wishes?: string;
-  family_wishes?: string;
-  overall_policy?: string;
-  effective_from?: string;
-  effective_until?: string;
-  facility_id?: string;
-  service_days_per_week?: number;
-  service_start_time?: string;
-  service_end_time?: string;
-  daily_life_goal?: string;
-  functional_goal?: string;
-  service_content?: string;
-  life_support_activity?: string;
-  client_consent_at?: string;
-  family_consent_at?: string;
-  program_manager_id?: string;
-  trainer_id?: string;
-  life_form_code?: string;
-  memo?: string;
-};
+export type CreateDayservicePlanInput = import("@qaito/schemas/api/dayservice-plan").CreateDayservicePlanApiInput;
 
-/** PATCH /care-plan/dayservice/plans/:id リクエスト */
-export type UpdateDayservicePlanInput = Partial<Omit<CreateDayservicePlanInput, "client_id">>;
+export type UpdateDayservicePlanInput = import("@qaito/schemas/api/dayservice-plan").UpdateDayservicePlanApiInput;
 
 /** PATCH /care-plan/dayservice/plans/:id/status リクエスト */
 export type UpdateDayservicePlanStatusInput = {
@@ -7176,7 +7192,7 @@ export type ClaimsInvoiceDetail = {
  * 項目に無いものを手で足す形。
  */
 export type ClaimsSelfPayLineInput =
-  | { selfPayItemId: string; quantity: number }
+  | { selfPayItemId: string; quantity: number; /** 単価を決めていない項目では必須 */ unitPriceYen?: number }
   | {
       description: string;
       quantity?: number | null;
@@ -7189,6 +7205,39 @@ export type ClaimsSelfPayLineInput =
 export type AddClaimsSelfPayLineResult = {
   lineId: string;
   lineNo: number;
+};
+
+/** POST /claims/invoices/:invoiceId/self-pay-purchases/sync の結果（足した・置き換えた・外した行の数と、合わせたあとの請求額） */
+export type SyncClaimsSelfPayPurchasesResult = {
+  added: number;
+  updated: number;
+  removed: number;
+  billedYen: number;
+};
+
+/** 自費購入とのずれ（下書きの請求書 1 枚） */
+export type ClaimsSelfPayPurchaseInvoiceNotice = {
+  invoiceId: string;
+  clientId: string;
+  /** 直された・取り消された購入の行の数 */
+  changed: number;
+  /** まだ入っていない購入の数 */
+  missing: number;
+};
+
+/** GET /claims/invoices/self-pay-purchase-notice の結果 */
+export type ClaimsSelfPayPurchaseNotice = {
+  /** ずれのある下書きの請求書 */
+  invoices: ClaimsSelfPayPurchaseInvoiceNotice[];
+  /** 請求書に入っていない自費購入の数（明細書の無い人など） */
+  unbilled: number;
+};
+
+/** GET /claims/invoices/self-pay-purchase-notice の問い */
+export type ClaimsSelfPayPurchaseNoticeQuery = {
+  /** 請求年月（YYYY-MM） */
+  billingYearMonth: string;
+  facilityId?: string;
 };
 
 /** issueReceipt(invoiceId, input?) — 再発行時のみ必須 */
@@ -8226,7 +8275,7 @@ export type ClaimsSelfPayItem = {
   facilityName: string | null;
   name: string;
   /** 税込の単価（円・値引きの項目は負） */
-  unitPriceYen: number;
+  unitPriceYen: number | null;
   /** 回・食・枚 など */
   unit: string;
   taxClass: ClaimsTaxClass;
@@ -8239,7 +8288,7 @@ export type ClaimsSelfPayItem = {
 export type CreateClaimsSelfPayItemInput = {
   facilityId: string;
   name: string;
-  unitPriceYen: number;
+  unitPriceYen: number | null;
   unit: string;
   taxClass: ClaimsTaxClass;
   medicalDeductionClass?: ClaimsMedicalDeductionClass;
@@ -10831,12 +10880,54 @@ export type MealAmountsResult =
   | { clientId: string; status: "created" | "updated" | "cleared" | "unchanged"; id: string | null }
   | { clientId: string; error: string };
 
+/**
+ * POST /care-record/daily-checks/bulk の入力（入浴・ハブラシ・個別の一括）。
+ * apply=付ける / revert=付けた分を戻す（ハブラシ・個別は行の論理削除なので削除の権限が要る）/ preview=個別（training）だけ・書かずに計画の有無を返す
+ */
+export type BulkSetDailyChecksInput = {
+  facilityId: string;
+  serviceDate: string;
+  check: "bath" | "oral" | "training";
+  clientIds: string[];
+  mode?: "apply" | "revert" | "preview";
+  /** revert のとき、apply が返した付けた行の印。印が今の行と一致する行だけ戻す（そのあと触られた行は戻さない） */
+  marks?: BulkMark[];
+};
+
+/** 一括で付けた行の印（行の id と付けた直後の updated_at） */
+export type BulkMark = { clientId: string; id: string; updatedAt: string };
+
+/** POST /care-record/daily-checks/bulk の結果（applied / marks は元に戻すのに使う） */
+export type BulkDailyChecksResult = {
+  dayClosed: boolean;
+  applied: string[];
+  /** 付けた行の印（revert に返す）。revert のときは戻した行 */
+  marks: BulkMark[];
+  /** revert: そのあと変更されている・もう無いので戻さなかった利用者 */
+  notReverted: string[];
+  unchanged: number;
+  notAttending: number;
+  outOfScope: number;
+  /** 利用中・お試し以外（利用開始前・一時停止・入院中・利用中止）なので対象から外した利用者（付ける・preview のときだけ） */
+  inactive: string[];
+  /** training: 計画のプログラムが 2 つ以上で一括の対象にしなかった利用者 */
+  multiProgram: string[];
+  skippedPeople: { clientId: string; reason: "not_attending" | "elsewhere" | "inactive" | "multi_program" }[];
+  /** 見えない利用者・存在しない ID・他の組織の ID（渡した ID のうち理由を分けないもの。存在の有無は区別しない） */
+  hidden: string[];
+  /** training の preview: 計画のある人・ない人 */
+  withPlan?: string[];
+  noPlan?: string[];
+};
+
 /** POST /care-record/records/meal-amounts の結果（利用者ごとの成否） */
 export type MealAmountsSummary = {
   requested: number;
   written: number;
   failed: number;
   results: MealAmountsResult[];
+  /** 入れるとき: その日来ていない（欠席・キャンセル・名簿にいない）ので書かなかった人（reason は not_attending） */
+  skippedPeople: { clientId: string; reason: "not_attending" | "elsewhere" | "inactive" | "multi_program" }[];
 };
 
 export type DayRecreationsQuery = {
@@ -10845,19 +10936,19 @@ export type DayRecreationsQuery = {
   service_date: string;
 };
 
-/** その日のレクの 1 つの枠 */
+/** その日のレク・おやつの 1 つの枠 */
 export type DayRecreationSlotState = {
-  /** 入っているレクの名前（人によって違えば一番多いもの）。無ければ null */
+  /** 入っているレク・おやつの名前（人によって違えば一番多いもの）。無ければ null */
   name: string | null;
-  /** その枠のレクが介護記録にある人数 */
+  /** その枠の行が介護記録にある人数 */
   count: number;
 };
 
-/** その日のレク（午前・午後・イベント） */
 export type DayRecreations = {
   morning: DayRecreationSlotState;
   afternoon: DayRecreationSlotState;
   event: DayRecreationSlotState;
+  snack: DayRecreationSlotState;
 };
 
 /** PUT /care-record/day-recreations の入力（渡した枠だけが変わる。空・null はその枠を外す） */
@@ -10868,6 +10959,10 @@ export type SetDayRecreationsInput = {
   morning?: string | null;
   afternoon?: string | null;
   event?: string | null;
+  snack?: string | null;
+  client_ids?: string[];
+  /** 入れ方。sync（既定）= 入れ直す（ほかの人の行・空の枠の行は外す）。add = client_ids の人に空でない枠だけを入れる（何も外さない） */
+  mode?: "sync" | "add";
 };
 
 /** PUT /care-record/day-recreations の結果 */
@@ -10989,6 +11084,7 @@ export type GenerateAllContactSheetNotesInput = {
   clientIds?: string[];
   /** true で入力済みの人も作り直す（既定 false = 未入力の人だけ） */
   overwrite?: boolean;
+  preview?: boolean;
 };
 
 /** AI 一括生成の結果（人数） */
@@ -11003,6 +11099,8 @@ export type GenerateAllContactSheetNotesSummary = {
   failed: number;
   /** 失敗した利用者の ID（画面の並び順） */
   failedClientIds: string[];
+  /** preview: true のときだけ: 作った文（保存していない） */
+  drafts?: GeneratedContactSheetNote[];
 };
 
 /** POST /dayservice/contact-sheets/set-all のボディ（その日の全員に同じ文章を入れる） */
@@ -11014,6 +11112,10 @@ export type SetAllContactSheetNotesInput = {
   text: string;
   /** 入れ方（fill_empty = 未入力の人だけ〔既定〕/ overwrite = 全員を置き換え / append = 全員の末尾に足す） */
   mode?: "fill_empty" | "overwrite" | "append";
+  /** 入れる人（その日の連絡票の人のうちこの人たちだけ）。省くと全員 */
+  clientIds?: string[];
+  /** 入れる欄（comment = 連絡事項〔既定〕/ staffMemo = 家族に伝えたいこと。入れた人は作り直し待ちの印が立つ） */
+  field?: "comment" | "staffMemo";
 };
 
 export type ReflectNursingToContactSheetInput = {
@@ -11101,6 +11203,35 @@ export type UpsertDayserviceStatusRecordInput = {
   recreation?: boolean;
   snack?: boolean;
   remarks?: string | null;
+};
+
+/** POST /dayservice/status-records/bulk-flags の入力（弁当・おやつの一括。apply=付ける / revert=付けた分を外す） */
+export type BulkSetStatusFlagsInput = {
+  facilityId: string;
+  date: string;
+  field: "bento" | "snack";
+  clientIds: string[];
+  mode?: "apply" | "revert";
+  /** revert のとき、apply が返した付けた行の印（そのあと触られた行は外さない） */
+  marks?: BulkMark[];
+};
+
+/** POST /dayservice/status-records/bulk-flags の結果（applied は付けた／外した利用者・元に戻すのに使う） */
+export type BulkSetStatusFlagsResult = {
+  dayClosed: boolean;
+  applied: string[];
+  /** 付けた行の印（revert に返す）。revert のときは外した行 */
+  marks: BulkMark[];
+  /** revert: そのあと変更されている・もう無いので外さなかった利用者 */
+  notReverted: string[];
+  unchanged: number;
+  notAttending: number;
+  outOfScope: number;
+  /** 利用中・お試し以外（利用開始前・一時停止・入院中・利用中止）なので対象から外した利用者（付けるときだけ） */
+  inactive: string[];
+  skippedPeople: { clientId: string; reason: "not_attending" | "elsewhere" | "inactive" | "multi_program" }[];
+  /** 見えない利用者・存在しない ID・他の組織の ID（渡した ID のうち理由を分けないもの。存在の有無は区別しない） */
+  hidden: string[];
 };
 
 /** PATCH /dayservice/status-records/:record_id の入力 */
@@ -11205,6 +11336,10 @@ export type DayserviceDailyRecordRow = DayserviceClientNameColumns & {
   } | null;
   /** その日の 1 枚（選択済の写真 = media_logs.id）。顔写真とは別物 */
   dailyPickMediaId: string | null;
+  exerciseComplete: boolean;
+  bathExcluded: boolean;
+  mealExcluded: boolean;
+  exerciseMenus: { menuId: string; name: string; checked: boolean }[];
 };
 
 /** 今日の実績で読めたソース */
@@ -11399,7 +11534,7 @@ export type DayserviceContactSheetRow = DayserviceClientNameColumns & {
   /** 職員の記入欄（家族に伝えたいこと・空文字なら未入力）。連絡事項の AI 生成が最優先で使う。紙には出さない */
   staffMemo: string;
   /** 連絡事項を作る素材（紙には出さない） */
-  material: { rehab: string[]; recreation: string[]; treatments: string[]; cases: string[]; rechecks: string[]; familyHandovers: string[] };
+  material: { rehab: string[]; recreation: string[]; snacks: string[]; treatments: string[]; cases: string[]; rechecks: string[]; familyHandovers: string[]; drinks?: string[]; bento?: boolean };
   /** 連絡票に載せている写真（保存済みの選択 + 自動で入ったその日の 1 枚） */
   photos: DayserviceContactSheetPhoto[];
   /** 手で選んで保存した写真（contact_notes.media_log_ids） */
@@ -12533,11 +12668,203 @@ export type SetDayserviceDrinkOrderInput = {
   orders: { menuId: string; sugar?: DayserviceDrinkOption; milk?: DayserviceDrinkOption }[];
 };
 
+/** 請求書とのつながり。issued = 発行済みの請求書の行（足す・直す・取り消すは 409）・draft = 下書きの請求書の行・none = まだ */
+export type DayserviceSelfPayInvoiceState = "none" | "draft" | "issued";
+
+/** 自費購入 1 件。名前・単位はマスタの品目なら今のマスタの値・その 1 回限りの物ならその行の値 */
+export type DayserviceSelfPayPurchase = {
+  id: string;
+  facilityId: string;
+  clientId: string;
+  serviceDate: string;
+  /** マスタの品目（その 1 回限りの物は null） */
+  selfPayItemId: string | null;
+  name: string;
+  unit: string;
+  /** マスタで使わなくした品目 */
+  itemArchived: boolean;
+  quantity: number;
+  unitPriceYen: number;
+  /** 足したときにマスタの単価と違う額を入れた */
+  priceOverridden: boolean;
+  amountYen: number;
+  taxClass: "taxable" | "nontaxable";
+  medicalDeductionClass: "medical" | "welfare" | "none";
+  note: string | null;
+  createdByName: string | null;
+  createdAt: string;
+  updatedAt: string;
+  invoiceState: DayserviceSelfPayInvoiceState;
+};
+
+/** GET /dayservice/self-pay-purchases のレスポンス */
+export type DayserviceSelfPayPurchaseList = {
+  rows: DayserviceSelfPayPurchase[];
+  totalAmountYen: number;
+};
+
+/** GET /dayservice/self-pay-purchases のクエリ（date か ym のどちらか一方） */
+export type DayserviceSelfPayPurchasesQuery = {
+  facility_id: string;
+  date?: string;
+  ym?: string;
+  client_id?: string;
+};
+
+/** 選べる品目。unitPriceYen が null = 単価を決めていない品目（購入のときに額を入れる） */
+export type DayserviceSelfPayItemOption = {
+  id: string;
+  name: string;
+  unit: string;
+  unitPriceYen: number | null;
+  taxClass: "taxable" | "nontaxable";
+  medicalDeductionClass: "medical" | "welfare" | "none";
+};
+
+/** POST /dayservice/self-pay-purchases の body。selfPayItemId（マスタ）か name（その 1 回限り）のどちらか一方 */
+export type CreateDayserviceSelfPayPurchaseInput = {
+  facilityId: string;
+  clientId: string;
+  serviceDate: string;
+  quantity: number;
+  selfPayItemId?: string;
+  name?: string;
+  unit?: string;
+  /** マスタの品目では違う額にするときだけ（上書きの印が立つ）。単価の無い品目・その 1 回限りの物は必須 */
+  unitPriceYen?: number;
+  taxClass?: "taxable" | "nontaxable";
+  note?: string;
+};
+
+/** PATCH /dayservice/self-pay-purchases/:id の body（数量・単価・一言だけ） */
+export type UpdateDayserviceSelfPayPurchaseInput = {
+  quantity?: number;
+  unitPriceYen?: number;
+  note?: string | null;
+};
+
+/** POST /dayservice/self-pay-purchases/with-new-item の body（品目の登録は user-billing:write の人だけ） */
+export type CreateDayserviceSelfPayPurchaseWithNewItemInput = {
+  facilityId: string;
+  clientId: string;
+  serviceDate: string;
+  quantity: number;
+  unitPriceYen?: number;
+  note?: string;
+  item: {
+    name: string;
+    unit: string;
+    /** null = 単価を決めていない品目 */
+    unitPriceYen: number | null;
+    taxClass: "taxable" | "nontaxable";
+    medicalDeductionClass?: "medical" | "welfare" | "none";
+  };
+};
+
 /** DELETE /dayservice/drink-board/orders のクエリ */
 export type ClearDayserviceDrinkOrderQuery = {
   facility_id: string;
   date: string;
   client_id: string;
+};
+
+export type DayserviceBoardSetting = {
+  clientId: string;
+  /** 入浴しない人（入浴ボードのタスクと進捗の分母から外す） */
+  bathExcluded: boolean;
+  /** 食事をとらない人（主食・副食の入力と未入力の印を外す） */
+  mealExcluded: boolean;
+};
+
+/** PUT /dayservice/board-settings の body（省いた項目は触らない・どちらかは渡す） */
+export type SetDayserviceBoardSettingInput = {
+  facilityId: string;
+  clientId: string;
+  bathExcluded?: boolean;
+  mealExcluded?: boolean;
+};
+
+export type DayserviceExerciseMenu = {
+  id: string;
+  name: string;
+  sortOrder: number;
+  /** 実施時間の初めの値（分・null = 入れない）。チェックで作る個別機能訓練の記録の duration_min に入る */
+  defaultMinutes: number | null;
+  archivedAt: string | null;
+};
+
+/** 機能訓練ボードの進み具合（割り当ての数で等分・全部チェックで済） */
+export type DayserviceExerciseProgress = { total: number; done: number; complete: boolean };
+
+/** 機能訓練ボード 1 行（名簿の 1 人） */
+export type DayserviceExerciseBoardRow = DayserviceClientNameColumns & {
+  scheduleId: string;
+  clientId: string;
+  attendanceStatus: string;
+  /** 割り当てたメニュー（並び順）と、その日にチェックしたか */
+  menus: { menuId: string; name: string; checked: boolean }[];
+  progress: DayserviceExerciseProgress;
+  /** その日に有効な個別機能訓練計画書があるか（介護記録の閲覧権限が無い・欠席なら null） */
+  hasTrainingPlan: boolean | null;
+  /** 加算の欄（運動が 1 つでも済み かつ 計画書あり）。計画書の有無が分からなければ null */
+  additionEligible: boolean | null;
+};
+
+/** GET /dayservice/exercise-board のレスポンス */
+export type DayserviceExerciseBoard = {
+  rows: DayserviceExerciseBoardRow[];
+  menus: DayserviceExerciseMenu[];
+  scope: { client: { read: boolean }; schedule: { read: boolean } };
+  /** 加算の欄を出せるか（介護記録の閲覧権限） */
+  additionReadable: boolean;
+};
+
+/** GET /dayservice/exercise-board/menus のクエリ */
+export type DayserviceExerciseMenusQuery = {
+  facility_id: string;
+  include_archived?: boolean;
+};
+
+/** PUT /dayservice/exercise-board/menus の body（id なし = 作る〔name 必須〕/ id あり = 直す） */
+export type SaveDayserviceExerciseMenuInput = {
+  facilityId: string;
+  id?: string;
+  name?: string;
+  sortOrder?: number;
+  /** 実施時間の初めの値（分・1〜600。null で消す・省くと触らない） */
+  defaultMinutes?: number | null;
+};
+
+/** PUT /dayservice/exercise-board/assignments の body（その人の割り当てを置き換える） */
+export type SetDayserviceClientExerciseMenusInput = {
+  facilityId: string;
+  clientId: string;
+  menuIds: string[];
+};
+
+/** PUT /dayservice/exercise-board/checks の body（その人のその日のチェックを置き換える） */
+export type SetDayserviceExerciseChecksInput = {
+  facilityId: string;
+  date: string;
+  clientId: string;
+  menuIds: string[];
+};
+
+/** PUT /dayservice/exercise-board/checks/bulk の body（人ごとに足す・外す） */
+export type BulkSetDayserviceExerciseChecksInput = {
+  facilityId: string;
+  date: string;
+  changes: { clientId: string; add?: string[]; remove?: string[] }[];
+};
+
+/** PUT /dayservice/exercise-board/checks/bulk のレスポンス */
+export type DayserviceExerciseChecksBulkResult = {
+  /** 確定した日（何も動かしていない） */
+  dayClosed: boolean;
+  /** 動かした人と、足した・外したメニュー（元に戻すは入れ替えてもう一度呼ぶ） */
+  applied: { clientId: string; added: string[]; removed: string[]; progress: DayserviceExerciseProgress }[];
+  /** 動かさなかった人と理由 */
+  skippedPeople: { clientId: string; reason: "notAttending" | "absent" | "notAssigned" | "unchanged" | "failed" }[];
 };
 
 export type DayserviceSeatingRuleKind = "avoid" | "prefer";

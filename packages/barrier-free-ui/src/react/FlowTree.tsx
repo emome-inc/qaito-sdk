@@ -41,6 +41,7 @@ export type FlowNode = {
    * しないこと(Tooltip と同じ原則 — 必須情報は本文へ)。aria-describedby で SR にも届く。
    */
   description?: ReactNode;
+  lockedReason?: string;
 };
 
 export type FlowPhase = {
@@ -196,7 +197,7 @@ function FlowTreeNode({
             {node.statusText && <span className="bf-flow-node__status">{node.statusText}</span>}
           </span>
         )}
-        {locked && <span className="bf-flow-node__locked-text">権限がありません</span>}
+        {locked && <span className="bf-flow-node__locked-text">{node.lockedReason ?? "権限がありません"}</span>}
       </span>
       {node.description && (
         <span className="bf-flow-hint" role="tooltip" id={hintId}>
@@ -286,6 +287,7 @@ function FlowTreeChildNode({
   const style = node.accent ? ({ "--bf-primary": node.accent } as CSSProperties) : undefined;
   const hasMeta =
     Boolean(node.statusText) || node.state === "attention" || node.state === "urgent";
+  const hint = locked && node.lockedReason ? node.lockedReason : node.description;
 
   const content = (
     <>
@@ -303,9 +305,9 @@ function FlowTreeChildNode({
           </span>
         )}
       </span>
-      {node.description && (
+      {hint && (
         <span className="bf-flow-hint" role="tooltip" id={hintId}>
-          {node.description}
+          {hint}
         </span>
       )}
     </>
@@ -319,7 +321,7 @@ function FlowTreeChildNode({
       href={node.href}
       target={linkTarget === "_blank" ? "_blank" : undefined}
       rel={linkTarget === "_blank" ? "noreferrer" : undefined}
-      aria-describedby={node.description ? hintId : undefined}
+      aria-describedby={hint ? hintId : undefined}
     >
       {content}
     </a>
@@ -330,7 +332,7 @@ function FlowTreeChildNode({
       data-state={node.state}
       style={style}
       aria-disabled={locked || undefined}
-      aria-describedby={node.description ? hintId : undefined}
+      aria-describedby={hint ? hintId : undefined}
     >
       {content}
     </button>

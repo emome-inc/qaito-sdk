@@ -14,3 +14,10 @@
   color: color-mix(in oklch, var(--bf-muted-fg) 70%, var(--bf-bg));
 }
 .bf-user-photo--default svg { width: 100%; height: 100%; }
+.bf-user-photo--client {
+  --bf-user-photo-client-tint: var(--bf-primary);
+}
+.bf-user-photo--default.bf-user-photo--client {
+  background: color-mix(in oklch, var(--bf-user-photo-client-tint) 18%, var(--bf-bg));
+  color: color-mix(in oklch, var(--bf-user-photo-client-tint) 62%, var(--bf-bg));
+}

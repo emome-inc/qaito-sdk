@@ -7,14 +7,18 @@ export type UserPhotoProps = {
   /** 読み上げ名。隣に名前がある飾りなら空文字（既定） */
   alt?: string;
   className?: string;
+  /** 既定の画像の色。staff = 従業員（既定）/ client = 利用者（色違い） */
+  tone?: "staff" | "client";
+  /** 写真が読めなかったとき（403 / 404 など）。呼ぶ側が src を外して既定の画像に落とす */
+  onError?: () => void;
 };
 
-export function UserPhoto({ src, size = "calc(var(--bf-icon) * 1.25)", alt = "", className }: UserPhotoProps) {
-  const cls = `bf-user-photo${className ? ` ${className}` : ""}`;
+export function UserPhoto({ src, size = "calc(var(--bf-icon) * 1.25)", alt = "", className, tone = "staff", onError }: UserPhotoProps) {
+  const cls = `bf-user-photo${tone === "client" ? " bf-user-photo--client" : ""}${className ? ` ${className}` : ""}`;
   const style = { width: size, height: size, borderRadius: "9999px", objectFit: "cover" as const, flexShrink: 0 };
   if (src) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img className={cls} src={src} alt={alt} aria-hidden={alt ? undefined : true} style={style} />;
+    return <img className={cls} src={src} alt={alt} aria-hidden={alt ? undefined : true} style={style} onError={onError ? () => onError() : undefined} />;
   }
   return (
     <span className={`${cls} bf-user-photo--default`} role={alt ? "img" : undefined} aria-label={alt || undefined} aria-hidden={alt ? undefined : true} style={style}>

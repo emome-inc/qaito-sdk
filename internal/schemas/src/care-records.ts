@@ -12,6 +12,7 @@ export const recordTypeValues = [
   "nutrition",
   "oral",
   "recreation",
+  "snack",
 ] as const;
 
 export type RecordType = (typeof recordTypeValues)[number];
@@ -26,6 +27,7 @@ export const RECORD_TYPE_LABEL: Record<RecordType, string> = {
   nutrition:          "栄養管理",
   oral:               "口腔ケア",
   recreation:         "レク",
+  snack:              "おやつ",
 };
 
 export const bathTypeValues = ["full", "partial", "wiping", "none"] as const;
@@ -155,6 +157,34 @@ export const setMealAmountsSchema = z.object({
 
 export type SetMealAmountsInput = z.infer<typeof setMealAmountsSchema>;
 
+/** 一括で付けられるチェックの列（care-record 所有。弁当・おやつは dayservice の `bulkSetStatusFlagsApiSchema`） */
+export const dailyCheckValues = ["bath", "oral", "training"] as const;
+export type DailyCheck = (typeof dailyCheckValues)[number];
+
+export const DAILY_CHECKS_MAX_CLIENTS = 200;
+
+export const bulkSkipReasonValues = ["not_attending", "elsewhere", "inactive", "multi_program"] as const;
+export type BulkSkipReason = (typeof bulkSkipReasonValues)[number];
+export type BulkSkippedPerson = { clientId: string; reason: BulkSkipReason };
+
+export const bulkSetDailyChecksSchema = z.object({
+  facilityId:  z.string().uuid("facilityId は UUID 形式です"),
+  serviceDate: z.string().date("serviceDate は YYYY-MM-DD 形式です"),
+  check:       z.enum(dailyCheckValues),
+  clientIds:   z.array(z.string().uuid("clientIds は UUID 形式です")).min(1).max(DAILY_CHECKS_MAX_CLIENTS),
+  mode:        z.enum(["apply", "revert", "preview"]).default("apply"),
+  /**
+   * revert のとき: apply が返した、付けた行の印（行の id と付けた直後の updated_at）。この印が今の行と一致する行だけを戻す
+   * （そのあと誰かが触った行・ほかの事業所の行は戻さない）
+   */
+  marks:       z.array(z.object({
+    clientId:  z.string().uuid("clientId は UUID 形式です"),
+    id:        z.string().uuid("id は UUID 形式です"),
+    updatedAt: z.string().min(1).max(64),
+  })).max(DAILY_CHECKS_MAX_CLIENTS).optional(),
+});
+export type BulkSetDailyChecksInput = z.infer<typeof bulkSetDailyChecksSchema>;
+
 export const recordTemplateKindValues = ["care_record", "training_record"] as const;
 export type RecordTemplateKind = (typeof recordTemplateKindValues)[number];
 
@@ -242,9 +272,17 @@ export const additionRecordExtraSchema = z.discriminatedUnion("kind", [
 ]);
 export type AdditionRecordExtra = z.infer<typeof additionRecordExtraSchema>;
 
-/** その日のレクの枠（午前・午後・イベント） */
-export const dayRecreationSlots = ["morning", "afternoon", "event"] as const;
+/** その日の枠（午前レク・午後レク・イベント・おやつ） */
+export const dayRecreationSlots = ["morning", "afternoon", "event", "snack"] as const;
 export type DayRecreationSlot = (typeof dayRecreationSlots)[number];
+
+/** 枠ごとの介護記録の種別（おやつだけ 'snack'・ほかはレク） */
+export const DAY_SLOT_RECORD_TYPE: Readonly<Record<DayRecreationSlot, "recreation" | "snack">> = {
+  morning: "recreation",
+  afternoon: "recreation",
+  event: "recreation",
+  snack: "snack",
+};
 
 export const DAY_RECREATION_NAME_MAX = 100;
 
@@ -266,5 +304,8 @@ export const setDayRecreationsSchema = z.object({
   morning: dayRecreationName,
   afternoon: dayRecreationName,
   event: dayRecreationName,
+  snack: dayRecreationName,
+  client_ids: z.array(z.string().uuid()).min(1).max(200).optional(),
+  mode: z.enum(["sync", "add"]).default("sync"),
 });
 export type SetDayRecreationsInput = z.infer<typeof setDayRecreationsSchema>;

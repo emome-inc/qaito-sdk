@@ -32,6 +32,14 @@
   border-color: var(--bf-primary);
   font-weight: var(--bf-weight-bold);
 }
+.bf-kana-rows__btn:disabled {
+  color: var(--bf-muted-fg);
+  background: var(--bf-surface-2);
+  cursor: not-allowed;
+}
+.bf-kana-rows__btn:disabled:hover {
+  background: var(--bf-surface-2);
+}
 .bf-kana-rows__btn:focus-visible {
   outline: var(--bf-focus-ring-w, 3px) solid var(--bf-focus-ring, var(--bf-primary));
   outline-offset: 2px;

@@ -82,6 +82,9 @@ export function RowAction(
     (rest as { "aria-label"?: string })["aria-label"] ?? (typeof text === "string" ? text : undefined);
   const iconOnly = glyph !== undefined;
   const inner = iconOnly ? glyph : text;
+  const r = rest as { "aria-disabled"?: unknown; "aria-describedby"?: unknown };
+  const gated = (r["aria-disabled"] === true || r["aria-disabled"] === "true") && typeof r["aria-describedby"] === "string";
+  const tip = iconOnly && !gated ? text : undefined;
   if (href !== undefined) {
     const Tag: ElementType = linkAs ?? "a";
     const { type: _type, disabled, ...linkRest } = rest;
@@ -97,7 +100,7 @@ export function RowAction(
       >
         {inner}
       </Tag>,
-      iconOnly ? text : undefined,
+      tip,
     );
   }
   return withTip(
@@ -111,7 +114,7 @@ export function RowAction(
     >
       {inner}
     </button>,
-    iconOnly ? text : undefined,
+    tip,
   );
 }
 

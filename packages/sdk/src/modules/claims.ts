@@ -62,6 +62,8 @@ import type {
   ClaimsResult,
   ClaimsSelfPayItem,
   ClaimsSelfPayLineInput,
+  ClaimsSelfPayPurchaseNotice,
+  ClaimsSelfPayPurchaseNoticeQuery,
   ClaimsServiceCode,
   ClaimsStatement,
   ClaimsStatementCandidate,
@@ -127,6 +129,7 @@ import type {
   SearchClaimsServiceCodesQuery,
   SetClaimsInvoiceDueDateInput,
   SubmitClaimsKagoClaimInput,
+  SyncClaimsSelfPayPurchasesResult,
   TransitionClaimsShoguFilingInput,
   UpdateClaimsAdditionFilingInput,
   UpdateClaimsAdditionFilingResult,
@@ -288,6 +291,16 @@ export function createClaimsNamespace(tx: SdkTransport) {
       /** POST /claims/invoices/:invoiceId/self-pay-lines — upsertSelfPayLine（draft のみ・kind 固定 self_pay） */
       addSelfPayLine: (invoiceId: string, input: ClaimsSelfPayLineInput) =>
         tx.request<AddClaimsSelfPayLineResult>("POST", `/claims/invoices/${pathParam(invoiceId, "invoiceId")}/self-pay-lines`, input),
+      /** POST /claims/invoices/:invoiceId/self-pay-purchases/sync — syncInvoiceSelfPayPurchases（下書きのみ。自費購入の行を購入の今の値に合わせる） */
+      syncSelfPayPurchases: (invoiceId: string) =>
+        tx.request<SyncClaimsSelfPayPurchasesResult>("POST", `/claims/invoices/${pathParam(invoiceId, "invoiceId")}/self-pay-purchases/sync`),
+      /** GET /claims/invoices/self-pay-purchase-notice — getSelfPayPurchaseNotice（請求年月の下書きごとの自費購入とのずれ・請求書に入っていない購入の数） */
+      selfPayPurchaseNotice: (params: ClaimsSelfPayPurchaseNoticeQuery) => {
+        const qs = new URLSearchParams();
+        qs.set("billingYearMonth", params.billingYearMonth);
+        if (params.facilityId) qs.set("facilityId", params.facilityId);
+        return tx.request<ClaimsSelfPayPurchaseNotice>("GET", `/claims/invoices/self-pay-purchase-notice?${qs.toString()}`);
+      },
       /** POST /claims/invoices/:invoiceId/issue — issueInvoice（draft→issued） */
       issue: (invoiceId: string) =>
         tx.request<ClaimsUserInvoice>("POST", `/claims/invoices/${pathParam(invoiceId, "invoiceId")}/issue`),

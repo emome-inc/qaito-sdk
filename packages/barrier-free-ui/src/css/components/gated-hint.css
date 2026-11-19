@@ -1,0 +1,33 @@
+
+.bf-gated-hint > .bf-hoverhint__target {
+  position: relative;
+}
+.bf-gated,
+.bf-gated-hint[data-gated] > .bf-hoverhint__target > :first-child {
+  --bf-gated-neutral-bg: color-mix(in oklch, var(--bf-fg) 7%, var(--bf-bg));
+  --bf-gated-perm-bg: color-mix(in oklch, var(--bf-fg) 16%, var(--bf-bg));
+  color: color-mix(in oklch, var(--bf-fg) 72%, var(--bf-bg));
+  cursor: not-allowed;
+}
+.bf-gated.bf-gated--neutral,
+.bf-gated.bf-gated--neutral:hover,
+.bf-gated-hint[data-gated="neutral"] > .bf-hoverhint__target > :first-child,
+.bf-gated-hint[data-gated="neutral"] > .bf-hoverhint__target > :first-child:hover {
+  background: var(--bf-gated-neutral-bg);
+}
+.bf-gated.bf-gated--perm,
+.bf-gated.bf-gated--perm:hover,
+.bf-gated-hint[data-gated="perm"] > .bf-hoverhint__target > :first-child,
+.bf-gated-hint[data-gated="perm"] > .bf-hoverhint__target > :first-child:hover {
+  background: var(--bf-gated-perm-bg);
+}
+.bf-gated__lock {
+  position: absolute;
+  inset-block-start: 0.125rem;
+  inset-inline-end: 0.125rem;
+  opacity: 0.8;
+  pointer-events: none;
+}
+.bf-gated__bubble {
+  max-width: min(22rem, 80vw);
+}

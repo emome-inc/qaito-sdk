@@ -166,6 +166,7 @@ export { Progress, Spinner, Skeleton, PageSkeleton } from "./Progress";
 export { Tooltip } from "./Tooltip";
 export { HoverHint } from "./HoverHint";
 export { InfoHint } from "./InfoHint";
+export { GatedHint, type GatedHintProps, type GatedHintTone } from "./GatedHint";
 export {
   useBubblePlacement,
   computeBubblePlacement,

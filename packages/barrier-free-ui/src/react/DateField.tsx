@@ -49,6 +49,7 @@ export function DateField({
   compact = false,
   disabled = false,
   id,
+  format,
 }: {
   name?: string;
   value?: string;
@@ -63,6 +64,8 @@ export function DateField({
   disabled?: boolean;
   /** 暦の id の元（rewrite 配信の面では安定 id を渡す） */
   id?: string;
+  /** チップの文字と読み上げの書き方を差し替える（和暦で出す帳票など）。compact より優先 */
+  format?: (value: string) => string;
 }) {
   const isControlled = controlled !== undefined;
   const [internal, setInternal] = useState(defaultValue ?? "");
@@ -162,7 +165,7 @@ export function DateField({
         ref={chipRef}
         type="button"
         className="bf-datefield__chip"
-        aria-label={value ? `${ariaLabel}: ${dateFieldLabel(value)}` : ariaLabel}
+        aria-label={value ? `${ariaLabel}: ${format ? format(value) : dateFieldLabel(value)}` : ariaLabel}
         aria-haspopup="dialog"
         aria-expanded={open}
         data-placeholder={!value || undefined}
@@ -170,7 +173,7 @@ export function DateField({
         onClick={() => (open ? setOpen(false) : openPanel())}
         onKeyDown={onChipKey}
       >
-        {value ? compact && parseYmd(value) ? `${Number(value.slice(5, 7))}/${Number(value.slice(8, 10))}（${WEEKDAY_JA[weekdayOf(value)]}）` : dateFieldLabel(value) : placeholder}
+        {value ? format ? format(value) : compact && parseYmd(value) ? `${Number(value.slice(5, 7))}/${Number(value.slice(8, 10))}（${WEEKDAY_JA[weekdayOf(value)]}）` : dateFieldLabel(value) : placeholder}
       </button>
       {open && (
         <div ref={panelRef} className="bf-datefield__panel" data-placement={up ? "up" : undefined} role="dialog" aria-label={ariaLabel}>

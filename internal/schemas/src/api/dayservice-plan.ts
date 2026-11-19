@@ -25,6 +25,10 @@ export const createDayservicePlanApiSchema = z.object({
   source: z.enum(["internal", "external"]).default("internal"),
   careManagerName: z.string().max(200).optional(),
   careManagerOffice: z.string().max(200).optional(),
+  /** 担当のケアマネ（care-office の名簿 `tool.care_managers` の id）。渡すと居宅（所属）と名前・事業所名の文字の写しをサーバーが入れる。作るときに省けば利用者の今の担当 */
+  careManagerId: z.string().guid().optional(),
+  /** 担当の居宅（care-office の名簿 `tool.care_offices` の id）。ケアマネを渡せばその所属が入る（違う居宅を渡すと 400）。居宅だけでも保存できる */
+  careOfficeId: z.string().guid().optional(),
   assessmentId: z.string().guid().optional(),
   certificationId: z.string().guid().optional(),
   baseCarePlanId: z.string().guid().nullable().optional(),
@@ -77,10 +81,26 @@ export const createDayservicePlanApiSchema = z.object({
   services: z.array(dayservicePlanServiceItemApiSchema).max(5).optional(),
 });
 
+export const DAYSERVICE_PLAN_CLEARABLE_KEYS = [
+  "careManagerName", "careManagerOffice", "clientWishes", "familyWishes", "overallPolicy",
+  "effectiveFrom", "effectiveUntil", "serviceStartTime", "serviceEndTime", "dailyLifeGoal", "functionalGoal",
+  "serviceContent", "lifeSupportActivity", "clientConsentAt", "familyConsentAt", "programManagerId", "plannerJobType", "memo",
+  "createdOn", "previousCreatedOn", "firstCreatedOn", "historySummary", "clientWish", "familyWish",
+  "socialParticipation", "homeEnvironment", "healthCondition", "medicalRisk",
+  "longGoal", "longGoalSetOn", "longGoalDueOn", "longGoalAchievement",
+  "shortGoal", "shortGoalSetOn", "shortGoalDueOn", "shortGoalAchievement",
+  "specialNote", "outcomeSummary", "reevaluatedOn", "explainerName", "explainedOn",
+  "assessmentId", "serviceDaysPerWeek", "careManagerId", "careOfficeId",
+] as const satisfies readonly (keyof typeof createDayservicePlanApiSchema.shape)[];
+
+const clearable = Object.fromEntries(
+  DAYSERVICE_PLAN_CLEARABLE_KEYS.map((k) => [k, createDayservicePlanApiSchema.shape[k].unwrap().nullable().optional()]),
+) as { [K in (typeof DAYSERVICE_PLAN_CLEARABLE_KEYS)[number]]: z.ZodOptional<z.ZodNullable<ReturnType<(typeof createDayservicePlanApiSchema.shape)[K]["unwrap"]>>> };
+
 /** PATCH /care-plan/dayservice/plans/:id リクエストボディ */
 export const updateDayservicePlanApiSchema = partialForUpdate(
   createDayservicePlanApiSchema.omit({ clientId: true }),
-);
+).extend(clearable);
 
 /** PATCH /care-plan/dayservice/plans/:id/status リクエストボディ */
 export const updateDayservicePlanStatusApiSchema = z.object({
@@ -89,5 +109,8 @@ export const updateDayservicePlanStatusApiSchema = z.object({
 
 export type CreateDayservicePlanApi = z.infer<typeof createDayservicePlanApiSchema>;
 export type UpdateDayservicePlanApi = z.infer<typeof updateDayservicePlanApiSchema>;
+/** 口に送る形（既定値のある欄は省ける）。SDK の入力の型の元 */
+export type CreateDayservicePlanApiInput = z.input<typeof createDayservicePlanApiSchema>;
+export type UpdateDayservicePlanApiInput = z.input<typeof updateDayservicePlanApiSchema>;
 export type UpdateDayservicePlanStatusApi = z.infer<typeof updateDayservicePlanStatusApiSchema>;
 export type DayservicePlanServiceItemApi = z.infer<typeof dayservicePlanServiceItemApiSchema>;

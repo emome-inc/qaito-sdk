@@ -68,6 +68,7 @@
 @import "./components/tooltip.css";
 @import "./components/hover-hint.css";
 @import "./components/info-hint.css";
+@import "./components/gated-hint.css";
 @import "./components/multiselect.css";
 @import "./components/slider.css";
 @import "./components/file-upload.css";

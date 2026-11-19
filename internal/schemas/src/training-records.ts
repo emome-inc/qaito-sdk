@@ -61,6 +61,7 @@ export const createTrainingRecordSchema = z.object({
   memo:            z.string().max(2000).optional(),
   templateId:      z.string().uuid().optional(),
   extraData:       z.record(z.string(), z.unknown()).optional(),
+  exerciseMenuId:  z.string().uuid().optional(),
 });
 
 export type CreateTrainingRecordInput = z.infer<typeof createTrainingRecordSchema>;
