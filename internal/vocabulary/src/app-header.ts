@@ -1,10 +1,10 @@
 /**
- * app-header — 組み込みアプリ（QaitoChat・Qaito Piazza・E-CALL。DB を持たない別の Next アプリ）のヘッダーに、
+ * app-header — 組み込みアプリ（QaitoChat・Qaito Piazza・E-CALL・Qaito Park。DB を持たない別の Next アプリ）のヘッダーに、
  * ポータルと同じアプリ一覧（ランチャー）とアカウントの箱を出すための組み立て。
  *
  * 受け取るのは api の答え（`GET /auth/userinfo`・`GET /apps`・`GET /integration/launcher`）だけで、入れるかの判定は
  * しない（判定は api のゲートと表示権の 1 か所）。ここは行き先の URL を組み、`@qaito/vocabulary` の並べ方に渡す。
- * 3 つのアプリが同じものを出すために 1 か所に置く（web は自分の画面の中で `app-launcher` / `account-menu` が同じ並べ方を使う）。
+ * 4 つのアプリが同じものを出すために 1 か所に置く（web は自分の画面の中で `app-launcher` / `account-menu` が同じ並べ方を使う）。
  * URL の組み方（`@qaito/schemas/app-domain` の `webHostOrigin`・`external-apps` の `builtinExternalAppLaunchUrl`）は
  * 呼ぶ側が渡す（vocabulary は他の kit を import しない）。
  */
@@ -73,7 +73,7 @@ export type AppHeaderMaterials = {
 /**
  * 本番のロゴは同一オリジンの相対パス（`/user-profiles/...`）なので、別のホストからは web の固定のホストの origin を付ける。
  * 顔写真（web の `/api/me/photo`。ログインの cookie は `.{appDomain}` で共有）も同じホストから読む。
- * 組織ごとのポータルのホスト（`{org}.{appDomain}`）にしないのは、3 つのアプリの CSP の img-src を完全一致の固定の
+ * 組織ごとのポータルのホスト（`{org}.{appDomain}`）にしないのは、4 つのアプリの CSP の img-src を完全一致の固定の
  * オリジンで書くため（ワイルドカードを使わない）。
  */
 const ASSET_HOST = "console";

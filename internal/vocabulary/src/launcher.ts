@@ -1,12 +1,12 @@
 /**
  * launcher — ヘッダーのアプリ一覧（ランチャー）とアカウントの箱の中身。ポータル・業務アプリ・
- * 組み込みアプリ（QaitoChat・Qaito Piazza・E-CALL）が同じ中身を出すための 1 か所。
+ * 組み込みアプリ（QaitoChat・Qaito Piazza・E-CALL・Qaito Park）が同じ中身を出すための 1 か所。
  *
  * 見た目は bf-ui の `AppLauncherMenu` / `PortalAccountMenu` が持ち、ここは**何を並べるか**だけを持つ
  * （呼び名・行き先のパス・アイコンの名前・テーマ色）。並びと見出しは `APP_KIND_ORDER` / `APP_KIND_LABELS`。
  * 入れるかどうかの判定は持たない（呼ぶ側が口の答え ── 表示権で絞ったアプリ・scope・コンソールに入れるか ── を渡す）。
  *
- * 【なぜ vocabulary か】行き先・アイコン・色まで文言の置き場に置くのは広いが、web と 3 つの組み込みアプリ
+ * 【なぜ vocabulary か】行き先・アイコン・色まで文言の置き場に置くのは広いが、web と 4 つの組み込みアプリ
  * （別の Next アプリ）が共有でき、server と client の両方から読める kit がここだけのため（bf-ui は他の kit を
  * import しない・schemas は Zod の型の置き場・sdk は文言を持たない）。
  */
@@ -171,7 +171,6 @@ export const ACCOUNT_MENU_ENTRIES: readonly AccountMenuEntry[] = [
   { key: "calendar", label: CALENDAR_LAUNCH.label, path: CALENDAR_LAUNCH.href, iconName: CALENDAR_LAUNCH.iconName, needs: "calendar" },
   { key: "library", label: LIBRARY_LAUNCH.label, path: LIBRARY_LAUNCH.href, iconName: LIBRARY_LAUNCH.iconName, needs: "library" },
   { key: "mfa", label: "MFA設定", path: "/settings/mfa", iconName: "ShieldCheck" },
-  { key: "tokens", label: "アクセストークン", path: "/settings/tokens", iconName: "KeyRound" },
   { key: "mcp", label: "MCP で接続", path: "/settings/mcp", iconName: "Link2" },
 ];
 

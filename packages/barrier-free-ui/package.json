@@ -1,6 +1,6 @@
 {
   "name": "@qaito/barrier-free-ui",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Qaito バリアフリー UI（CSS トークンと React 部品。文字の大きさ 小・中・大、ダーク、テーマ）。TypeScript のソースのまま配る（Next.js は transpilePackages に入れる）",
   "license": "MIT",
   "type": "module",

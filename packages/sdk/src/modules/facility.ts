@@ -3,8 +3,11 @@ import type {
   Company,
   CreateCompanyInput,
   CreateFacilityInput,
+  CreateFacilityRoomInput,
   CreateFacilityVehicleInput,
   Facility,
+  FacilityRoom,
+  FacilityRoomInput,
   FacilityVehicle,
   FacilityVehicleDrivers,
   FacilityVehicleInput,
@@ -57,6 +60,18 @@ export function createFacilityNamespace(tx: SdkTransport) {
       /** PUT /facility/vehicles/:id/drivers — 車両を運転する職員を設定する（一覧に置き換える） */
       setDrivers: (id: string, input: SetFacilityVehicleDriversInput) =>
         tx.request<FacilityVehicleDrivers>("PUT", `/facility/vehicles/${pathParam(id, "id")}/drivers`, input),
+    },
+    rooms: {
+      /** GET /facility/rooms — 会議室の一覧（並び順・名前の順） */
+      list: (params?: { facility_id?: string }) =>
+        tx.request<FacilityRoom[]>("GET", `/facility/rooms${buildQueryString(params)}`),
+      /** POST /facility/rooms — 会議室の登録 */
+      create: (input: CreateFacilityRoomInput) => tx.request<FacilityRoom>("POST", "/facility/rooms", input),
+      /** PUT /facility/rooms/:id — 会議室の更新（全項目を書き換える） */
+      update: (id: string, input: FacilityRoomInput) =>
+        tx.request<FacilityRoom>("PUT", `/facility/rooms/${pathParam(id, "id")}`, input),
+      /** DELETE /facility/rooms/:id — 会議室の削除（論理削除） */
+      delete: (id: string) => tx.request<null>("DELETE", `/facility/rooms/${pathParam(id, "id")}`),
     },
   };
 }

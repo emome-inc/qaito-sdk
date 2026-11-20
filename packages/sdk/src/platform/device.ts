@@ -3,6 +3,7 @@ import type {
   AddTalkMessageInput,
   CreateDeviceInput,
   CreateTalkSessionInput,
+  CreateWearableInput,
   Device,
   DeviceAuthSettings,
   DevicePushToken,
@@ -19,8 +20,13 @@ import type {
   UpdateDeviceAuthSettingsInput,
   UpdateDeviceInput,
   UpdateTalkSessionInput,
+  UpdateVitalGatewayConnectionInput,
+  UpdateWearableInput,
+  VitalConnectionStatus,
+  Wearable,
 } from "../types.js";
 import { pathParam } from "../path-param.js";
+import { buildQueryString } from "../serialize.js";
 import type { SdkTransport } from "../transport.js";
 
 export function createTalkNamespace(tx: SdkTransport) {
@@ -91,6 +97,18 @@ export function createDevicesNamespace(tx: SdkTransport) {
       revoke: (id: string) => tx.request<null>("POST", `/device/${pathParam(id, "id")}/revoke`),
       rotateKey: (id: string) =>
         tx.request<DeviceWithRawKey>("POST", `/device/${pathParam(id, "id")}/rotate-key`),
+      updateConnection: (id: string, input: UpdateVitalGatewayConnectionInput) =>
+        tx.request<Device>("PATCH", `/device/${pathParam(id, "id")}/connection`, input),
+      vitalStatus: (params?: { facility_id?: string }) =>
+        tx.request<VitalConnectionStatus>("GET", `/device/vital-status${buildQueryString(params)}`),
+    },
+    wearables: {
+      list: (params?: { facility_id?: string }) =>
+        tx.request<Wearable[]>("GET", `/device/wearables${buildQueryString(params)}`),
+      create: (input: CreateWearableInput) => tx.request<Wearable>("POST", "/device/wearables", input),
+      update: (id: string, input: UpdateWearableInput) =>
+        tx.request<Wearable>("PATCH", `/device/wearables/${pathParam(id, "id")}`, input),
+      revoke: (id: string) => tx.request<null>("POST", `/device/wearables/${pathParam(id, "id")}/revoke`),
     },
   };
 }

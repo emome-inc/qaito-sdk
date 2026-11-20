@@ -82,3 +82,13 @@ export const QaitoVision = qaitoGlyph("QaitoVision", () => [
   createElement("path", { key: "eye", d: "M6.5 12s2-4 5.5-4 5.5 4 5.5 4-2 4-5.5 4-5.5-4-5.5-4z" }),
   createElement("circle", { key: "pupil", cx: 12, cy: 12, r: 1.5 }),
 ]);
+
+/** Qaito Park（映像レク）: テレビの画面の中の再生の三角と、下の台（みんなで見る映像） */
+export const QaitoPark = qaitoGlyph("QaitoPark", () => [
+  createElement("path", {
+    key: "screen",
+    d: "M4.5 4h15A2.5 2.5 0 0 1 22 6.5v8a2.5 2.5 0 0 1-2.5 2.5h-15A2.5 2.5 0 0 1 2 14.5v-8A2.5 2.5 0 0 1 4.5 4z",
+  }),
+  createElement("path", { key: "play", d: "M10 7.5v6l5-3z" }),
+  createElement("path", { key: "stand", d: "M12 17v3M8 20h8" }),
+]);

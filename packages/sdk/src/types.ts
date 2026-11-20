@@ -712,6 +712,32 @@ export type FacilityVehicleInput = {
 /** POST /facility/vehicles の body */
 export type CreateFacilityVehicleInput = FacilityVehicleInput & { facilityId: string };
 
+export type FacilityRoom = {
+  id: string;
+  organizationId: string;
+  facilityId: string;
+  name: string;
+  /** 定員（null = 指定なし） */
+  capacity: number | null;
+  memo: string | null;
+  sortOrder: number;
+  deletedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/** PUT /facility/rooms/:id の body（**全項目を書き換える**。省略した項目は空になる） */
+export type FacilityRoomInput = {
+  name: string;
+  /** 定員（1 以上。null = 指定なし） */
+  capacity?: number | null;
+  memo?: string | null;
+  sortOrder?: number;
+};
+
+/** POST /facility/rooms の body */
+export type CreateFacilityRoomInput = FacilityRoomInput & { facilityId: string };
+
 /** POST /facility/facilities/:id/link-master の body */
 export type LinkFacilityToMasterInput = { eefulFacilityId: number };
 
@@ -3912,7 +3938,8 @@ export type Device = {
   serial_number: string | null;
   /** 置いている事業所（会話の記録はこの事業所を写す）。null = 未設定 */
   facility_id: string | null;
-  device_type: string;
+  /** qaito_talk（音声デバイス）/ vital_gateway（腕時計の親機） */
+  device_type: "qaito_talk" | "vital_gateway" | (string & {});
   status: "active" | "revoked";
   log_transcript: boolean;
   log_face_auth_event: boolean;
@@ -3921,6 +3948,16 @@ export type Device = {
   locked_until: string | null;
   revoked_at: string | null;
   notes: string | null;
+  /** 腕時計の親機だけ: 機種（huawei_x1_pro） */
+  vendor_model: string | null;
+  /** 腕時計の親機だけ: 親機の MAC（初回の接続で控える） */
+  gateway_mac: string | null;
+  /** 腕時計の親機だけ: WebSocket の宛先の上書き（null = 既定） */
+  ws_host: string | null;
+  ws_port: number | null;
+  ws_token_expires_at: string | null;
+  /** 腕時計の親機だけ: つながった時刻（切れたら null） */
+  connected_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -3929,6 +3966,89 @@ export type Device = {
 export type DeviceWithRawKey = Device & {
   api_key_raw: string;
   api_key_prefix: string;
+  /** 腕時計の親機だけ: 親機に入れるサーバーアドレス（鍵を含む・1 回限り）。ほかは null */
+  server_address: string | null;
+};
+
+/** PATCH /device/:id/connection リクエスト（腕時計の親機の WebSocket の宛先。null で既定に戻す） */
+export type UpdateVitalGatewayConnectionInput = {
+  ws_host?: string | null;
+  ws_port?: number | null;
+};
+
+export type Wearable = {
+  id: string;
+  facility_id: string;
+  /** 呼び名（D2①） */
+  label: string;
+  /** MAC（大文字・コロン区切り） */
+  mac: string;
+  model: string;
+  status: "active" | "revoked";
+  gateway_device_id: string | null;
+  connected: boolean;
+  worn: boolean | null;
+  battery_percent: number | null;
+  state_at: string | null;
+  last_result_at: string | null;
+  revoked_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** POST /device/wearables リクエスト */
+export type CreateWearableInput = {
+  facility_id: string;
+  label: string;
+  /** 小文字・ハイフン区切り・区切りなしも受ける（大文字・コロン区切りに直す） */
+  mac: string;
+  model?: "huawei_watch_d2";
+};
+
+/** PATCH /device/wearables/:id リクエスト */
+export type UpdateWearableInput = {
+  facility_id?: string;
+  label?: string;
+  mac?: string;
+};
+
+/** 親機とのやりとりの記録の 1 件（測定値は入らない） */
+export type VitalGatewayLogEntry = {
+  at: string;
+  direction: "in" | "out";
+  operation_type: number | null;
+  kind: string | null;
+  return_code: string | null;
+  mac: string | null;
+};
+
+/** GET /device/vital-status レスポンス（接続状況・つながりの図） */
+export type VitalConnectionStatus = {
+  gateways: Array<{
+    id: string;
+    name: string;
+    facility_id: string | null;
+    vendor_model: string | null;
+    gateway_mac: string | null;
+    ws_host: string | null;
+    ws_port: number | null;
+    online: boolean;
+    connected_at: string | null;
+    last_seen_at: string | null;
+    log: VitalGatewayLogEntry[];
+  }>;
+  wearables: Array<
+    Omit<Wearable, "revoked_at" | "created_at" | "updated_at"> & {
+      in_flight: {
+        measurement_id: string;
+        status: "queued" | "sent";
+        requested_at: string;
+        elapsed_sec: number;
+        requested_by: string | null;
+        requested_by_name: string | null;
+      } | null;
+    }
+  >;
 };
 
 /** 認証パラメータ（organizations テーブルの device_* カラム） */
@@ -3942,6 +4062,8 @@ export type DeviceAuthSettings = {
 /** POST /device リクエスト */
 export type CreateDeviceInput = {
   name: string;
+  /** 省略 = qaito_talk。vital_gateway は応答に server_address が付く */
+  device_type?: "qaito_talk" | "vital_gateway";
   serial_number?: string;
   notes?: string;
   /** 置いている事業所。省略・null = 未設定 */
@@ -4064,8 +4186,11 @@ export type VitalRecord = {
   client_id: string;
   facility_id: string | null;
   staff_id: string | null;
-  source: "measured" | "transcribed";
+  /** device = 腕時計の計測（人の入力では作れない） */
+  source: "measured" | "transcribed" | "device";
   source_note: string | null;
+  /** 機器の計測の重複の歯止め（腕時計は MAC:BpiTimestamp）。手入力では null */
+  external_id: string | null;
   respiratory_rate: number | null;
   service_date: string;
   recorded_at: string;
@@ -4905,6 +5030,21 @@ export type GenerateTransportSheetResult = {
 };
 
 /** GET /transport/sheets/trip-times のクエリ（車 1 台 = 運転者込みのフレーム） */
+/** GET /transport/sheets/vehicle-usage のクエリ（期間は 31 日まで・両端を含む） */
+export type TransportVehicleUsageQuery = { facility_id: string; from: string; to: string; vehicle_id?: string };
+/** 送迎表で車が使われている便 1 つ（利用者・運転者は返さない） */
+export type TransportVehicleUsage = {
+  vehicleId: string;
+  /** 日（YYYY-MM-DD・JST） */
+  date: string;
+  direction: "pickup" | "dropoff";
+  tripNo: number;
+  /** 便の始まり・終わり（ISO 8601） */
+  startsAt: string;
+  endsAt: string;
+  /** 送迎表の状態 */
+  sheetState: "draft" | "confirmed" | "editing";
+};
 export type TransportTripTimesQuery = {
   facility_id: string;
   date: string;
@@ -9733,18 +9873,44 @@ export type Announcement = {
   /** 書いた人の名前。アカウントが消えていれば null */
   createdByName: string | null;
   updatedByName: string | null;
+  /** サムネイル（短い署名つき URL・15 分）。無ければ null */
+  thumbnailUrl: string | null;
 };
-/** 掲示中のお知らせ（ポータルのホームが読む形） */
+/** 掲示中のお知らせ（ポータルが読む形）。組織のお知らせとシステムからのお知らせ（運営 → 全組織）を 1 つの並びで返す */
 export type PublishedAnnouncement = {
   id: string;
+  /** org = 組織が書いた / qaito = システムからのお知らせ（運営） */
+  source: "org" | "qaito";
+  /** release = リリースノート / notice = お知らせ（組織の分は常に notice） */
+  kind: "release" | "notice";
+  /** Qaito の版（リリースノートだけ） */
+  version: string | null;
   title: string;
   body: string;
+  /** text = 素の文（組織）/ markdown（システム） */
+  bodyFormat: "text" | "markdown";
+  /** ピン留め（組織の分だけ） */
   pinned: boolean;
   publishFrom: string;
+  /** null = 期限なし（システムの分は常に null） */
   publishUntil: string | null;
   /** 掲示から 3 日以内 */
   isNew: boolean;
+  /** サムネイル（短い署名つき URL・15 分）。無ければ null */
+  thumbnailUrl: string | null;
 };
+/** 掲示中のお知らせ 1 件（本文の画面の形） */
+export type PublishedAnnouncementDetail = PublishedAnnouncement & {
+  /** Markdown の本文を blocks にした JSON（システムの分だけ）。素の文の分は null */
+  bodyBlocks: string | null;
+};
+/** 掲示中の一覧の絞り */
+export type ListPublishedAnnouncementsParams = {
+  /** 件数の上限 */
+  limit?: number;
+};
+/** サムネイルの指定。null = 外す / `{ stagedId }` = アップロードの窓口（用途 `announcement_thumbnail`）で置いたもの */
+export type AnnouncementThumbnailInput = null | { stagedId: string };
 export type CreateAnnouncementInput = {
   title: string;
   body: string;
@@ -9753,16 +9919,18 @@ export type CreateAnnouncementInput = {
   publishFrom?: string;
   /** null = 期限なし */
   publishUntil?: string | null;
+  /** 省く = 変えない（作るときは無し） */
+  thumbnail?: AnnouncementThumbnailInput;
 };
 /** 送った項目だけを変える */
 export type UpdateAnnouncementInput = Partial<CreateAnnouncementInput>;
 
-/** カレンダーの持ち主の種類（個人のカレンダーだけ） */
-export type CalendarOwnerKind = "user";
+/** カレンダーの持ち主の種類（個人 / 事業所） */
+export type CalendarOwnerKind = "user" | "facility";
 /** カレンダーの出どころ（いまは `local` だけ） */
 export type CalendarSourceKind = "local" | "google";
 
-/** 自分の実効レベル（view < edit < full = 持ち主） */
+/** 自分の実効レベル（view < edit < full = 個人のカレンダーの持ち主。事業所のカレンダーは最大 edit） */
 export type CalendarShareLevel = "view" | "edit" | "full";
 /** 共有で渡せるレベル（見る / 編集） */
 export type CalendarShareInputLevel = "view" | "edit";
@@ -9778,8 +9946,13 @@ export type CalendarCapabilities = {
 
 /** カレンダー（見えるもの。自分の実効レベルとできることつき） */
 export type Calendar = {
-  id: string;
+  /** 事業所のレイヤーで、まだ事業所のカレンダーが作られていなければ null（予定は facilityIds で引く） */
+  id: string | null;
   ownerKind: CalendarOwnerKind;
+  /** 事業所のカレンダーの事業所（個人のカレンダーは null） */
+  facilityId: string | null;
+  /** 事業所の名前（個人のカレンダーは null） */
+  facilityName: string | null;
   /** 自分の個人のカレンダーか（違えば、だれかに共有されたもの） */
   isMine: boolean;
   /** 個人のカレンダーの持ち主 */
@@ -9793,8 +9966,9 @@ export type Calendar = {
   /** 自分の実効レベル */
   level: CalendarShareLevel;
   can: CalendarCapabilities;
-  createdAt: string;
-  updatedAt: string;
+  /** まだ行の無い事業所のレイヤーは null */
+  createdAt: string | null;
+  updatedAt: string | null;
 };
 /** 自分の実効レベル（`none` = 見えない） */
 export type CalendarLevel = "none" | CalendarShareLevel;
@@ -10022,18 +10196,93 @@ export type CalendarEvent = {
   myResponse: CalendarAttendeeResponse | null;
   /** 自分がこの予定を変えられるか（詳細 `getEvent` だけが返す。一覧には無い） */
   canEdit?: boolean;
+  /** 事業所への反映（事業所のカレンダーの予定は必ずある・個人の予定は反映したときだけ） */
+  showOn: CalendarShowOn | null;
+  /** カレンダーは見えないが、自分の事業所の範囲の事業所に反映されているので見える予定（見るだけ） */
+  shownOnFacility: boolean;
+  /** 反映で見えている他人の個人の予定の持ち主の名前（shownOnFacility のときだけ・ほかは null） */
+  ownerName: string | null;
+  /** 予定に付いた車両・会議室（自分の事業所の範囲の資源だけ。「この予定だけ」を直した戻りには無い） */
+  resources?: CalendarResource[];
   createdAt: string;
   updatedAt: string;
 };
-/** 予定の一覧の条件（JST の日付・両端を含む・92 日まで） */
+/** 事業所に反映した予定の種類（担当者会議 / レク・イベント / 管理者会議 / 事業所会議 / 訓練・点検 / その他） */
+export type CalendarFacilityEventCategory = "care_conference" | "recreation" | "manager_meeting" | "facility_meeting" | "drill" | "other";
+/** 予定の事業所への反映 */
+export type CalendarShowOn = {
+  facilityId: string;
+  category: CalendarFacilityEventCategory;
+  /** 関係する利用者（ID だけ。氏名は client の口で引く） */
+  clientId: string | null;
+};
+/** 作るときの反映（事業所のカレンダーでは facilityId を省ける） */
+export type CalendarShowOnInput = {
+  facilityId?: string;
+  category: CalendarFacilityEventCategory;
+  clientId?: string | null;
+};
+/** 送迎表で車が使われている時間帯の条件（期間は 31 日まで・両端を含む） */
+export type ListCalendarVehicleTransportUsageParams = { facilityId: string; from: string; to: string; vehicleId?: string };
+/** 送迎表で車が使われている時間帯（transport:read が無ければ available = false で空）。重なりの判定は calendar の pure の transportUsageOverlaps */
+export type CalendarVehicleTransportUsage = {
+  available: boolean;
+  items: TransportVehicleUsage[];
+};
+/** 予定に付ける資源の種類（vehicle = 車両 / room = 会議室） */
+export type CalendarResourceKind = "vehicle" | "room";
+/** 予約できる資源（予約に要る列だけ。ナンバー・メモは返さない） */
+export type CalendarResource = {
+  kind: CalendarResourceKind;
+  id: string;
+  name: string;
+  facilityId: string;
+  facilityName: string | null;
+  /** 部屋の定員・車の乗車定員（未設定は null） */
+  capacity: number | null;
+  /** 台帳で削除した資源（予約は残る） */
+  deleted: boolean;
+};
+/** 予定に付ける資源 1 つ */
+export type CalendarResourceRef = { kind: CalendarResourceKind; id: string };
+/** 資源の一覧の条件（省略 = 自分の事業所の範囲の全部） */
+export type ListCalendarResourcesParams = { facilityId?: string };
+/** 資源の予約の一覧の条件（JST の日付・両端を含む・92 日まで） */
+export type ListCalendarResourceBookingsParams = { from: string; to: string };
+/** 資源の予約 1 回（見えない予定は title が null・visible が false） */
+export type CalendarResourceBooking = {
+  /** 予定の ID（見えない予定は null） */
+  eventId: string | null;
+  occurrenceStart: string;
+  allDay: boolean;
+  startsAt: string | null;
+  endsAt: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  title: string | null;
+  visible: boolean;
+  /** 資源を付けた人の名前 */
+  bookedByName: string | null;
+};
+/** 予約が重なったときの 409 の conflicts の 1 つ（相手の回の時刻・相手の題は返さない） */
+export type CalendarResourceConflict = { kind: CalendarResourceKind; id: string; start: string; end: string };
+/** 予定の一覧の条件（JST の日付・両端を含む・92 日まで）。何も指さなければ個人 + 共有 + 招待。事業所の予定は facilityIds を指したときだけ */
 export type ListCalendarEventsParams = {
   from: string;
   to: string;
   calendarId?: string;
+  /** カンマ区切り（50 件まで） */
+  calendarIds?: string;
+  /** 事業所のレイヤー（カンマ区切り・50 件まで） */
+  facilityIds?: string;
 };
 export type CreateCalendarEventInput = {
-  /** 省略 = 自分の個人のカレンダー（無ければ作る） */
+  /** 省略 = 自分の個人のカレンダー（無ければ作る）。facilityId とどちらか一方 */
   calendarId?: string;
+  /** その事業所のカレンダーに作る（無ければ作る）。showOn.category が要る */
+  facilityId?: string;
+  /** 事業所への反映（事業所のカレンダーでは必須） */
+  showOn?: CalendarShowOnInput | null;
   title: string;
   description?: string | null;
   location?: string | null;
@@ -10049,9 +10298,15 @@ export type CreateCalendarEventInput = {
   timezone?: string;
   /** 繰り返し（FREQ=DAILY / WEEKLY;BYDAY=… / MONTHLY;BYMONTHDAY=… か BYDAY=2TU、COUNT か UNTIL）。null = 繰り返さない */
   rrule?: string | null;
+  /** 付ける車両・会議室（この一覧に置き換え・空で全部外す・更新で省けば変えない）。重なれば 409 RESOURCE_CONFLICT */
+  resources?: CalendarResourceRef[];
 };
 /** 送った項目だけを変える（カレンダーの付け替えはしない）。繰り返しの予定は scope と occurrenceStart で範囲を選ぶ */
-export type UpdateCalendarEventInput = Partial<Omit<CreateCalendarEventInput, "calendarId">> & CalendarOccurrenceTarget;
+export type UpdateCalendarEventInput = Partial<Omit<CreateCalendarEventInput, "calendarId" | "facilityId" | "showOn">> &
+  CalendarOccurrenceTarget & {
+    /** 反映の部分更新（scope=all のときだけ）。null で外す（個人の予定だけ） */
+    showOn?: Partial<CalendarShowOnInput> | null;
+  };
 
 export type LibraryArea = import("@qaito/schemas/library").LibraryArea;
 export type LibraryNodeKind = import("@qaito/schemas/library").LibraryNodeKind;
@@ -10103,6 +10358,10 @@ export type LibraryAsset = import("@qaito/schemas/library").LibraryAsset;
 export type LibraryAssetUrl = import("@qaito/schemas/library").LibraryAssetUrl;
 /** 画像の取り込み。実体は storage のアップロード窓口（用途 `library_asset`）に置いた stagedId で渡す */
 export type UploadLibraryAssetInput = { stagedId: string; width?: number; height?: number };
+/** 画像を上げる署名つき URL をもらう（種類 png / jpeg / webp / gif・10MB まで）。返った stagedId を取り込みに渡す */
+export type LibraryAssetUploadUrlInput = import("@qaito/schemas/library").LibraryAssetUploadUrlInput;
+/** PUT の先。`Content-Type: contentType`・`If-None-Match: *`・申告と同じ大きさで PUT する */
+export type LibraryAssetUploadUrl = import("@qaito/schemas/library").LibraryAssetUploadUrl;
 /** 公式のノード（組織を持たない・版は無い） */
 export type LibraryOfficialNode = import("@qaito/schemas/library").LibraryOfficialNode;
 export type LibraryOfficialNodeWithBody = import("@qaito/schemas/library").LibraryOfficialNodeWithBody;
@@ -10881,8 +11140,8 @@ export type MealAmountsResult =
   | { clientId: string; error: string };
 
 /**
- * POST /care-record/daily-checks/bulk の入力（入浴・ハブラシ・個別の一括）。
- * apply=付ける / revert=付けた分を戻す（ハブラシ・個別は行の論理削除なので削除の権限が要る）/ preview=個別（training）だけ・書かずに計画の有無を返す
+ * POST /care-record/daily-checks/bulk の入力（入浴・口腔ケア・個別の一括）。
+ * apply=付ける / revert=付けた分を戻す（口腔ケア・個別は行の論理削除なので削除の権限が要る）/ preview=個別（training）だけ・書かずに計画の有無を返す
  */
 export type BulkSetDailyChecksInput = {
   facilityId: string;
@@ -11318,7 +11577,7 @@ export type DayserviceDailyRecordRow = DayserviceClientNameColumns & {
     /** 副食の量（0〜100 の割合） */
     mealSidePct: number | null;
   } | null;
-  /** 歯磨き（口腔ケア記録）の id。null なら未実施 */
+  /** 口腔ケアの記録の id。null なら未実施 */
   oralId: string | null;
   /** 機能訓練（運動）の件数と最初の 1 件 */
   training: { count: number; firstId: string | null };
@@ -11393,7 +11652,7 @@ export type DayserviceMealBoardRow = DayserviceClientNameColumns & {
   attendanceStatus: string;
   /** 食事量（0〜100 の割合。無ければ未作成） */
   care: { id: string; mealStaplePct: number | null; mealSidePct: number | null } | null;
-  /** 歯磨き（口腔ケア記録）の id。null なら未実施 */
+  /** 口腔ケアの記録の id。null なら未実施 */
   oralId: string | null;
   /** その日の 1 枚（選択済の写真）の media_logs.id */
   photoMediaId: string | null;
@@ -11528,6 +11787,8 @@ export type DayserviceContactSheetRow = DayserviceClientNameColumns & {
   bathMethod: string | null;
   /** 入浴のメモ（お休みのときは理由が書かれる） */
   bathMemo: string | null;
+  /** 口腔ケアを済にした（その日の介護記録 record_type='oral' の行がある）。介護記録を読めなければ false */
+  oralDone: boolean;
   rehabPrograms: string[];
   /** 保存済みの「デイサービスからの連絡事項」（空文字なら未入力） */
   comment: string;
@@ -12867,6 +13128,39 @@ export type DayserviceExerciseChecksBulkResult = {
   skippedPeople: { clientId: string; reason: "notAttending" | "absent" | "notAssigned" | "unchanged" | "failed" }[];
 };
 
+export type DayserviceVitalWatch = {
+  id: string;
+  /** 呼び名（例「D2①」） */
+  label: string;
+  /** 押せるか（親機がつながっていて、腕時計が接続中） */
+  available: boolean;
+  /** 外している（押せる・印だけ） */
+  notWorn: boolean;
+  /** 電池が少ない（押せる・印だけ） */
+  lowBattery: boolean;
+  batteryPercent: number | null;
+  /** 計測中（clientId はこの事業所のボードで頼んだものだけ入る） */
+  measuring: { measurementId: string; clientId: string | null; requestedAt: string } | null;
+};
+
+/** POST /dayservice/vital-watches/measurements の body（その腕時計で、この利用者のバイタルを測る） */
+export type StartDayserviceWatchMeasurementInput = {
+  facilityId: string;
+  date: string;
+  clientId: string;
+  wearableId: string;
+};
+
+/** 腕時計の計測の依頼の状態（measuring = 計測中・done = バイタルに入った・timeout / failed = 終わらなかった） */
+export type DayserviceWatchMeasurement = {
+  measurementId: string;
+  wearableId: string;
+  state: "measuring" | "done" | "timeout" | "failed";
+  clientId: string | null;
+  requestedAt: string;
+  finishedAt: string | null;
+};
+
 export type DayserviceSeatingRuleKind = "avoid" | "prefer";
 
 /** 机 1 つ */
@@ -13795,6 +14089,211 @@ export type UpsertClosingBudgetsInput = import("@qaito/schemas/daily-closing").U
 /** PUT /daily-closing-budget/division-results */
 export type UpsertClosingDivisionResultInput = import("@qaito/schemas/daily-closing").UpsertClosingDivisionResultInput;
 
+export type RecreationType = import("@qaito/schemas/recreation").RecreationType;
+export type RecreationPublishStatus = import("@qaito/schemas/recreation").RecreationPublishStatus;
+/** 入稿の画面の状態（下書き・予約・公開・削除済み） */
+export type RecreationAdminState = import("@qaito/schemas/recreation").RecreationAdminState;
+export type RecreationCareLevel = import("@qaito/schemas/recreation").RecreationCareLevel;
+export type RecreationSupportType = import("@qaito/schemas/recreation").RecreationSupportType;
+export type RecreationDifficulty = import("@qaito/schemas/recreation").RecreationDifficulty;
+export type RecreationSeason = import("@qaito/schemas/recreation").RecreationSeason;
+/** 所要時間の区分（`durationSec` から決まる） */
+export type RecreationDurationClass = import("@qaito/schemas/recreation").RecreationDurationClass;
+export type RecreationInquiryType = import("@qaito/schemas/recreation").RecreationInquiryType;
+/** 問い合わせの平均の要介護度（要介護度の 8 値と mixed・unknown） */
+export type RecreationInquiryCareLevel = import("@qaito/schemas/recreation").RecreationInquiryCareLevel;
+export type RecreationInquiryStatus = import("@qaito/schemas/recreation").RecreationInquiryStatus;
+export type RecreationFileRole = import("@qaito/schemas/recreation").RecreationFileRole;
+/** 種類ごとに使えるファイルの役割（動画は thumbnail・プリントは attachment / thumbnail / preview・キットは main / flyer / sub） */
+export type RecreationFileRoleOf<T extends RecreationType> = import("@qaito/schemas/recreation").RecreationFileRoleOf<T>;
+export type RecreationFileContentType = import("@qaito/schemas/recreation").RecreationFileContentType;
+export type RecreationNewsImageSlot = import("@qaito/schemas/recreation").RecreationNewsImageSlot;
+export type RecreationOfficialGrouping = import("@qaito/schemas/recreation").RecreationOfficialGrouping;
+export type RecreationPlaylistKind = import("@qaito/schemas/recreation").RecreationPlaylistKind;
+export type RecreationVoteValue = import("@qaito/schemas/recreation").RecreationVoteValue;
+/** 実際の流し方（MP4・ネイティブの HLS・hls.js） */
+export type RecreationSourceKind = import("@qaito/schemas/recreation").RecreationSourceKind;
+export type RecreationDeviceHint = import("@qaito/schemas/recreation").RecreationDeviceHint;
+/** 再生の URL の出どころ（Stream の署名つき・署名なしの uid・手元の見本） */
+export type RecreationPlaybackProvider = import("@qaito/schemas/recreation").RecreationPlaybackProvider;
+/** Stream の `status.state`（知らない値もそのまま来る） */
+export type RecreationStreamState = import("@qaito/schemas/recreation").RecreationStreamState;
+export type RecreationStreamListState = import("@qaito/schemas/recreation").RecreationStreamListState;
+export type RecreationVideoSort = import("@qaito/schemas/recreation").RecreationVideoSort;
+export type RecreationPrintSort = import("@qaito/schemas/recreation").RecreationPrintSort;
+export type RecreationKitSort = import("@qaito/schemas/recreation").RecreationKitSort;
+
+/** GET /recreation/home（区画ごとの本数） */
+export type GetRecreationHomeParams = import("@qaito/schemas/recreation").GetRecreationHomeParams;
+/** GET /recreation/videos（検索・絞り込み・並び・ページ） */
+export type ListRecreationVideosParams = import("@qaito/schemas/recreation").ListRecreationVideosParams;
+/** GET /recreation/prints */
+export type ListRecreationPrintsParams = import("@qaito/schemas/recreation").ListRecreationPrintsParams;
+/** GET /recreation/kits */
+export type ListRecreationKitsParams = import("@qaito/schemas/recreation").ListRecreationKitsParams;
+/** GET /recreation/news */
+export type ListRecreationNewsParams = import("@qaito/schemas/recreation").ListRecreationNewsParams;
+/** GET /recreation/history */
+export type ListRecreationHistoryParams = import("@qaito/schemas/recreation").ListRecreationHistoryParams;
+/** GET /recreation/favorites */
+export type ListRecreationFavoritesParams = import("@qaito/schemas/recreation").ListRecreationFavoritesParams;
+/** GET /recreation/playlists（kind・grouping） */
+export type ListRecreationPlaylistsParams = import("@qaito/schemas/recreation").ListRecreationPlaylistsParams;
+/** GET /recreation/inquiries */
+export type ListRecreationInquiriesParams = import("@qaito/schemas/recreation").ListRecreationInquiriesParams;
+/** GET /recreation/admin/stream-videos（入稿） */
+export type ListRecreationStreamVideosParams = import("@qaito/schemas/recreation").ListRecreationStreamVideosParams;
+/** GET /recreation/admin/items（入稿） */
+export type ListRecreationAdminItemsParams = import("@qaito/schemas/recreation").ListRecreationAdminItemsParams;
+/** GET /recreation/admin/categories（入稿） */
+export type ListRecreationCategoriesParams = import("@qaito/schemas/recreation").ListRecreationCategoriesParams;
+/** GET /recreation/admin/news（入稿） */
+export type ListRecreationAdminNewsParams = import("@qaito/schemas/recreation").ListRecreationAdminNewsParams;
+/** GET /recreation/admin/official-playlists（入稿） */
+export type ListRecreationAdminOfficialPlaylistsParams = import("@qaito/schemas/recreation").ListRecreationAdminOfficialPlaylistsParams;
+
+/** POST /recreation/favorites */
+export type AddRecreationFavoriteInput = import("@qaito/schemas/recreation").AddRecreationFavoriteInput;
+/** POST /recreation/playlists */
+export type CreateRecreationPlaylistInput = import("@qaito/schemas/recreation").CreateRecreationPlaylistInput;
+/** PATCH /recreation/playlists/:id（送ったキーだけを変える） */
+export type UpdateRecreationPlaylistInput = import("@qaito/schemas/recreation").UpdateRecreationPlaylistInput;
+/** POST /recreation/playlists/:id/items */
+export type AddRecreationPlaylistItemInput = import("@qaito/schemas/recreation").AddRecreationPlaylistItemInput;
+/** PUT /recreation/playlists/:id/items（渡した順が新しい並び） */
+export type ReorderRecreationPlaylistItemsInput = import("@qaito/schemas/recreation").ReorderRecreationPlaylistItemsInput;
+/** POST /recreation/plays（再生の開始。`sourceKind` は必須） */
+export type StartRecreationPlayInput = import("@qaito/schemas/recreation").StartRecreationPlayInput;
+/** PUT /recreation/progress/:recreationId（`watchedDeltaSec` は前の送信からの再生していた実時間） */
+export type SaveRecreationProgressInput = import("@qaito/schemas/recreation").SaveRecreationProgressInput;
+/** PUT /recreation/votes/:recreationId */
+export type CastRecreationVoteInput = import("@qaito/schemas/recreation").CastRecreationVoteInput;
+/** POST /recreation/file-opens */
+export type RecordRecreationFileOpenInput = import("@qaito/schemas/recreation").RecordRecreationFileOpenInput;
+/** POST /recreation/inquiries（キットは必須。担当者名・電話・メールは職員の連絡先） */
+export type SubmitRecreationInquiryInput = import("@qaito/schemas/recreation").SubmitRecreationInquiryInput;
+/** PATCH /recreation/inquiries/:id（対応済み / 戻す） */
+export type UpdateRecreationInquiryInput = import("@qaito/schemas/recreation").UpdateRecreationInquiryInput;
+/** POST /recreation/admin/items（`type` で形が分かれる・入稿） */
+export type CreateRecreationItemInput = import("@qaito/schemas/recreation").CreateRecreationItemInput;
+/** PATCH /recreation/admin/items/:id（入稿） */
+export type UpdateRecreationItemInput = import("@qaito/schemas/recreation").UpdateRecreationItemInput;
+/** POST /recreation/admin/items/:id/files（staging の `stagedId` を渡す・入稿） */
+export type AddRecreationItemFileInput = import("@qaito/schemas/recreation").AddRecreationItemFileInput;
+/** POST /recreation/admin/categories（入稿） */
+export type CreateRecreationCategoryInput = import("@qaito/schemas/recreation").CreateRecreationCategoryInput;
+/** PATCH /recreation/admin/categories/:id（入稿） */
+export type UpdateRecreationCategoryInput = import("@qaito/schemas/recreation").UpdateRecreationCategoryInput;
+/** POST /recreation/admin/news（本文は平文・入稿） */
+export type CreateRecreationNewsInput = import("@qaito/schemas/recreation").CreateRecreationNewsInput;
+/** PATCH /recreation/admin/news/:id（入稿） */
+export type UpdateRecreationNewsInput = import("@qaito/schemas/recreation").UpdateRecreationNewsInput;
+/** POST /recreation/admin/news/:id/images（入稿） */
+export type AddRecreationNewsImageInput = import("@qaito/schemas/recreation").AddRecreationNewsImageInput;
+/** POST /recreation/admin/official-playlists（入稿） */
+export type CreateRecreationOfficialPlaylistInput = import("@qaito/schemas/recreation").CreateRecreationOfficialPlaylistInput;
+/** PATCH /recreation/admin/official-playlists/:id（`recreationIds` で項目を丸ごと置き換え・入稿） */
+export type UpdateRecreationOfficialPlaylistInput = import("@qaito/schemas/recreation").UpdateRecreationOfficialPlaylistInput;
+
+/** 絞り込みのカテゴリの選択肢 */
+export type RecreationCategoryOption = import("@qaito/schemas/recreation").RecreationCategoryOption;
+/** 項目の共通の欄（一覧のカード。数は組織の中で数える） */
+export type RecreationItemBase<T extends RecreationType = RecreationType> = import("@qaito/schemas/recreation").RecreationItemBase<T>;
+/** GET /recreation/videos の 1 行 */
+export type RecreationVideo = import("@qaito/schemas/recreation").RecreationVideo;
+/** GET /recreation/videos/:id */
+export type RecreationVideoDetail = import("@qaito/schemas/recreation").RecreationVideoDetail;
+/** GET /recreation/videos/:id/related の 1 行（点数つき） */
+export type RecreationRelatedVideo = import("@qaito/schemas/recreation").RecreationRelatedVideo;
+/** 本人の再生位置（GET・PUT /recreation/progress/:recreationId） */
+export type RecreationProgress = import("@qaito/schemas/recreation").RecreationProgress;
+/** ファイル 1 件（署名 URL なし） */
+export type RecreationFile<R extends RecreationFileRole = RecreationFileRole> = import("@qaito/schemas/recreation").RecreationFile<R>;
+/** ファイル 1 件と、開くための署名つき URL */
+export type RecreationFileView<R extends RecreationFileRole = RecreationFileRole> = import("@qaito/schemas/recreation").RecreationFileView<R>;
+/** GET /recreation/prints の 1 行 */
+export type RecreationPrint = import("@qaito/schemas/recreation").RecreationPrint;
+/** GET /recreation/prints/:id（添付ごとの署名つき URL つき） */
+export type RecreationPrintDetail = import("@qaito/schemas/recreation").RecreationPrintDetail;
+/** AI と委任の呼び出しが受け取るプリントの詳細（添付の URL なし） */
+export type RecreationPrintDetailForTool = import("@qaito/schemas/recreation").RecreationPrintDetailForTool;
+/** GET /recreation/kits の 1 行 */
+export type RecreationKit = import("@qaito/schemas/recreation").RecreationKit;
+/** GET /recreation/kits/:id */
+export type RecreationKitDetail = import("@qaito/schemas/recreation").RecreationKitDetail;
+/** 種類ごとの一覧の形 */
+export type RecreationItemByType = import("@qaito/schemas/recreation").RecreationItemByType;
+/** どの種類でも入る項目（お気に入り・プレイリスト・履歴）。`type` で絞れる */
+export type RecreationItem = import("@qaito/schemas/recreation").RecreationItem;
+/** GET /recreation/news の 1 行（本文は持たない） */
+export type RecreationNews = import("@qaito/schemas/recreation").RecreationNews;
+/** GET /recreation/news/:id */
+export type RecreationNewsDetail = import("@qaito/schemas/recreation").RecreationNewsDetail;
+/** 公式プレイリスト（`kind: "official"`） */
+export type RecreationOfficialPlaylist = import("@qaito/schemas/recreation").RecreationOfficialPlaylist;
+/** マイプレイリスト（`kind: "mine"`） */
+export type RecreationMyPlaylist = import("@qaito/schemas/recreation").RecreationMyPlaylist;
+/** GET /recreation/playlists の 1 行（公式とマイを `kind` で分ける） */
+export type RecreationPlaylist = import("@qaito/schemas/recreation").RecreationPlaylist;
+/** プレイリストの項目 1 つ */
+export type RecreationPlaylistItem = import("@qaito/schemas/recreation").RecreationPlaylistItem;
+/** GET /recreation/playlists/:id（項目つき） */
+export type RecreationPlaylistDetail = import("@qaito/schemas/recreation").RecreationPlaylistDetail;
+/** 種類ごとのお気に入り 1 件 */
+export type RecreationFavoriteOf<T extends RecreationType> = import("@qaito/schemas/recreation").RecreationFavoriteOf<T>;
+/** GET /recreation/favorites の 1 行 */
+export type RecreationFavorite = import("@qaito/schemas/recreation").RecreationFavorite;
+/** POST /recreation/plays の応答 */
+export type RecreationPlayReceipt = import("@qaito/schemas/recreation").RecreationPlayReceipt;
+/** POST /recreation/file-opens の応答 */
+export type RecreationFileOpenReceipt = import("@qaito/schemas/recreation").RecreationFileOpenReceipt;
+/** 種類ごとの履歴 1 行 */
+export type RecreationHistoryItemOf<T extends RecreationType> = import("@qaito/schemas/recreation").RecreationHistoryItemOf<T>;
+/** GET /recreation/history の 1 行（見せなくなった項目は `item: null`） */
+export type RecreationHistoryItem = import("@qaito/schemas/recreation").RecreationHistoryItem;
+/** DELETE /recreation/history・/recreation/history/:recreationId の応答（消した記録と再生位置の数） */
+export type RecreationHistoryClearResult = import("@qaito/schemas/recreation").RecreationHistoryClearResult;
+/** 本人の投票と組織の中の数（GET・PUT・DELETE /recreation/votes/:recreationId） */
+export type RecreationVote = import("@qaito/schemas/recreation").RecreationVote;
+/** GET /recreation/videos/:id/playback（HLS は必ず・MP4 は作ってある動画だけ。期限の前に取り直す） */
+export type RecreationPlayback = import("@qaito/schemas/recreation").RecreationPlayback;
+/** GET /recreation/prints/:id/files/:fileId/open-url */
+export type RecreationFileOpenUrl = import("@qaito/schemas/recreation").RecreationFileOpenUrl;
+/** GET /recreation/filters?type=（見せる項目が使っているカテゴリ・タグ・作者） */
+export type RecreationFilters = import("@qaito/schemas/recreation").RecreationFilters;
+/** ホームの区画（`{ items, has_more }`） */
+export type RecreationHomeSection<T> = import("@qaito/schemas/recreation").RecreationHomeSection<T>;
+export type RecreationContinueWatchingItem = import("@qaito/schemas/recreation").RecreationContinueWatchingItem;
+export type RecreationHomeCategorySection = import("@qaito/schemas/recreation").RecreationHomeCategorySection;
+/** GET /recreation/home（6 区画） */
+export type RecreationHome = import("@qaito/schemas/recreation").RecreationHome;
+/** GET /recreation/permission-context（画面の出し分けの材料。止めるのは api のゲート） */
+export type RecreationPermissionContext = import("@qaito/schemas/recreation").RecreationPermissionContext;
+/** 問い合わせ 1 件（送った本人か組織の管理者だけが読む） */
+export type RecreationInquiry = import("@qaito/schemas/recreation").RecreationInquiry;
+
+/** Stream の 1 本がどの項目に登録してあるか */
+export type RecreationStreamRegistration = import("@qaito/schemas/recreation").RecreationStreamRegistration;
+/** Stream の動画 1 本 */
+export type RecreationStreamVideo = import("@qaito/schemas/recreation").RecreationStreamVideo;
+/** Stream から消えた登録済みの動画 */
+export type RecreationStreamMissingVideo = import("@qaito/schemas/recreation").RecreationStreamMissingVideo;
+/** GET /recreation/admin/stream-videos */
+export type RecreationStreamVideoList = import("@qaito/schemas/recreation").RecreationStreamVideoList;
+export type RecreationAdminVideoFields = import("@qaito/schemas/recreation").RecreationAdminVideoFields;
+export type RecreationAdminKitFields = import("@qaito/schemas/recreation").RecreationAdminKitFields;
+/** GET /recreation/admin/items の 1 行（ファイルはサムネイル 1 つと数だけ） */
+export type RecreationAdminItemRow = import("@qaito/schemas/recreation").RecreationAdminItemRow;
+/** 入稿の詳細（GET /recreation/admin/items/:id・作成・更新・元に戻す・ファイルの追加・Stream と突き合わせるの応答） */
+export type RecreationAdminItem = import("@qaito/schemas/recreation").RecreationAdminItem;
+/** カテゴリ（使っている項目の数つき） */
+export type RecreationCategory = import("@qaito/schemas/recreation").RecreationCategory;
+/** お知らせ（入稿。画像の追加の応答もこの形） */
+export type RecreationAdminNews = import("@qaito/schemas/recreation").RecreationAdminNews;
+export type RecreationAdminOfficialPlaylistItem = import("@qaito/schemas/recreation").RecreationAdminOfficialPlaylistItem;
+/** 公式プレイリスト（入稿。項目の並び `recreationIds` つき） */
+export type RecreationAdminOfficialPlaylist = import("@qaito/schemas/recreation").RecreationAdminOfficialPlaylist;
+
 /** 訪問看護記録書Ⅱ（契約 `nursing.visit-records`） */
 export type NursingVisitRecord = {
   status: "draft" | "final";
@@ -14545,7 +15044,6 @@ export type PublicLink = {
   status: PublicLinkStatus;
   revokeReason: string | null;
   generation: number;
-  expiresAt: string;
   createdBy: string;
   createdAt: string;
   publishedAt: string | null;
@@ -14568,9 +15066,6 @@ export type ListPublicLinksQuery = {
 /** 取り消しの結果（もう取り消し中・取り消し済みなら started は false） */
 export type RevokePublicLinkResult = { started: boolean; link: PublicLink | null };
 
-export type ShareLibraryNodeInput = { expiresInDays?: 7 | 30 | 90 };
-export type UpdateLibraryShareInput = { expiresInDays?: 7 | 30 | 90 };
-
 /** 作った結果（`url` = 外の人に渡す URL。この応答で 1 度だけ。`skippedImages` = 書き出せなかった画像の数） */
-export type LibraryShareCreated = { linkId: string; url: string; expiresAt: string; skippedImages: number };
-export type LibraryShareUpdated = { linkId: string; generation: number; expiresAt: string; skippedImages: number };
+export type LibraryShareCreated = { linkId: string; url: string; skippedImages: number };
+export type LibraryShareUpdated = { linkId: string; generation: number; skippedImages: number };

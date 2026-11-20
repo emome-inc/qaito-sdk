@@ -59,6 +59,7 @@ export const SCOPED_MODULES = [
   "phone-recording",
   "plan-review",
   "kyotaku-plan",
+  "recreation",
   "reference",
   "riyohyo",
   "schedule",

@@ -22,6 +22,7 @@ import { createContactNamespace } from "./modules/contact.js";
 import { createPhoneNamespace } from "./modules/phone.js";
 import { createVideoAnalysisNamespace } from "./modules/video-analysis.js";
 import { createPhoneRecordingNamespace } from "./modules/phone-recording.js";
+import { createRecreationNamespace } from "./modules/recreation.js";
 import { createMeetingNamespace } from "./modules/meeting.js";
 import { createDailyClosingNamespace } from "./modules/daily-closing.js";
 import { createDailyClosingBudgetNamespace } from "./modules/daily-closing-budget.js";
@@ -536,6 +537,7 @@ export class QaitoClient {
   videoAnalysis = createVideoAnalysisNamespace(this.tx);
   meeting = createMeetingNamespace(this.tx);
   meetingRecording = createMeetingRecordingNamespace(this.tx);
+  recreation = createRecreationNamespace(this.tx);
   dailyClosing = createDailyClosingNamespace(this.tx);
   dailyClosingBudget = createDailyClosingBudgetNamespace(this.tx);
   medication = createMedicationNamespace(this.tx);

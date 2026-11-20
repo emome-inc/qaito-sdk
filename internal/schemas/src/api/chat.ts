@@ -244,7 +244,7 @@ export const exportListApiSchema = z.object({
   sheet: z.string().min(1).max(31).optional(),
 });
 
-/** POST /chat/generate-image — 画像生成（既定バックエンド: OpenAI gpt-image-1）。size は DALL·E 互換の3択。 */
+/** POST /chat/generate-image — 画像生成（既定バックエンド: OpenAI gpt-image-2）。size は DALL·E 互換の3択。 */
 export const generateImageApiSchema = z.object({
   prompt: z.string().min(1).max(4000),
   size: z.enum(["1024x1024", "1792x1024", "1024x1792"]).optional(),

@@ -571,9 +571,13 @@ export const postSystemNoticeSchema = z.object({
 });
 export type PostSystemNoticeInput = z.infer<typeof postSystemNoticeSchema>;
 
-/** 本文中の予約語（`@qaito`。大文字小文字を区別しない） */
-export const QAITO_WORD = "qaito";
-/** 質問文の上限（`@qaito` を除いた本文を切る） */
+export const QAITO_WORD = "CoCo";
+/**
+ * 前の呼ぶ言葉（`@qaito`）。当たる言葉として残す（過去の投稿の強調が消えない・癖で打っても答える）。
+ * 候補の一覧には出さない（出すのは `QAITO_WORD` だけ）。
+ */
+export const QAITO_LEGACY_WORDS = ["qaito"] as const;
+/** 質問文の上限（`@CoCo`・`@qaito` を除いた本文を切る） */
 export const QAITO_QUESTION_MAX_LENGTH = 2000;
 /** 文脈（直前の投稿の引用）の上限 */
 export const QAITO_CONTEXT_MAX_LENGTH = 8000;

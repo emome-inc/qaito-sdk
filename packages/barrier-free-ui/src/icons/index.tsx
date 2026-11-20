@@ -33,6 +33,7 @@ import {
   ChartLine,
   Car,
   CheckSquare,
+  Clapperboard,
   Clipboard,
   ClipboardList,
   Contact,
@@ -89,7 +90,7 @@ import {
   KeyRound,
   Coins,
 } from "lucide-react";
-import { QaitoChat, QaitoPiazza, QaitoEecall, QaitoVision } from "./qaito-app-icons";
+import { QaitoChat, QaitoPiazza, QaitoEecall, QaitoVision, QaitoPark } from "./qaito-app-icons";
 
 /**
  * モジュールアイコンの単一 SoT（名前 → 部品の解決表）。
@@ -107,6 +108,7 @@ export const MODULE_ICON_MAP: Record<string, LucideIcon> = {
   QaitoPiazza,
   QaitoEecall,
   QaitoVision,
+  QaitoPark,
   AppWindow,
   Globe,
   Phone,
@@ -116,6 +118,7 @@ export const MODULE_ICON_MAP: Record<string, LucideIcon> = {
   FileAudio,
   Presentation,
   AudioLines,
+  Clapperboard,
   Mic,
   KeyRound,
   Coins,

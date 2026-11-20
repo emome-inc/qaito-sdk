@@ -42,6 +42,8 @@
 }
 .bf-mediathumb__icon {
   display: inline-flex;
+  font-size: calc(2.5rem * var(--bf-scale, 1));
+  line-height: 1;
 }
 .bf-mediathumb__icon svg {
   inline-size: 40%;

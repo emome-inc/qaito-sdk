@@ -487,6 +487,25 @@ export const GET = qaitoAppManifest({
 - 1.0 になるまで（`0.x` の間）は、`0.1 → 0.2` のような版で使い方が変わることがあります。`0.1.x` のような小さな版の中では、使い方を変えないようにします
 - 変更の内容は、GitHub のリポジトリのタグ（版の一覧）で確かめてください
 
+## 0.3.0 での変更
+
+互換のない変更を含みます（一緒に出す `@qaito/barrier-free-ui` は 0.1.2）。
+
+- **外部共有（ライブラリのページ）の期限をなくしました。** 共有は取り消すまで有効です。
+  - `library.nodes.share.create(id)` と `library.nodes.share.update(id)` は本文を送りません（`expiresInDays` の入力はなくなりました）
+  - 作った・更新した応答と、`publication.links.list` の各リンクから `expiresAt` を消しました
+- **計画書の作成・更新の入力の型を、API の形（camelCase）にそろえました。** 通所介護計画書・個別機能訓練計画書は、担当の居宅とケアマネを
+  `careOfficeId`・`careManagerId` で渡せます（省けば利用者の今の担当）
+- **通所介護の口を足しました**（足しただけで、今の呼び方はそのまま動きます）
+  - 自費購入: `dayserviceDaily.selfPay.*`（品目・一覧・足す・直す・取り消す）。請求書への取り込み直しは `claims.invoices.syncSelfPayPurchases`、ずれの数は `claims.invoices.selfPayPurchaseNotice`
+  - 個別機能訓練: `dayserviceDaily.exerciseBoard.*`（運動メニュー・割り当て・チェック・まとめて付ける）
+  - まとめて付ける: `carerecord.dailyChecks.bulkSet`・`dayserviceDaily.statusRecords.bulkSetFlags`
+  - 送迎: 送迎の向き `transportPlan.settings.setDirections`、送迎表から送迎のチェックを合わせる `transportLog.logs.recordDayLegsFromSheet`
+  - ボードの個人設定: `dayserviceDaily.boardSettings.*`
+- **応答の型に欄が増えました。** 週間予定の確定の結果（`keptRecorded`・`unrecorded`・notes の `closed`）、週の表示（`closedDates`）、
+  送迎表の利用者（`absent`）、送迎の記録（`origin`）、送迎設定（`transport_directions`）ほか。知らない欄を無視していれば、そのまま動きます
+- `@qaito/barrier-free-ui` 0.1.2: 権限が無い操作を灰色と理由で見せる `GatedHint` を足しました。`KanaRowFilter`・`NoticeBar`・`UserPhoto`・`FlowTree` などを直しました
+
 ## 0.2.0 での変更
 
 互換のない変更を含みます。

@@ -1,7 +1,9 @@
 .bf-icon-stack {
   display: inline-flex;
+  flex-wrap: wrap; 
   align-items: center;
   gap: var(--bf-space-1);
+  max-width: 100%;
   vertical-align: middle;
 }
 .bf-icon-stack__item {
@@ -17,4 +19,5 @@
   font-size: var(--bf-font-xs);
   color: var(--bf-muted-fg);
   padding: 0 var(--bf-space-1);
+  white-space: nowrap; 
 }

@@ -6,6 +6,8 @@ import type {
   GetLibraryNodeQuery,
   GetLibraryTreeQuery,
   LibraryAsset,
+  LibraryAssetUploadUrl,
+  LibraryAssetUploadUrlInput,
   LibraryAssetUrl,
   LibraryDesignPreview,
   LibraryHelpTarget,
@@ -28,10 +30,8 @@ import type {
   SearchLibraryNodesQuery,
   SetLibraryNamesInput,
   SetLibraryVisibilityInput,
-  ShareLibraryNodeInput,
   StepLibraryVersionInput,
   UpdateLibraryNodeInput,
-  UpdateLibraryShareInput,
   UploadLibraryAssetInput,
 } from "../types.js";
 import { pathParam } from "../path-param.js";
@@ -104,6 +104,9 @@ export function createLibraryNamespace(tx: SdkTransport) {
       },
       /** ページに貼る画像（実体は storage のアップロード窓口・用途 library_asset に置いてから取り込む） */
       assets: {
+        /** 画像を上げる署名つき URL（DB に書かない）。PUT のあと stagedId を assets.upload に渡す POST /library/nodes/:id/assets/upload-url */
+        uploadUrl: (id: string, input: LibraryAssetUploadUrlInput) =>
+          tx.request<LibraryAssetUploadUrl>("POST", `/library/nodes/${pathParam(id, "id")}/assets/upload-url`, input),
         /** 画像を staging から取り込む POST /library/nodes/:id/assets */
         upload: (id: string, input: UploadLibraryAssetInput) =>
           tx.request<LibraryAsset>("POST", `/library/nodes/${pathParam(id, "id")}/assets`, input),
@@ -118,16 +121,16 @@ export function createLibraryNamespace(tx: SdkTransport) {
           tx.request<{ id: string }>("PATCH", `/library/nodes/${pathParam(id, "id")}/assets/${pathParam(assetId, "assetId")}/delete`),
       },
       share: {
-        /** 外部共有リンクを作る（作った人とルート・公開のデザインページ。URL はこの応答で 1 度だけ）POST /library/nodes/:id/share */
-        create: (id: string, input?: ShareLibraryNodeInput) =>
-          tx.request<LibraryShareCreated>("POST", `/library/nodes/${pathParam(id, "id")}/share`, input ?? {}),
-        /** 共有を更新（今の内容に置き換える・同じリンク。expiresInDays で期限も選び直す）POST /library/nodes/:id/share/update */
-        update: (id: string, input?: UpdateLibraryShareInput) =>
-          tx.request<LibraryShareUpdated>("POST", `/library/nodes/${pathParam(id, "id")}/share/update`, input ?? {}),
-        /** 共有を止める DELETE /library/nodes/:id/share */
+        /** 外部共有リンクを作る（置き場の対象の人〔事業所は所属の人・組織は全員〕とルート・公開のページ。本文なし・期限なし。URL はこの応答で 1 度だけ）POST /library/nodes/:id/share */
+        create: (id: string) =>
+          tx.request<LibraryShareCreated>("POST", `/library/nodes/${pathParam(id, "id")}/share`),
+        /** 共有を更新（今の内容に置き換える・同じリンク）POST /library/nodes/:id/share/update */
+        update: (id: string) =>
+          tx.request<LibraryShareUpdated>("POST", `/library/nodes/${pathParam(id, "id")}/share/update`),
+        /** 共有を止める（置き場の対象の人とルート）DELETE /library/nodes/:id/share */
         remove: (id: string) =>
           tx.request<{ started: boolean }>("DELETE", `/library/nodes/${pathParam(id, "id")}/share`),
-        /** 共有の状態（無ければ null。作った人とルートだけ）GET /library/nodes/:id/share */
+        /** 共有の状態（無ければ null。置き場の対象の人とルートだけ）GET /library/nodes/:id/share */
         get: (id: string) =>
           tx.request<PublicLink | null>("GET", `/library/nodes/${pathParam(id, "id")}/share`),
       },

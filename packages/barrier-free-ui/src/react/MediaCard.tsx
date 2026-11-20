@@ -17,6 +17,7 @@ export function MediaCard({
   objectPosition,
   referrerPolicy,
   blankTone = "muted",
+  thumbIcon,
   title,
   titleLines = 1,
   meta,
@@ -46,6 +47,11 @@ export function MediaCard({
   referrerPolicy?: ImgHTMLAttributes<HTMLImageElement>["referrerPolicy"];
   /** 絵が出せないときの地（`MediaThumb` へ素通し） */
   blankTone?: MediaBlankTone;
+  /**
+   * 絵が出せないときの印の差し替え（`MediaThumb` の `icon` へ素通し。絵文字・フォルダ等、種類の外のもの）。
+   * `blankTone="primary"` は印を出さない地なので併用しない
+   */
+  thumbIcon?: ReactNode;
   /** 名前（既定は 1 行で省略）。省略すると文字の段を出さず、写真だけが並ぶ */
   title?: ReactNode;
   /** 名前を何行で折るか（既定 1 = 1 行で省略）。記事の題のように 1 行では読めないものは 2 */
@@ -111,6 +117,7 @@ export function MediaCard({
       objectPosition={objectPosition}
       referrerPolicy={referrerPolicy}
       blankTone={blankTone}
+      icon={thumbIcon}
     />
   );
   const overlaidText = textPlacement === "overlay";

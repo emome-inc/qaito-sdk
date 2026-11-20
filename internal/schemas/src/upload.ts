@@ -1,9 +1,17 @@
 import { z } from "zod";
 import { APP_LOGO_MAX_BYTES, APP_LOGO_MIME } from "./app-branding";
 import { LIBRARY_ASSET_ALLOWED_MIME, LIBRARY_ASSET_MAX_BYTES } from "./library";
+import { PORTAL_LINK_IMAGE_MAX_BYTES } from "./portal-links";
+import { ANNOUNCEMENT_THUMBNAIL_MAX_BYTES, ANNOUNCEMENT_THUMBNAIL_MIME } from "./announcements";
+import {
+  RECREATION_DOCUMENT_CONTENT_TYPES,
+  RECREATION_DOCUMENT_MAX_BYTES,
+  RECREATION_IMAGE_CONTENT_TYPES,
+  RECREATION_IMAGE_MAX_BYTES,
+} from "./recreation";
 
 /** staging の用途。s3_key の prefix になり、許可 MIME・サイズ上限もこれで決まる */
-export const UPLOAD_PURPOSES = ["kaipoke_records", "intake_xlsx", "app_logo", "portal_link_image", "library_asset", "direct_debit_result", "kokuhoren_notice", "kyotaku_plan_origin", "clinical_record_source", "face_photo", "own_face_photo"] as const;
+export const UPLOAD_PURPOSES = ["kaipoke_records", "intake_xlsx", "app_logo", "portal_link_image", "library_asset", "direct_debit_result", "kokuhoren_notice", "kyotaku_plan_origin", "clinical_record_source", "face_photo", "own_face_photo", "announcement_thumbnail", "recreation_document", "recreation_image"] as const;
 export type UploadPurpose = (typeof UPLOAD_PURPOSES)[number];
 
 export const uploadPurposeSchema = z.enum(UPLOAD_PURPOSES);
@@ -31,6 +39,9 @@ export const UPLOAD_ALLOWED_MIME: Record<UploadPurpose, readonly string[]> = {
   clinical_record_source: ["application/pdf", "image/jpeg", "image/png"],
   face_photo: FACE_PHOTO_MIME,
   own_face_photo: FACE_PHOTO_MIME,
+  announcement_thumbnail: ANNOUNCEMENT_THUMBNAIL_MIME,
+  recreation_document: RECREATION_DOCUMENT_CONTENT_TYPES,
+  recreation_image: RECREATION_IMAGE_CONTENT_TYPES,
 };
 
 /**
@@ -41,7 +52,7 @@ export const UPLOAD_MAX_BYTES: Record<UploadPurpose, number> = {
   kaipoke_records: 20 * 1024 * 1024,
   intake_xlsx: 20 * 1024 * 1024,
   app_logo: APP_LOGO_MAX_BYTES,
-  portal_link_image: APP_LOGO_MAX_BYTES,
+  portal_link_image: PORTAL_LINK_IMAGE_MAX_BYTES,
   library_asset: LIBRARY_ASSET_MAX_BYTES,
   direct_debit_result: 10 * 1024 * 1024,
   kokuhoren_notice: 20 * 1024 * 1024,
@@ -49,6 +60,9 @@ export const UPLOAD_MAX_BYTES: Record<UploadPurpose, number> = {
   clinical_record_source: 18 * 1024 * 1024,
   face_photo: FACE_PHOTO_MAX_BYTES,
   own_face_photo: FACE_PHOTO_MAX_BYTES,
+  announcement_thumbnail: ANNOUNCEMENT_THUMBNAIL_MAX_BYTES,
+  recreation_document: RECREATION_DOCUMENT_MAX_BYTES,
+  recreation_image: RECREATION_IMAGE_MAX_BYTES,
 };
 
 export const checksumSha256Schema = z.string().regex(/^[A-Za-z0-9+/]{43}=$/);

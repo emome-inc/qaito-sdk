@@ -252,6 +252,23 @@ export const BUILTIN_EXTERNAL_APPS = {
     },
     moduleUses: { "video-analysis": ["read", "write"] },
   },
+  park: {
+    name: "Qaito Park",
+    description: "体操・脳トレ・音楽レクなどの映像を選んで流します。お気に入りとプレイリストで日々のレクを組めます。印刷して使うプリント教材と、対面レクのキットの紹介・問い合わせもここから。",
+    iconName: "QaitoPark",
+    themeToken: EXTERNAL_APP_THEME_PRESETS[2],
+    subdomain: "park",
+    localOrigin: (appDomain) => `http://park.${appDomain}:3006`,
+    callbackPaths: ["/api/auth/callback"],
+    keyPurpose: "park_oauth",
+    memberAppSet: { name: "Qaito Park", description: "Qaito Park だけ" },
+    optIn: true,
+    activationScopes: {
+      admin: ["recreation:read", "recreation:write", "recreation:delete"],
+      member: ["recreation:read", "recreation:write"],
+    },
+    moduleUses: { recreation: ["read", "write"] },
+  },
 } as const satisfies Record<string, BuiltinExternalAppDef>;
 
 export type BuiltinExternalAppKey = keyof typeof BUILTIN_EXTERNAL_APPS;
@@ -310,7 +327,7 @@ export function isBuiltinExternalAppKey(value: unknown): value is BuiltinExterna
   return typeof value === "string" && Object.prototype.hasOwnProperty.call(BUILTIN_EXTERNAL_APPS, value);
 }
 
-/** 組み込みアプリのホスト名の先頭（`chat` / `piazza` / `eecall` / `vision`）。 */
+/** 組み込みアプリのホスト名の先頭（`chat` / `piazza` / `eecall` / `vision` / `park`）。 */
 export type BuiltinExternalAppSubdomain = (typeof BUILTIN_EXTERNAL_APPS)[BuiltinExternalAppKey]["subdomain"];
 
 /** 組み込みアプリのホスト名の先頭の一覧。web はこれを予約し、組織 ID に使わせない。 */

@@ -2,6 +2,14 @@
 # 仮置きした版は、npm の画面（Staged Packages）で人がセキュリティキーで承認して初めて公開される。
 # CI やこのリポジトリが乗っ取られても、承認なしに偽の版は出ない（Trusted Publisher は stage だけを許す設定）。
 # 公開は npm の Trusted Publishing（OIDC）で行う。npm のトークンはどこにも置かない。
+#
+# 版ごとに 3 つを見分けてから動く（同じ版を 2 度仮置きすると npm が E409 で断るので、先に見分ける）:
+#   公開済み     … npm view に版がある → 飛ばす
+#   仮置き済み   … このリポジトリにタグ staged/<パッケージ>/v<版> がある → 飛ばす（承認を待っている）
+#   どちらでもない … 仮置きし、タグを付ける
+# 仮置き済みを npm に聞かないのは、OIDC の短命のトークンでは npm stage list が使えない（publish だけ）ため。
+# npm stage list の失敗を捨てて「仮置きされていない」と読むと、仮置き済みの版をもう一度仮置きして E409 で落ちる。
+# 仮置きを npm の画面で却下（reject）して出し直すときは、そのタグを消してから版を上げずに走らせ直す。
 name: release
 on:
   push:
@@ -9,12 +17,16 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
-  id-token: write
 concurrency: release
 jobs:
   publish:
     runs-on: ubuntu-latest
     environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      staged: ${{ steps.stage.outputs.staged }}
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       - uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d # v4.1.0
@@ -27,20 +39,46 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - name: 公開されていない版だけを出す
+        id: stage
         run: |
           set -euo pipefail
+          staged=""
+          # 途中で落ちても、それまでに仮置きした版はタグを付ける（付けないと次の run が同じ版をもう一度仮置きして E409）
+          trap 'echo "staged=${staged# }" >> "$GITHUB_OUTPUT"' EXIT
           for dir in packages/sdk packages/barrier-free-ui; do
             name=$(node -p "require('./$dir/package.json').name")
             version=$(node -p "require('./$dir/package.json').version")
+            tag="staged/${name#@qaito/}/v$version"
             if npm view "$name@$version" version >/dev/null 2>&1; then
               echo "$name@$version は公開済み"
-            elif npm stage list "$name" 2>/dev/null | grep -q "$version"; then
-              echo "$name@$version は仮置き済み（npm の Staged Packages で承認を待っている）"
+            elif git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+              echo "$name@$version は仮置き済み（タグ $tag がある・npm の Staged Packages で承認を待っている）"
             else
               echo "$name@$version を仮置きする（npm の Staged Packages で承認すると公開される）"
               # pnpm pack が workspace: の指定を実際の版に直す。仮置きは npm（OIDC と provenance に対応）
               tgz=$(cd "$dir" && pnpm pack --pack-destination "$RUNNER_TEMP" | tail -1)
               npm stage publish "$tgz" --access public --provenance
+              staged="$staged $tag"
               echo "::notice title=npm の承認待ち::$name@$version を仮置きした。https://www.npmjs.com/settings/~/staged-packages で承認すると公開される"
             fi
+          done
+
+  # 仮置きした版にタグを付ける（次の run が「仮置き済み」と見分けるため）。書く権限は OIDC を持たないこの小さな仕事にだけ渡す
+  tag:
+    needs: publish
+    if: always() && needs.publish.outputs.staged != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: 仮置きの印のタグを付ける
+        env:
+          STAGED: ${{ needs.publish.outputs.staged }}
+        run: |
+          set -euo pipefail
+          for tag in $STAGED; do
+            git tag "$tag" "$GITHUB_SHA"
+            git push origin "refs/tags/$tag"
+            echo "タグ $tag を付けた"
           done

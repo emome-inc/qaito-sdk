@@ -58,6 +58,8 @@ import type {
   TransportTemplateTripTimesSuggestion,
   TransportTripTimesQuery,
   TransportTripTimesSuggestion,
+  TransportVehicleUsage,
+  TransportVehicleUsageQuery,
   UpdateTransportLogInput,
   UpdateTransportRouteInput,
   UpdateTransportRouteStopInput,
@@ -238,6 +240,9 @@ export function createTransportPlanNamespace(tx: SdkTransport) {
       /** POST /transport/sheets/generate — AI で組む（その方向の下書きを入れ替える。確定した方向は 409） */
       generate: (input: GenerateTransportSheetInput) =>
         tx.request<GenerateTransportSheetResult>("POST", "/transport/sheets/generate", input),
+      /** GET /transport/sheets/vehicle-usage — 送迎表で車が使われている時間帯（便ごと・利用者と運転者は返さない・読むだけ） */
+      vehicleUsage: (params: TransportVehicleUsageQuery) =>
+        tx.request<TransportVehicleUsage[]>("GET", `/transport/sheets/vehicle-usage${buildQueryString(params)}`),
       /** GET /transport/sheets/trip-times — 車 1 台の時刻の案（並び順は変えない・何も書かない） */
       tripTimes: (params: TransportTripTimesQuery) =>
         tx.request<TransportTripTimesSuggestion>("GET", `/transport/sheets/trip-times${buildQueryString(params)}`),

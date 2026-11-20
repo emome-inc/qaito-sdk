@@ -65,8 +65,11 @@ export function BigSelect({
   ariaLabel,
   disabled = false,
   placement = "down",
+  id,
 }: {
   name?: string;
+  /** トリガーのボタンに付ける id（`Field` の `<label htmlFor>` と結ぶ。`{({ id }) => <BigSelect id={id} …/>}`） */
+  id?: string;
   options: SelectOption[];
   defaultValue?: string;
   value?: string;
@@ -184,6 +187,7 @@ export function BigSelect({
       {name && <input type="hidden" name={name} value={value} />}
       <button
         type="button"
+        id={id}
         className="bf-select__trigger"
         data-placeholder={!selected}
         aria-haspopup="listbox"

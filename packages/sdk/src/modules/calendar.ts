@@ -12,14 +12,21 @@ import type {
   CalendarOverlays,
   CalendarPerson,
   CalendarReminder,
+  CalendarResource,
+  CalendarResourceBooking,
+  CalendarResourceKind,
   CalendarShare,
   CalendarShareCandidates,
+  CalendarVehicleTransportUsage,
   CompleteCalendarGoogleConnectInput,
   CreateCalendarEventInput,
   FindCalendarFreeTimeParams,
   ListCalendarEventsParams,
   ListCalendarGoogleEventsParams,
   ListCalendarOverlaysParams,
+  ListCalendarResourceBookingsParams,
+  ListCalendarResourcesParams,
+  ListCalendarVehicleTransportUsageParams,
   RespondToCalendarInviteInput,
   SetCalendarAttendeesInput,
   SetCalendarRemindersInput,
@@ -106,6 +113,18 @@ export function createCalendarNamespace(tx: SdkTransport) {
       /** 自分のシフトと利用予定の件数（読むだけ）GET /calendar/overlays */
       list: (params: ListCalendarOverlaysParams) =>
         tx.request<CalendarOverlays>("GET", `/calendar/overlays${buildQueryString(params)}`),
+    },
+    /** 車両・会議室（予約できる資源と、その予約。付ける・外すのは events.create / update の resources） */
+    resources: {
+      /** 予約できる車両・会議室（自分の事業所の範囲の中・名前と定員だけ）GET /calendar/resources */
+      list: (params?: ListCalendarResourcesParams) =>
+        tx.request<CalendarResource[]>("GET", `/calendar/resources${buildQueryString(params)}`),
+      /** 車両・会議室 1 つの予約（見えない予定は題が null・時刻と予約した人の名前だけ）GET /calendar/resources/:kind/:id/bookings */
+      bookings: (kind: CalendarResourceKind, id: string, params: ListCalendarResourceBookingsParams) =>
+        tx.request<CalendarResourceBooking[]>("GET", `/calendar/resources/${kind}/${pathParam(id, "id")}/bookings${buildQueryString(params)}`),
+      /** 送迎表で車が使われている時間帯（読むだけ・transport:read が無ければ available = false）GET /calendar/resources/vehicle-transport-usage */
+      vehicleTransportUsage: (params: ListCalendarVehicleTransportUsageParams) =>
+        tx.request<CalendarVehicleTransportUsage>("GET", `/calendar/resources/vehicle-transport-usage${buildQueryString(params)}`),
     },
     /** 本人の Google カレンダーの連携（読み取りだけ・資格情報が無い環境は available = false / 503） */
     google: {

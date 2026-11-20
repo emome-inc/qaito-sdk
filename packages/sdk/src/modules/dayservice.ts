@@ -49,7 +49,9 @@ import type {
   DayserviceSelfPayPurchaseList,
   DayserviceSelfPayPurchasesQuery,
   DayserviceStatusRecord,
+  DayserviceVitalWatch,
   DayserviceVitalsBoard,
+  DayserviceWatchMeasurement,
   GenerateAllContactSheetNotesInput,
   GenerateAllContactSheetNotesSummary,
   GenerateContactSheetNoteInput,
@@ -74,6 +76,7 @@ import type {
   SetDayserviceDailyJobCheckInput,
   SetDayserviceDrinkOrderInput,
   SetDayserviceExerciseChecksInput,
+  StartDayserviceWatchMeasurementInput,
   UpdateDayserviceDailyJobInput,
   UpdateDayserviceSelfPayPurchaseInput,
   UpdateDayserviceStatusRecordInput,
@@ -97,7 +100,7 @@ export function createDayserviceDailyNamespace(tx: SdkTransport) {
         }).toString();
         return tx.request<DayserviceBathBoard>("GET", `/dayservice/boards/bath?${qs}`);
       },
-      /** GET /dayservice/boards/meal — 食事ボード（主食・副食の量・歯磨き・写真） */
+      /** GET /dayservice/boards/meal — 食事ボード（主食・副食の量・口腔ケア・写真） */
       meal: (params: DayserviceFacilityDayQuery) => {
         const qs = new URLSearchParams({
           facility_id: params.facility_id,
@@ -210,7 +213,7 @@ export function createDayserviceDailyNamespace(tx: SdkTransport) {
     dailyRecords: {
       /**
        * GET /dayservice/daily-records — 今日の実績（実績表・フロアボードの材料）。
-       * 出欠・バイタル・入浴・食事・歯磨き・運動・再検・その日の 1 枚を利用者ごとに（薬は boards.medication）。
+       * 出欠・バイタル・入浴・食事・口腔ケア・運動・再検・その日の 1 枚を利用者ごとに（薬は boards.medication）。
        */
       get: (params: DayserviceFacilityDayQuery) => {
         const qs = new URLSearchParams({
@@ -424,6 +427,19 @@ export function createDayserviceDailyNamespace(tx: SdkTransport) {
       /** PUT /dayservice/exercise-board/checks/bulk — 何人分かのチェックを足す・外す（割り当てていないメニューは付けない・動かさなかった人は理由つき） */
       bulkSetChecks: (input: BulkSetDayserviceExerciseChecksInput) =>
         tx.request<DayserviceExerciseChecksBulkResult>("PUT", "/dayservice/exercise-board/checks/bulk", input),
+    },
+    vitalWatches: {
+      /** GET /dayservice/vital-watches — その事業所の腕時計（押せるか・外している・電池が少ない・計測中なら誰の計測か） */
+      list: (params: DayserviceFacilityQuery) => {
+        const qs = new URLSearchParams({ facility_id: params.facility_id }).toString();
+        return tx.request<DayserviceVitalWatch[]>("GET", `/dayservice/vital-watches?${qs}`);
+      },
+      /** POST /dayservice/vital-watches/measurements — その腕時計で、この利用者の血圧を測る（結果は約 1 分後にバイタルに入る・状態は getMeasurement） */
+      startMeasurement: (input: StartDayserviceWatchMeasurementInput) =>
+        tx.request<DayserviceWatchMeasurement>("POST", "/dayservice/vital-watches/measurements", input),
+      /** GET /dayservice/vital-watches/measurements/:id — 計測の依頼の状態（measuring / done / timeout / failed） */
+      getMeasurement: (measurementId: string) =>
+        tx.request<DayserviceWatchMeasurement>("GET", `/dayservice/vital-watches/measurements/${pathParam(measurementId, "measurementId")}`),
     },
     seating: {
       /**

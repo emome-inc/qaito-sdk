@@ -43,6 +43,9 @@ export const LIBRARY_DESIGN_BODY_MAX = 300_000;
 /** ヘルプキーの形: `アプリ/画面` の軽い英数字 */
 export const LIBRARY_HELP_KEY_RE = /^[a-z][a-z0-9-]*(?:\/[a-z][a-z0-9-]*)*$/u;
 
+export const LIBRARY_CELL_BACKGROUNDS = ["red", "yellow", "green", "blue", "gray"] as const;
+export type LibraryCellBackground = (typeof LIBRARY_CELL_BACKGROUNDS)[number];
+
 /** 今の blocks の形の版。上げるときは `migrateBlocksDoc`（library/pure）に移行を足す */
 export const LIBRARY_BLOCKS_SCHEMA_VERSION = 1 as const;
 /** blocks の本文（JSON の文字列）の長さの上限 */
@@ -124,12 +127,7 @@ export type LibraryBlocksNode =
   | { type: "image"; attrs: { assetId: string; alt: string } };
 export type LibraryBlocksListItem = { type: "listItem"; content: LibraryBlocksNode[] };
 export type LibraryBlocksTaskItem = { type: "taskItem"; attrs: { checked: boolean }; content: LibraryBlocksNode[] };
-/**
- * 表（Tiptap の @tiptap/extension-table の名前・GFM の表に写せる形だけ）。置けるのは本文の一番上の並びだけ（引用・リストの中には置かない）。
- * 1 行目は全部 tableHeader・2 行目からは全部 tableCell・どの行もセルの数は 1 行目と同じ。セルの中は段落 1 つ（インラインだけ）。
- * 結合・幅・揃えは持たない（attrs は Tiptap が既定で付ける colspan 1・rowspan 1・colwidth null だけ受ける）
- */
-export type LibraryBlocksCellAttrs = { colspan?: 1; rowspan?: 1; colwidth?: null };
+export type LibraryBlocksCellAttrs = { colspan?: 1; rowspan?: 1; colwidth?: null; background?: LibraryCellBackground | null };
 export type LibraryBlocksParagraph = { type: "paragraph"; content?: LibraryBlocksInline[] };
 export type LibraryBlocksTableHeader = { type: "tableHeader"; attrs?: LibraryBlocksCellAttrs; content: [LibraryBlocksParagraph] };
 export type LibraryBlocksTableCell = { type: "tableCell"; attrs?: LibraryBlocksCellAttrs; content: [LibraryBlocksParagraph] };
@@ -212,7 +210,12 @@ const blockSchema: z.ZodType<LibraryBlocksNode> = z.lazy(() =>
 ) as z.ZodType<LibraryBlocksNode>;
 
 const cellAttrsSchema = z
-  .strictObject({ colspan: z.literal(1).optional(), rowspan: z.literal(1).optional(), colwidth: z.null().optional() })
+  .strictObject({
+    colspan: z.literal(1).optional(),
+    rowspan: z.literal(1).optional(),
+    colwidth: z.null().optional(),
+    background: z.enum(LIBRARY_CELL_BACKGROUNDS).nullable().optional(),
+  })
   .optional();
 const cellParagraphSchema = z.tuple([simpleBlockSchemas.paragraph]);
 const tableHeaderSchema = z.strictObject({ type: z.literal("tableHeader"), attrs: cellAttrsSchema, content: cellParagraphSchema });
@@ -687,6 +690,8 @@ export type LibraryAsset = {
   width: number | null;
   height: number | null;
   createdAt: string;
+  /** 今の本文から指されているか（一覧の口だけが付ける。消す口は指されている画像を断る） */
+  referenced?: boolean;
 };
 
 /** 画像を見る署名 URL（短い期限） */
@@ -763,6 +768,28 @@ export const uploadLibraryAssetSchema = z.object({
   height: z.number().int().positive().max(10_000).optional(),
 });
 export type UploadLibraryAssetInput = z.infer<typeof uploadLibraryAssetSchema>;
+
+/**
+ * 画像を上げる署名つき URL をもらう（MCP・SDK から。画面はアップロード窓口 `/storage/uploads/staged` を直に使う）。
+ * 種類・大きさは取り込みと同じ上限（`LIBRARY_ASSET_ALLOWED_MIME`・`LIBRARY_ASSET_MAX_BYTES`）で先に断る。
+ * 返り値の `stagedId` を取り込み（`uploadLibraryAssetSchema`）に渡す
+ */
+export const libraryAssetUploadUrlSchema = z.object({
+  /** 表示・監査用。置き場のキーには使わない */
+  filename: z.string().min(1).max(255),
+  contentType: z.enum(LIBRARY_ASSET_ALLOWED_MIME),
+  sizeBytes: z.number().int().positive().max(LIBRARY_ASSET_MAX_BYTES),
+});
+export type LibraryAssetUploadUrlInput = z.infer<typeof libraryAssetUploadUrlSchema>;
+
+/** 画像を上げる署名つき URL（PUT の先）。PUT は `Content-Type: contentType`・`If-None-Match: *`・申告と同じ大きさで送る */
+export type LibraryAssetUploadUrl = {
+  stagedId: string;
+  uploadUrl: string;
+  contentType: string;
+  /** ISO 8601 */
+  expiresAt: string;
+};
 
 /** 公式の画像の取り込み（Platform Admin）。置き先の公式のページを指定する */
 export const uploadLibraryOfficialAssetSchema = uploadLibraryAssetSchema.extend({ officialNodeId: uuid });

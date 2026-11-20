@@ -24,11 +24,22 @@ export function toBloodGlucoseTiming(v: unknown): BloodGlucoseTiming | null {
 
 const R = VITAL_INPUT_RANGES;
 
+export const vitalSourceValues = ["measured", "transcribed", "device"] as const;
+export type VitalSource = (typeof vitalSourceValues)[number];
+/** 人が入れられる出どころ。 */
+export const humanVitalSourceValues = ["measured", "transcribed"] as const;
+/** DB の text 列を型に絞る。想定外の値は measured（列の既定値）。 */
+export function toVitalSource(v: unknown): VitalSource {
+  return vitalSourceValues.find((s) => s === v) ?? "measured";
+}
+/** 機器の計測の重複の歯止め（`client.vitals.external_id`）。腕時計は `MAC:BpiTimestamp`。 */
+export const vitalExternalIdSchema = z.string().min(1).max(100);
+
 export const createVitalSchema = z.object({
   clientId: z.string().uuid("clientId は UUID 形式です"),
   facilityId: z.string().uuid("facilityId は UUID 形式です").optional().nullable(),
   staffId: z.string().uuid("staffId は UUID 形式です").optional().nullable(),
-  source: z.enum(["measured", "transcribed"]).default("measured"),
+  source: z.enum(humanVitalSourceValues).default("measured"),
   sourceNote: z.string().max(500).optional().nullable(),
   serviceDate: z.string().date("serviceDate は YYYY-MM-DD 形式です"),
   recordedAt: z.string().datetime({ offset: true }).optional(),
@@ -60,6 +71,12 @@ export const createVitalSchema = z.object({
 });
 
 export type CreateVitalInput = z.infer<typeof createVitalSchema>;
+
+export const createDeviceVitalSchema = createVitalSchema.extend({
+  source: z.literal("device"),
+  externalId: vitalExternalIdSchema,
+});
+export type CreateDeviceVitalInput = z.infer<typeof createDeviceVitalSchema>;
 
 export const updateVitalSchema = partialForUpdate(
   createVitalSchema.omit({ clientId: true }),
